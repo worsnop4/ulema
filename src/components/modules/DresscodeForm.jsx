@@ -41,7 +41,8 @@ export default function DresscodeForm() {
         <label className="form-label">Keterangan Tambahan</label>
         <textarea className="form-textarea" rows={3}
           value={dresscode.notes || ''}
-          onChange={e => updateData({ dresscode: { ...dresscode, notes: e.target.value } })} />
+          onChange={e => updateData({ dresscode: { ...dresscode, notes: e.target.value } })}
+          placeholder="Contoh: Mohon menggunakan pakaian formal bernuansa pastel sage green." />
       </div>
       <div className="p-4 rounded-2xl flex items-center gap-4" style={{ background: currentColor.hex + '30', border: `2px solid ${currentColor.hex}40` }}>
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl" style={{ background: currentColor.hex }}>👗</div>

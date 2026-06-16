@@ -10,7 +10,7 @@ const QUOTES_PRESETS = [
 
 export default function QuotesForm() {
   const [data, updateData] = useSharedInvitation()
-  const currentQuote = data.quote || QUOTES_PRESETS[0].text
+  const currentQuote = data.quote !== undefined ? data.quote : ''
 
   const selectedIndex = QUOTES_PRESETS.findIndex(q => q.text && q.text === currentQuote) !== -1
     ? QUOTES_PRESETS.findIndex(q => q.text && q.text === currentQuote)

@@ -5,8 +5,8 @@ import { useSharedInvitation } from '../../hooks/useSharedInvitation'
 export default function TurutMengundangForm() {
   const [data, updateData] = useSharedInvitation()
   const families = data.families || [
-    { id: 1, side: 'Keluarga Pria', members: ['Bpk. Ahmad Santoso', 'Ibu. Sri Rahayu'] },
-    { id: 2, side: 'Keluarga Wanita', members: ['Bpk. Hendra Wijaya', 'Ibu. Dewi Kusuma'] },
+    { id: 1, side: 'Keluarga Pria', members: [''] },
+    { id: 2, side: 'Keluarga Wanita', members: [''] },
   ]
 
   const setFamilies = (next) => updateData({ families: next })
@@ -21,7 +21,7 @@ export default function TurutMengundangForm() {
         <div key={fam.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
           <div className="mb-3">
             <label className="form-label">Nama Pihak</label>
-            <input className="form-input" value={fam.side} onChange={e => updateSide(fam.id, e.target.value)} />
+            <input className="form-input" value={fam.side} onChange={e => updateSide(fam.id, e.target.value)} placeholder="Contoh: Keluarga Pria" />
           </div>
           <div className="space-y-2">
             {fam.members.map((m, i) => (

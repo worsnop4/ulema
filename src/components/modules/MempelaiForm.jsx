@@ -18,28 +18,28 @@ export default function MempelaiForm() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="form-label">Nama Lengkap</label>
-                  <input className="form-input" value={person.name || ''} onChange={e => update('name', e.target.value)} />
+                  <input className="form-input" placeholder={i === 0 ? "Contoh: Doni Firmansyah, S.T." : "Contoh: Rizka Amelia, S.Pd."} value={person.name || ''} onChange={e => update('name', e.target.value)} />
                 </div>
                 <div>
                   <label className="form-label">Nama Panggilan</label>
-                  <input className="form-input" value={person.nickname || ''} onChange={e => update('nickname', e.target.value)} />
+                  <input className="form-input" placeholder={i === 0 ? "Contoh: Doni" : "Contoh: Rizka"} value={person.nickname || ''} onChange={e => update('nickname', e.target.value)} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="form-label">Nama Ayah</label>
-                  <input className="form-input" value={person.father || ''} onChange={e => update('father', e.target.value)} />
+                  <input className="form-input" placeholder={i === 0 ? "Contoh: Bpk. Ahmad Santoso" : "Contoh: Bpk. Hendra Wijaya"} value={person.father || ''} onChange={e => update('father', e.target.value)} />
                 </div>
                 <div>
                   <label className="form-label">Nama Ibu</label>
-                  <input className="form-input" value={person.mother || ''} onChange={e => update('mother', e.target.value)} />
+                  <input className="form-input" placeholder={i === 0 ? "Contoh: Ibu Sri Rahayu" : "Contoh: Ibu Dewi Kusuma"} value={person.mother || ''} onChange={e => update('mother', e.target.value)} />
                 </div>
               </div>
               <div>
                 <label className="form-label">Instagram</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">@</span>
-                  <input className="form-input pl-7" value={person.instagram || ''} onChange={e => update('instagram', e.target.value)} />
+                  <input className="form-input pl-7" placeholder={i === 0 ? "donifirmansyah" : "rizkaamelia"} value={person.instagram || ''} onChange={e => update('instagram', e.target.value)} />
                 </div>
               </div>
             </div>

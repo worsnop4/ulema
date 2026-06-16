@@ -44,11 +44,11 @@ export default function LoveStoryForm() {
               <div className="space-y-2">
                 <div>
                   <label className="form-label">Judul</label>
-                  <input className="form-input" value={item.title} onChange={e => update(item.id, 'title', e.target.value)} />
+                  <input className="form-input" value={item.title} onChange={e => update(item.id, 'title', e.target.value)} placeholder="Contoh: Pertama Bertemu" />
                 </div>
                 <div>
                   <label className="form-label">Deskripsi</label>
-                  <textarea className="form-textarea" rows={2} value={item.desc} onChange={e => update(item.id, 'desc', e.target.value)} />
+                  <textarea className="form-textarea" rows={2} value={item.desc} onChange={e => update(item.id, 'desc', e.target.value)} placeholder="Contoh: Kami pertama kali bertemu di..." />
                 </div>
                 <div>
                   <PhotoUploadBox
