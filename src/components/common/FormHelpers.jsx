@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { Upload, X, Save, Check, ChevronDown, ChevronRight } from 'lucide-react'
+import ImageCropperModal from './ImageCropperModal'
 
 export function ToggleSwitch({ checked, onChange }) {
   return (
@@ -40,6 +41,7 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
   const inputRef = useRef()
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [cropFileUrl, setCropFileUrl] = useState(null)
 
   const handleFile = async (e) => {
     const file = e.target.files[0]
@@ -49,15 +51,23 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
       return
     }
     setError(null)
+    const url = URL.createObjectURL(file)
+    setCropFileUrl(url)
+    e.target.value = '' // reset input
+  }
+
+  const handleCropComplete = async (croppedBase64) => {
+    setCropFileUrl(null)
     setLoading(true)
     try {
-      const compressed = await compressImage(file)
+      const res = await fetch(croppedBase64)
+      const blob = await res.blob()
+      const compressed = await compressImage(blob)
       onChange(compressed)
     } catch (err) {
       setError('Gagal memproses foto: ' + err.message)
     } finally {
       setLoading(false)
-      e.target.value = '' // reset input
     }
   }
 
@@ -90,6 +100,14 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
       </div>
       {error && <p className="text-[11px] text-red-500 mt-1">{error}</p>}
       <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={handleFile} />
+      
+      {cropFileUrl && (
+        <ImageCropperModal 
+          imageSrc={cropFileUrl} 
+          onComplete={handleCropComplete} 
+          onCancel={() => setCropFileUrl(null)} 
+        />
+      )}
     </div>
   )
 }
@@ -98,6 +116,7 @@ export function PremiumPhotoUploadBox({ value, onChange, helperText }) {
   const inputRef = useRef()
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [cropFileUrl, setCropFileUrl] = useState(null)
 
   const handleFile = async (e) => {
     const file = e.target.files[0]
@@ -107,15 +126,23 @@ export function PremiumPhotoUploadBox({ value, onChange, helperText }) {
       return
     }
     setError(null)
+    const url = URL.createObjectURL(file)
+    setCropFileUrl(url)
+    e.target.value = ''
+  }
+
+  const handleCropComplete = async (croppedBase64) => {
+    setCropFileUrl(null)
     setLoading(true)
     try {
-      const compressed = await compressImage(file, 550, 0.5)
+      const res = await fetch(croppedBase64)
+      const blob = await res.blob()
+      const compressed = await compressImage(blob, 550, 0.5)
       onChange(compressed)
     } catch (err) {
       setError('Gagal memproses foto: ' + err.message)
     } finally {
       setLoading(false)
-      e.target.value = ''
     }
   }
 
@@ -168,6 +195,14 @@ export function PremiumPhotoUploadBox({ value, onChange, helperText }) {
       </div>
       {error && <p className="text-xs text-red-500 mt-1 text-center">{error}</p>}
       {helperText && <p className="text-[11px] text-slate-400 mt-2 text-center">{helperText}</p>}
+      
+      {cropFileUrl && (
+        <ImageCropperModal 
+          imageSrc={cropFileUrl} 
+          onComplete={handleCropComplete} 
+          onCancel={() => setCropFileUrl(null)} 
+        />
+      )}
     </div>
   )
 }
