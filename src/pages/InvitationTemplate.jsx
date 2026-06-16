@@ -142,6 +142,18 @@ export default function InvitationTemplate() {
     setAnimateClose(false)
   }, [data.meta?.coverStyle, data.meta?.coverPhoto])
 
+  // Track page views
+  useEffect(() => {
+    // Prevent tracking in admin demo mode or if already viewed in this session
+    const isDemo = window.location.pathname.includes('/demo')
+    const viewKey = 'has_viewed_' + (data.slug || 'temp')
+    
+    if (!isDemo && !sessionStorage.getItem(viewKey)) {
+      updateData(prev => ({ ...prev, views: (prev.views || 0) + 1 }))
+      sessionStorage.setItem(viewKey, 'true')
+    }
+  }, [data.slug])
+
   const wishes = data.rsvps && data.rsvps.length > 0 ? data.rsvps : SAMPLE_WISHES
   const primaryEvent = data.events?.find(ev => ev.date && ev.date.length === 10) || data.events?.[0]
 

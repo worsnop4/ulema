@@ -35,12 +35,14 @@ export default function InvitationEdit() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const totalPengunjung = (data.guests || []).length
+  const totalViews = data.views || 0
+  const totalGuests = (data.guests || []).length
   const totalUcapan = (data.rsvps || []).filter(r => r.wish && r.wish.trim() !== '').length
   const totalRsvp = (data.rsvps || []).length
 
   const stats = [
-    { label: 'Pengunjung', value: totalPengunjung.toString(), icon: Users, color: 'text-brand-600', bg: 'bg-brand-50' },
+    { label: 'Pengunjung', value: totalViews.toString(), icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Daftar Tamu', value: totalGuests.toString(), icon: Users, color: 'text-brand-600', bg: 'bg-brand-50' },
     { label: 'Ucapan', value: totalUcapan.toString(), icon: MessageSquare, color: 'text-violet-600', bg: 'bg-violet-50' },
     { label: 'RSVP', value: totalRsvp.toString(), icon: CalendarCheck, color: 'text-amber-600', bg: 'bg-amber-50' },
   ]
@@ -110,10 +112,10 @@ export default function InvitationEdit() {
         </div>
 
         {/* Stats row */}
-        <div className="border-t border-slate-100 grid grid-cols-3">
+        <div className="border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-100">
           {stats.map((s, i) => (
             <div key={s.label}
-                 className={`p-4 sm:p-5 flex flex-col items-center text-center ${i < 2 ? 'border-r border-slate-100' : ''}`}>
+                 className="p-4 sm:p-5 flex flex-col items-center text-center">
               <div className={`w-8 h-8 ${s.bg} rounded-xl flex items-center justify-center mb-2`}>
                 <s.icon size={15} className={s.color} />
               </div>
