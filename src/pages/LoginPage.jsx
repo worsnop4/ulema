@@ -55,7 +55,7 @@ export default function LoginPage() {
         login(found)
         navigate('/dashboard')
       } else {
-        setError('Email atau password salah. Coba: demo@ulema.id / demo1234 atau admin@ulema.id / admin1234')
+        setError('Email atau password salah. Silakan coba lagi.')
         setLoading(false)
       }
     }
@@ -396,21 +396,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {!isRegister && (
-            <div className="mt-8 p-4 rounded-lg space-y-3" style={{background:'#F8FAFC',border:'1px solid rgba(28,35,46,0.1)'}}>
-              <p className="text-[13px] font-semibold" style={{color:'#1C232E'}}>🔐 Demo Credentials</p>
-              <div className="pt-2" style={{borderTop:'1px solid rgba(28,35,46,0.06)'}}>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">User Akun</p>
-                <p className="text-[12px] text-[#374151] font-mono">Email: <strong>demo@ulema.id</strong></p>
-                <p className="text-[12px] text-[#374151] font-mono">Password: <strong>demo1234</strong></p>
-              </div>
-              <div className="pt-2.5" style={{borderTop:'1px solid rgba(28,35,46,0.06)'}}>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Admin Akun</p>
-                <p className="text-[12px] text-[#374151] font-mono">Email: <strong>admin@ulema.id</strong></p>
-                <p className="text-[12px] text-[#374151] font-mono">Password: <strong>admin1234</strong></p>
-              </div>
-            </div>
-          )}
+          {/* Demo info removed */}
         </div>
 
         {/* Footer outside card */}
