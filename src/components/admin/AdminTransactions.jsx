@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { getTransactions, saveTransactions } from '../../hooks/useSharedInvitation'
+import { getTransactions, saveTransactions, getPricing } from '../../hooks/useSharedInvitation'
 import { storageService } from '../../services/storageService'
 import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare } from 'lucide-react'
 
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState(() => getTransactions())
+  const [pricing, setPricing] = useState(() => getPricing())
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
 
@@ -14,6 +15,7 @@ export default function AdminTransactions() {
 
     const handleUpdate = () => {
       setTransactions(getTransactions())
+      setPricing(getPricing())
       setUsers(storageService.getItem('inviter_registered_users') || [])
     }
     window.addEventListener('local-storage-update', handleUpdate)
@@ -82,9 +84,12 @@ export default function AdminTransactions() {
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const totalRevenue = transactions
-    .filter(t => t.status === 'paid')
-    .reduce((s, t) => s + (t.finalAmount || t.amount), 0)
+  const totalRevenue = users.reduce((sum, user) => {
+    if (user.package && user.package !== 'none') {
+      return sum + (pricing[user.package] || 0)
+    }
+    return sum
+  }, 0)
 
   const pendingPayments = transactions.filter(t => t.status === 'pending')
 
