@@ -88,21 +88,19 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspe
       <div className="bg-black/80 text-white p-6 sm:pb-6 pb-10 backdrop-blur-sm z-10 sm:rounded-b-2xl sm:mx-auto sm:max-w-2xl w-full flex flex-col gap-4">
         
         {/* Aspect Ratio Selector */}
-        <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+        <div className="flex gap-2 overflow-x-auto pb-2 snap-x justify-center">
           {[
             { label: 'Bebas', value: undefined },
-            { label: '1:1', value: 1 },
-            { label: '3:4', value: 3/4 },
-            { label: '4:3', value: 4/3 },
-            { label: '9:16', value: 9/16 },
-            { label: '16:9', value: 16/9 },
+            { label: 'Persegi 1:1', value: 1 },
+            { label: 'Potret', value: 3/4 },
+            { label: 'Lanskap', value: 4/3 },
           ].map(opt => (
             <button
               key={opt.label}
               onClick={() => setCurrentAspect(opt.value)}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-colors snap-start ${currentAspect === opt.value ? 'bg-brand-500 text-white shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
             >
-              Rasio {opt.label}
+              {opt.label}
             </button>
           ))}
         </div>
