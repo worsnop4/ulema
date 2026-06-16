@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getTransactions, saveTransactions, getPricing, getVouchers, getThemes } from '../hooks/useSharedInvitation'
-import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon } from 'lucide-react'
+import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles } from 'lucide-react'
 import { useAuth } from '../App'
+import { storageService } from '../services/storageService'
 
 export default function TransactionPage() {
   const { user } = useAuth()
@@ -132,6 +133,27 @@ export default function TransactionPage() {
     }
   }
 
+  // Handle instant theme change for active packages
+  const handleInstantThemeChange = (themeName, themeId) => {
+    if (!user) return
+    const updatedUser = { ...user, selectedThemeName: themeName, themeId: themeId }
+    storageService.setItem('inviter_user', updatedUser)
+    window.dispatchEvent(new Event('local-storage-update'))
+    
+    // Also update registered users list if needed
+    const usersList = storageService.getItem('inviter_registered_users') || []
+    const updatedUsersList = usersList.map(u => u.email === user.email ? updatedUser : u)
+    storageService.setItem('inviter_registered_users', updatedUsersList)
+    
+    setPaymentSuccess(`Desain tema berhasil diubah ke ${themeName}!`)
+    setTimeout(() => setPaymentSuccess(''), 4000)
+  }
+
+  // Filter themes for the Dashboard Main View (Ganti Tema section)
+  const dashboardThemes = user?.package === 'Luxury' 
+    ? themes // Luxury gets all themes
+    : themes.filter(t => t.category === user?.package) // Others get themes from their package
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
       {/* Header */}
@@ -185,12 +207,23 @@ export default function TransactionPage() {
               </div>
             </div>
             
-            <button 
-              onClick={() => setShowPaymentForm(true)}
-              className="btn-primary w-full justify-center py-3 text-sm rounded-xl"
-            >
-              <CreditCard size={15} /> {user?.package === 'none' ? 'Bayar Tagihan Sekarang' : 'Upgrade Kategori Lain'}
-            </button>
+            {user?.package !== 'Luxury' ? (
+              <button 
+                onClick={() => setShowPaymentForm(true)}
+                className="btn-primary w-full justify-center py-3 text-sm rounded-xl"
+              >
+                <CreditCard size={15} /> {user?.package === 'none' ? 'Bayar Tagihan Sekarang' : 'Upgrade Kategori Lain'}
+              </button>
+            ) : (
+              <div className="bg-gradient-to-r from-amber-200 to-yellow-400 p-[2px] rounded-xl">
+                <div className="bg-white rounded-[10px] p-3 text-center">
+                  <p className="text-amber-700 font-bold text-sm flex items-center justify-center gap-1.5">
+                    <Sparkles size={16} /> Paket Tertinggi Terbuka
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Anda bisa menggunakan seluruh desain tema.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Transaction History (Main View) */}
@@ -233,6 +266,57 @@ export default function TransactionPage() {
               )}
             </div>
           </div>
+          
+          {/* Instant Theme Change Section (Only for active users) */}
+          {user?.package !== 'none' && (
+            <div className="md:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 className="font-semibold text-slate-800 text-base">Ganti Desain Tema</h2>
+                {user?.package === 'Luxury' && (
+                  <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                    <Sparkles size={10} /> Akses Semua Tema
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
+                {dashboardThemes.map(theme => {
+                  const isCurrent = user?.selectedThemeName === theme.name || user?.themeId === theme.id
+                  return (
+                    <div key={theme.id} className="relative flex-shrink-0 w-36 flex flex-col snap-start group">
+                      <div className={`h-48 rounded-2xl overflow-hidden border-2 transition-all mb-2 ${isCurrent ? 'border-brand-500 shadow-md ring-2 ring-brand-100 ring-offset-2' : 'border-slate-100 hover:border-slate-300'}`}>
+                        {theme.thumbnail ? (
+                          <img src={theme.thumbnail} alt={theme.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-4xl">
+                            {theme.emoji}
+                          </div>
+                        )}
+                        {/* Category Badge for Luxury Users to know where it's from */}
+                        {user?.package === 'Luxury' && (
+                          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                            {theme.category}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-bold text-slate-800 truncate px-1">{theme.name}</p>
+                      <button
+                        onClick={() => handleInstantThemeChange(theme.name, theme.id)}
+                        disabled={isCurrent}
+                        className={`mt-2 py-1.5 px-3 rounded-lg text-[10px] font-bold transition-colors ${
+                          isCurrent 
+                            ? 'bg-brand-50 text-brand-600 border border-brand-200' 
+                            : 'bg-slate-800 text-white hover:bg-slate-700'
+                        }`}
+                      >
+                        {isCurrent ? 'Sedang Dipakai' : 'Ganti ke Tema Ini'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -257,22 +341,29 @@ export default function TransactionPage() {
                   {Object.keys(pricing).map(plan => {
                     const price = pricing[plan]
                     const isActive = selectedPlan === plan
+                    const isAlreadyOwned = user?.package === plan
+                    
                     return (
                       <button
                         key={plan}
                         type="button"
+                        disabled={isAlreadyOwned}
                         onClick={() => {
                           setSelectedPlan(plan)
                           setAppliedVoucher(null)
                           setVoucherCode('')
                         }}
                         className={`text-left p-3 rounded-xl border-2 transition-all flex flex-col justify-between ${
-                          isActive ? 'border-brand-500 bg-brand-50/10' : 'border-slate-100 hover:border-slate-200'
+                          isAlreadyOwned 
+                            ? 'border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed' 
+                            : isActive 
+                              ? 'border-brand-500 bg-brand-50/10' 
+                              : 'border-slate-100 hover:border-slate-200'
                         }`}
                       >
                         <span className="font-bold text-[10px] text-slate-400 uppercase truncate">{plan}</span>
                         <span className="font-serif text-xs font-bold text-slate-800 mt-2">
-                          Rp {(price / 1000).toFixed(0)}k
+                          {isAlreadyOwned ? <span className="text-slate-500 italic font-sans text-[10px]">Sedang Aktif</span> : `Rp ${(price / 1000).toFixed(0)}k`}
                         </span>
                       </button>
                     )
