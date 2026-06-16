@@ -26,6 +26,12 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+function AdminRoute({ children }) {
+  const { user } = useAuth()
+  if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />
+  return children
+}
+
 export default function App() {
   const [user, setUser] = useState(() => storageService.getItem('inviter_user'))
 
@@ -75,8 +81,12 @@ export default function App() {
             } />
             <Route path="invitation/edit" element={<InvitationEdit />} />
             <Route path="guests" element={<GuestsPage />} />
-            <Route path="admin" element={<AdminDashboardPage />} />
-            <Route path="illustrations" element={<IllustrationsPage />} />
+            <Route path="admin" element={
+              <AdminRoute><AdminDashboardPage /></AdminRoute>
+            } />
+            <Route path="illustrations" element={
+              <AdminRoute><IllustrationsPage /></AdminRoute>
+            } />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="security" element={<SecurityPage />} />
             <Route path="transactions" element={<TransactionPage />} />
