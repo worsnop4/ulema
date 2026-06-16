@@ -8,9 +8,10 @@ export default function AdminFinance() {
   const [message, setMessage] = useState('')
 
   // Pricing Form States
-  const [priceBasic, setPriceBasic] = useState(pricing.Basic || 99000)
-  const [pricePremium, setPricePremium] = useState(pricing.Premium || 149000)
-  const [priceLuxury, setPriceLuxury] = useState(pricing.Luxury || 249000)
+  const [priceSpecial, setPriceSpecial] = useState(pricing.Special || 99000)
+  const [priceAdat, setPriceAdat] = useState(pricing.Adat || 110000)
+  const [priceMotion, setPriceMotion] = useState(pricing.Motion || 140000)
+  const [priceLuxury, setPriceLuxury] = useState(pricing.Luxury || 175000)
 
   // Voucher Form States
   const [voucherCode, setVoucherCode] = useState('')
@@ -30,8 +31,9 @@ export default function AdminFinance() {
   const handleSavePricing = (e) => {
     e.preventDefault()
     const newPricing = {
-      Basic: Number(priceBasic),
-      Premium: Number(pricePremium),
+      Special: Number(priceSpecial),
+      Adat: Number(priceAdat),
+      Motion: Number(priceMotion),
       Luxury: Number(priceLuxury)
     }
     savePricing(newPricing)
@@ -87,12 +89,16 @@ export default function AdminFinance() {
           </div>
           <form onSubmit={handleSavePricing} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Basic (Rupiah)</label>
-              <input type="number" className="form-input text-sm font-mono" value={priceBasic} onChange={e => setPriceBasic(e.target.value)} required />
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Special (Rupiah)</label>
+              <input type="number" className="form-input text-sm font-mono" value={priceSpecial} onChange={e => setPriceSpecial(e.target.value)} required />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Premium (Rupiah)</label>
-              <input type="number" className="form-input text-sm font-mono" value={pricePremium} onChange={e => setPricePremium(e.target.value)} required />
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Adat (Rupiah)</label>
+              <input type="number" className="form-input text-sm font-mono" value={priceAdat} onChange={e => setPriceAdat(e.target.value)} required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Motion (Rupiah)</label>
+              <input type="number" className="form-input text-sm font-mono" value={priceMotion} onChange={e => setPriceMotion(e.target.value)} required />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Luxury (Rupiah)</label>

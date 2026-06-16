@@ -3,19 +3,18 @@ import { getTransactions, saveTransactions } from '../../hooks/useSharedInvitati
 import { storageService } from '../../services/storageService'
 import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare } from 'lucide-react'
 
-const DUMMY_USERS = [
-  { id: 1, name: 'Adi & Dinda', email: 'adi.dinda@gmail.com', package: 'Luxury', status: 'Aktif', date: '2026-05-28' },
-  { id: 2, name: 'Rian & Susi', email: 'rian.susi@yahoo.com', package: 'Premium', status: 'Aktif', date: '2026-05-27' },
-  { id: 3, name: 'Bimo & Clara', email: 'bimo.clara@outlook.com', package: 'Basic', status: 'Non-aktif', date: '2026-05-25' },
-]
-
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState(() => getTransactions())
+  const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    const storedUsers = storageService.getItem('inviter_registered_users') || []
+    setUsers(storedUsers)
+
     const handleUpdate = () => {
       setTransactions(getTransactions())
+      setUsers(storageService.getItem('inviter_registered_users') || [])
     }
     window.addEventListener('local-storage-update', handleUpdate)
     return () => window.removeEventListener('local-storage-update', handleUpdate)
@@ -89,6 +88,36 @@ export default function AdminTransactions() {
 
   const pendingPayments = transactions.filter(t => t.status === 'pending')
 
+  // Compute analytics
+  const totalUsers = users.length
+
+  // Find most popular theme logic
+  let topTheme = 'Belum Ada'
+  let topThemePercentage = 0
+  if (users.length > 0) {
+    const packageCounts = users.reduce((acc, user) => {
+      acc[user.package] = (acc[user.package] || 0) + 1
+      return acc
+    }, {})
+    
+    // Find highest count package
+    let maxPkg = 'none'
+    let maxCount = 0
+    Object.keys(packageCounts).forEach(pkg => {
+      if (pkg !== 'none' && packageCounts[pkg] > maxCount) {
+        maxCount = packageCounts[pkg]
+        maxPkg = pkg
+      }
+    })
+    
+    if (maxCount > 0) {
+      topTheme = maxPkg
+      topThemePercentage = Math.round((maxCount / users.length) * 100)
+    }
+  }
+
+  const recentUsers = [...users].reverse().slice(0, 5)
+
   return (
     <div className="space-y-8 animate-fade-in">
       {message && (
@@ -105,7 +134,7 @@ export default function AdminTransactions() {
           </div>
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Pengguna</p>
-            <p className="text-2xl font-bold text-slate-800 font-serif mt-0.5">1,240</p>
+            <p className="text-2xl font-bold text-slate-800 font-serif mt-0.5">{totalUsers}</p>
           </div>
         </div>
 
@@ -127,8 +156,8 @@ export default function AdminTransactions() {
           </div>
           <div>
             <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Tema Terlaris</p>
-            <p className="text-sm font-bold text-slate-800 truncate mt-0.5">🌿 Classic Elegance</p>
-            <span className="text-[10px] text-slate-400 font-medium">(42% pengguna)</span>
+            <p className="text-sm font-bold text-slate-800 truncate mt-0.5">{topTheme === 'Belum Ada' ? 'Belum Ada' : `🌿 Paket ${topTheme}`}</p>
+            <span className="text-[10px] text-slate-400 font-medium">({topThemePercentage}% pengguna)</span>
           </div>
         </div>
 
@@ -194,19 +223,23 @@ export default function AdminTransactions() {
         <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
           <h2 className="font-semibold text-slate-800 text-sm mb-4 border-b pb-2">Registrasi Pengguna Baru</h2>
           <div className="space-y-3">
-            {DUMMY_USERS.map(u => (
-              <div key={u.id} className="border border-slate-100 rounded-xl p-3 flex flex-col gap-1.5 bg-slate-50/50">
+            {recentUsers.map((u, i) => (
+              <div key={i} className="border border-slate-100 rounded-xl p-3 flex flex-col gap-1.5 bg-slate-50/50">
                 <div className="flex justify-between items-center">
                   <p className="font-bold text-slate-800 text-xs">{u.name}</p>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 bg-green-50 text-green-700 rounded-full">{u.status}</span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${u.package !== 'none' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {u.package !== 'none' ? 'Aktif' : 'Non-aktif'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-[10px] text-slate-400">
                   <span>{u.email}</span>
-                  <span className="font-bold text-slate-700">{u.package}</span>
+                  <span className="font-bold text-slate-700">{u.package === 'none' ? 'Belum Bayar' : u.package}</span>
                 </div>
-                <p className="text-[9px] text-slate-400">Terdaftar: {u.date}</p>
               </div>
             ))}
+            {recentUsers.length === 0 && (
+              <div className="text-center py-4 text-slate-400 text-xs">Belum ada pengguna.</div>
+            )}
           </div>
         </div>
       </div>

@@ -29,9 +29,11 @@ export default function LandingCatalog() {
   ]
 
   const getPriceByCategory = (cat) => {
-    let p = pricing.Basic || 99000
-    if (cat === 'Luxury') p = pricing.Luxury || 249000
-    if (cat === 'Motion' || cat === 'Adat') p = pricing.Premium || 149000
+    let p = pricing[cat] || 99000
+    if (cat === 'Special' && !pricing.Special) p = 99000
+    if (cat === 'Adat' && !pricing.Adat) p = 110000
+    if (cat === 'Motion' && !pricing.Motion) p = 140000
+    if (cat === 'Luxury' && !pricing.Luxury) p = 175000
     return {
       promo: `Rp ${(p / 1000).toLocaleString('id-ID')}k`,
       original: `Rp ${((p * 2) / 1000).toLocaleString('id-ID')}k`
