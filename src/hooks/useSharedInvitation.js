@@ -93,17 +93,7 @@ export function getCountdownTarget(data) {
 }
 
 const getStorageKey = () => {
-  const adminDemo = storageService.getItem('inviter_admin_demo_mode')
-  if (adminDemo) {
-    return `inviter_demo_data_${adminDemo}`
-  }
-
-  const userStored = storageService.getItem('inviter_user')
-  if (userStored && userStored.email && userStored.role !== 'admin') {
-    return `inviter_template_data_${userStored.email}`
-  }
-
-  // Check if we are viewing a specific slug from URL path
+  // 1. Check if we are viewing a specific slug from URL path (Highest Priority for /invite)
   const pathParts = window.location.pathname.split('/')
   const inviteIdx = pathParts.indexOf('invite')
   if (inviteIdx !== -1 && pathParts[inviteIdx + 1]) {
@@ -122,6 +112,18 @@ const getStorageKey = () => {
         return `inviter_template_data_${matchedUser.email}`
       }
     }
+  }
+
+  // 2. Admin Demo Mode (Dashboard)
+  const adminDemo = storageService.getItem('inviter_admin_demo_mode')
+  if (adminDemo) {
+    return `inviter_demo_data_${adminDemo}`
+  }
+
+  // 3. Logged-in User (Dashboard)
+  const userStored = storageService.getItem('inviter_user')
+  if (userStored && userStored.email && userStored.role !== 'admin') {
+    return `inviter_template_data_${userStored.email}`
   }
 
   return 'inviter_template_data'
