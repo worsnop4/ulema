@@ -63,7 +63,6 @@ export default function GantiTemaForm() {
                   <span className="text-sm">{theme.emoji}</span>
                   <p className="font-semibold text-slate-800 text-xs flex items-center gap-1">
                     {theme.name}
-                    {!allowed && <span className="text-[10px]">🔒</span>}
                   </p>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-relaxed mb-2">{theme.desc}</p>
