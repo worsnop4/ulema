@@ -458,39 +458,38 @@ export const THEME_CONFIGS = {
       nameClass: 'font-playball text-[30px] mb-4 text-special-sage',
     },
     events: {
-      cardClass: 'bg-white/60 backdrop-blur-md p-8 border border-special-sage/40 rounded-3xl shadow-[0_0_20px_rgba(107,112,92,0.15)]',
+      cardClass: 'bg-white/60 backdrop-blur-sm p-8 border border-special-sage/15 rounded-3xl shadow-sm',
       tabClass: 'text-[10px] font-bold tracking-[0.25em] uppercase pb-2',
       titleClass: 'font-playball text-[30px] mb-2 text-special-sage',
       calendarStyle: true,
     },
     story: {
-      cardClass: 'bg-white/60 backdrop-blur-md p-5 border border-special-sage/40 shadow-[0_0_20px_rgba(107,112,92,0.15)] rounded-3xl',
+      cardClass: 'bg-white/60 p-5 border border-special-sage/15 shadow-sm rounded-3xl',
       dotClass: 'border-2 border-special-sage bg-white rounded-full',
       lineClass: 'bg-special-sage/20'
     },
     gallery: {
-      itemClass: 'rounded-3xl overflow-hidden border border-special-sage/40 shadow-[0_0_20px_rgba(107,112,92,0.15)] hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(107,112,92,0.3)] transition-all duration-[2000ms] ease-out'
+      itemClass: 'rounded-3xl overflow-hidden border border-special-sage/15 shadow-sm hover:scale-[1.03] transition-transform duration-500'
     },
     rsvp: {
-      formClass: 'bg-white/60 backdrop-blur-md p-6 border border-special-sage/40 shadow-[0_0_20px_rgba(107,112,92,0.15)] rounded-3xl',
-      inputClass: 'w-full rounded-xl px-4 py-3 text-xs border border-special-sage/30 bg-white/80 focus:border-special-sage',
-      buttonClass: 'rounded-xl tracking-widest uppercase font-bold transition-all text-white bg-special-sage hover:bg-special-darkSage hover:shadow-lg',
-      cardClass: 'p-4 bg-white/60 backdrop-blur-md border border-special-sage/30 rounded-2xl',
-      avatarClass: 'rounded-full border border-special-sage/30 bg-white'
+      formClass: 'bg-white/60 p-6 border border-special-sage/15 shadow-sm rounded-3xl',
+      inputClass: 'w-full rounded-xl px-4 py-3 text-xs border border-special-sage/20 bg-white focus:border-special-sage',
+      buttonClass: 'rounded-xl tracking-widest uppercase font-bold transition-all text-white bg-special-sage hover:bg-special-darkSage',
+      cardClass: 'p-4 bg-white/60 border border-special-sage/15 rounded-2xl',
+      avatarClass: 'rounded-full border border-special-sage/15 bg-white'
     },
     gift: {
-      cardClass: 'bg-white/60 backdrop-blur-md p-5 border border-special-sage/40 shadow-[0_0_20px_rgba(107,112,92,0.15)] rounded-3xl',
-      iconClass: 'rounded-full bg-white border border-special-sage/30 text-special-sage',
-      buttonClass: 'rounded-xl uppercase font-bold tracking-wider text-[10px] border border-special-sage text-special-sage hover:bg-special-sage hover:text-white hover:shadow-lg'
+      cardClass: 'bg-white/60 p-5 border border-special-sage/15 shadow-sm rounded-3xl',
+      iconClass: 'rounded-full bg-white border border-special-sage/15 text-special-sage',
+      buttonClass: 'rounded-xl uppercase font-bold tracking-wider text-[10px] border border-special-sage text-special-sage hover:bg-special-sage hover:text-white'
     },
     ornaments: {
       bg: '/themes/Special/theme-9/bg.png',
       frame: '/themes/Special/theme-9/frame.png',
       frameSize: 'w-96 h-96',
-      photoSize: 'w-[169px] h-[169px]',
+      photoSize: 'w-[169px] h-[165px]',
       photoOffset: 'translate(8px, -6px)',
       fallingLeaves: false,
-      leafClass: 'animate-ornament-float',
       leaves: {
         topRight: '/themes/Special/theme-9/top-right.png',
         bottomRight: '/themes/Special/theme-9/buttom-right.png',
