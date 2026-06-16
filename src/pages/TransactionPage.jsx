@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getTransactions, saveTransactions, getPricing, getVouchers, getThemes } from '../hooks/useSharedInvitation'
-import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles } from 'lucide-react'
+import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles, MessageCircle } from 'lucide-react'
 import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
 
@@ -512,6 +512,17 @@ export default function TransactionPage() {
                   </>
                 )}
               </button>
+
+              {hasPendingTransaction && (
+                <a 
+                  href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm bg-green-500 text-white hover:bg-green-600 hover:shadow-md mt-3"
+                >
+                  <MessageCircle size={16} /> Konfirmasi via WhatsApp
+                </a>
+              )}
             </form>
           </div>
         </div>
