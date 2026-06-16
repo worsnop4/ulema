@@ -41,6 +41,7 @@ async function getCroppedImg(imageSrc, pixelCrop) {
 
 export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspect = undefined }) {
   const [currentAspect, setCurrentAspect] = useState(aspect)
+  const [originalAspect, setOriginalAspect] = useState(1)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
@@ -77,10 +78,11 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspe
           image={imageSrc}
           crop={crop}
           zoom={zoom}
-          aspect={currentAspect}
+          aspect={currentAspect === undefined ? originalAspect : currentAspect}
           onCropChange={setCrop}
           onCropComplete={onCropComplete}
           onZoomChange={setZoom}
+          onMediaLoaded={(mediaSize) => setOriginalAspect(mediaSize.width / mediaSize.height)}
           showGrid={true}
         />
       </div>
@@ -90,7 +92,7 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspe
         {/* Aspect Ratio Selector */}
         <div className="flex gap-2 overflow-x-auto pb-2 snap-x justify-center">
           {[
-            { label: 'Bebas', value: undefined },
+            { label: 'Asli', value: undefined },
             { label: 'Persegi 1:1', value: 1 },
             { label: 'Potret', value: 3/4 },
             { label: 'Lanskap', value: 4/3 },
