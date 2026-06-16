@@ -12,6 +12,14 @@ export default function TransactionPage() {
   const [vouchers, setVouchers] = useState(() => getVouchers())
   const [themes] = useState(() => getThemes())
 
+  const myTransactionsInitial = transactions.filter(t => t.userEmail === (user?.email || 'demo@ulema.id'))
+  const hasPendingInitial = myTransactionsInitial.some(t => t.status === 'pending')
+
+  const [showPaymentForm, setShowPaymentForm] = useState(() => {
+    // Show form by default if user has NO package AND no pending transactions
+    return (user?.package === 'none') && !hasPendingInitial
+  })
+
   // Form states
   const [selectedPlan, setSelectedPlan] = useState(() => {
     return user?.selectedCategory || 'Special'
@@ -98,7 +106,10 @@ export default function TransactionPage() {
     setVoucherCode('')
     setAppliedVoucher(null)
     setPaymentSuccess('🎉 Konfirmasi transfer berhasil dikirim! Silakan tunggu verifikasi admin.')
-    setTimeout(() => setPaymentSuccess(''), 6000)
+    setTimeout(() => {
+      setPaymentSuccess('')
+      setShowPaymentForm(false)
+    }, 3000)
   }
 
   // Filter transactions for this user only
@@ -152,14 +163,91 @@ export default function TransactionPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {!showPaymentForm ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Active Package Info */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <h2 className="font-semibold text-slate-800 text-base mb-4 border-b pb-2">Informasi Paket Anda</h2>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Status Langganan</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold tracking-wide uppercase ${user?.package !== 'none' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {user?.package !== 'none' ? 'Aktif' : 'Belum Bayar'}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Kategori Saat Ini</p>
+                  <p className="text-xl font-serif font-bold text-slate-800">{user?.package !== 'none' ? user?.package : (user?.selectedCategory || '-')}</p>
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setShowPaymentForm(true)}
+              className="btn-primary w-full justify-center py-3 text-sm rounded-xl"
+            >
+              <CreditCard size={15} /> {user?.package === 'none' ? 'Bayar Tagihan Sekarang' : 'Upgrade Kategori Lain'}
+            </button>
+          </div>
+
+          {/* Transaction History (Main View) */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+            <h2 className="font-semibold text-slate-800 text-base mb-4 border-b pb-2">Riwayat Pembayaran</h2>
+            <div className="space-y-3">
+              {myTransactions.map(tx => (
+                <div key={tx.id} className="border border-slate-100 rounded-xl p-4 space-y-2 bg-slate-50/30">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-slate-800 text-xs">{tx.desc}</p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">{tx.id} • {tx.date}</p>
+                    </div>
+                    {tx.status === 'paid' ? (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5">
+                        <CheckCircle2 size={9} /> Lunas
+                      </span>
+                    ) : tx.status === 'pending' ? (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-full flex items-center gap-0.5">
+                        <Clock size={9} /> Pending
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-red-50 text-red-650 rounded-full flex items-center gap-0.5">
+                        Ditolak
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-100/50">
+                    <span className="text-[10px] text-slate-400">Total Nominal</span>
+                    <span className="font-bold text-sm text-slate-850 font-mono">
+                      Rp {tx.finalAmount ? tx.finalAmount.toLocaleString('id-ID') : tx.amount.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {myTransactions.length === 0 && (
+                <div className="text-center py-10 text-slate-400 text-sm">
+                  📭 Belum ada riwayat transaksi.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Columns: Checkout/Upgrade */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
-            <h2 className="font-semibold text-slate-800 text-base mb-4 border-b pb-2">
-              {user?.package === 'none' ? 'Selesaikan Pembayaran Kategori' : 'Upgrade Kategori Undangan'}
-            </h2>
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h2 className="font-semibold text-slate-800 text-base">
+                {user?.package === 'none' ? 'Selesaikan Pembayaran Kategori' : 'Upgrade Kategori Undangan'}
+              </h2>
+              <button onClick={() => setShowPaymentForm(false)} className="text-xs font-semibold text-slate-400 hover:text-slate-600 px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                Batal
+              </button>
+            </div>
             
             <form onSubmit={handlePay} className="space-y-5">
               {/* Plan selection */}
@@ -380,7 +468,8 @@ export default function TransactionPage() {
           </div>
         </div>
 
-      </div>
+        </div>
+      )}
     </div>
   )
 }
