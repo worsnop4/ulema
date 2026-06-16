@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Upload, X, Save, Check, ChevronDown, ChevronRight } from 'lucide-react'
+import { Upload, X, Save, Check, ChevronDown, ChevronRight, Crop } from 'lucide-react'
 import ImageCropperModal from './ImageCropperModal'
 
 export function ToggleSwitch({ checked, onChange }) {
@@ -86,8 +86,19 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
         ) : value ? (
           <div className="relative w-full">
             <img src={value} alt="preview" className="w-full h-32 object-cover rounded-xl" />
-            <div className="absolute inset-0 rounded-xl bg-black/0 hover:bg-black/20 transition-all flex items-center justify-center">
-              <span className="text-white opacity-0 hover:opacity-100 text-xs font-bold bg-black/50 px-2 py-1 rounded-lg">Ganti Foto</span>
+            <div className="absolute inset-0 rounded-xl bg-black/0 hover:bg-black/50 transition-all flex items-center justify-center gap-2 opacity-0 hover:opacity-100">
+              <button 
+                onClick={(e) => { e.stopPropagation(); inputRef.current.click(); }}
+                className="text-white text-[10px] font-bold bg-slate-800/80 hover:bg-brand-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+              >
+                <Upload size={12} /> Ganti
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setCropFileUrl(value); }}
+                className="text-white text-[10px] font-bold bg-slate-800/80 hover:bg-brand-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+              >
+                <Crop size={12} /> Edit
+              </button>
             </div>
           </div>
         ) : (
@@ -156,26 +167,32 @@ export function PremiumPhotoUploadBox({ value, onChange, helperText }) {
           </div>
         ) : value ? (
           <div className="flex flex-col items-center gap-3">
-            <div className="relative w-32 h-24 rounded-xl overflow-hidden shadow-md border border-slate-100">
+            <div className="relative w-32 h-24 rounded-xl overflow-hidden shadow-md border border-slate-100 group">
               <img src={value} alt="preview" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onChange(null)
-                }}
-                className="absolute top-1 right-1 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center transition-all shadow"
-                title="Hapus Foto"
-              >
-                <X size={12} />
-              </button>
+              
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setCropFileUrl(value); }}
+                  className="text-white text-[9px] font-bold bg-brand-600 hover:bg-brand-500 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <Crop size={10} /> Re-crop
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onChange(null); }}
+                  className="text-white text-[9px] font-bold bg-red-600 hover:bg-red-500 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <X size={10} /> Hapus
+                </button>
+              </div>
             </div>
             <button
               type="button"
               onClick={() => inputRef.current.click()}
               className="bg-[#009688] hover:bg-[#00897b] text-white font-semibold px-5 py-2 rounded-xl text-xs transition-all shadow-sm active:scale-95"
             >
-              Pilih File
+              Ganti File
             </button>
             <p className="text-[10px] text-slate-400">Maximum file size: 10 MB</p>
           </div>
