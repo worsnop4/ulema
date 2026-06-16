@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { getTransactions, saveTransactions, getPricing } from '../../hooks/useSharedInvitation'
 import { storageService } from '../../services/storageService'
-import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare } from 'lucide-react'
+import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare, Image as ImageIcon, X } from 'lucide-react'
 
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState(() => getTransactions())
   const [pricing, setPricing] = useState(() => getPricing())
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
+  const [viewProofImage, setViewProofImage] = useState(null)
 
   useEffect(() => {
     const storedUsers = storageService.getItem('inviter_registered_users') || []
@@ -190,7 +191,7 @@ export default function AdminTransactions() {
               <div key={tx.id} className="border border-slate-150 rounded-xl p-4 space-y-3 bg-slate-50/50 flex flex-col justify-between md:flex-row md:items-center md:gap-4 md:space-y-0">
                 <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-slate-800 text-sm">{tx.desc}</span>
+                    <span className="font-bold text-slate-800 text-sm">{tx.desc} {tx.themeName ? `(${tx.themeName})` : ''}</span>
                     <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">Pending</span>
                   </div>
                   <p className="text-xs text-slate-500">User: <strong>{tx.userEmail}</strong></p>
@@ -205,7 +206,12 @@ export default function AdminTransactions() {
                     <span className="text-[10px] text-slate-400 block">Total Transfer</span>
                     <span className="font-bold font-mono text-sm text-slate-900">Rp {tx.finalAmount.toLocaleString('id-ID')}</span>
                   </div>
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-1.5 flex-wrap justify-end">
+                    {tx.paymentProof && tx.paymentProof.startsWith('data:image') && (
+                      <button onClick={() => setViewProofImage(tx.paymentProof)} className="flex items-center gap-1 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold px-3 py-1.5 rounded-xl text-xs transition-colors">
+                        <ImageIcon size={13} /> Cek Bukti
+                      </button>
+                    )}
                     <button onClick={() => handleRejectPayment(tx.id)} className="flex items-center gap-1 bg-red-50 text-red-700 hover:bg-red-100 font-bold px-3 py-1.5 rounded-xl text-xs transition-colors">
                       <XSquare size={13} /> Tolak
                     </button>
@@ -248,6 +254,30 @@ export default function AdminTransactions() {
           </div>
         </div>
       </div>
+
+      {/* Modal View Payment Proof */}
+      {viewProofImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100">
+              <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                <ImageIcon size={20} className="text-brand-600" /> Bukti Transfer
+              </h3>
+              <button onClick={() => setViewProofImage(null)} className="text-slate-400 hover:text-slate-600 p-1 bg-slate-100 rounded-full">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 bg-slate-50 flex justify-center items-center max-h-[70vh] overflow-auto">
+              <img src={viewProofImage} alt="Bukti Transfer" className="max-w-full rounded-lg shadow-sm" />
+            </div>
+            <div className="p-4 border-t border-slate-100 flex justify-end">
+              <button onClick={() => setViewProofImage(null)} className="btn-secondary px-6 py-2 text-sm">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

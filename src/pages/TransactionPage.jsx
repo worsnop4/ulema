@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getTransactions, saveTransactions, getPricing, getVouchers } from '../hooks/useSharedInvitation'
-import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck } from 'lucide-react'
+import { getTransactions, saveTransactions, getPricing, getVouchers, getThemes } from '../hooks/useSharedInvitation'
+import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon } from 'lucide-react'
 import { useAuth } from '../App'
 
 export default function TransactionPage() {
@@ -10,15 +10,22 @@ export default function TransactionPage() {
   const [transactions, setTransactions] = useState(() => getTransactions())
   const [pricing, setPricing] = useState(() => getPricing())
   const [vouchers, setVouchers] = useState(() => getVouchers())
+  const [themes] = useState(() => getThemes())
 
   // Form states
   const [selectedPlan, setSelectedPlan] = useState(() => {
     return user?.selectedCategory || 'Special'
   })
+  
+  // Initialize theme name based on user data or fallback to first theme of selected plan
+  const initialThemeName = user?.selectedThemeName || themes.find(t => t.category === (user?.selectedCategory || 'Special'))?.name || ''
+  const [selectedThemeName, setSelectedThemeName] = useState(initialThemeName)
+
   const [voucherCode, setVoucherCode] = useState('')
   const [appliedVoucher, setAppliedVoucher] = useState(null)
   const [voucherError, setVoucherError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
+  const [paymentProofFile, setPaymentProofFile] = useState(null) // Base64 string
   
   // Sync changes
   useEffect(() => {
@@ -73,13 +80,14 @@ export default function TransactionPage() {
       id: `INV-${Date.now().toString().slice(-6)}`,
       date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
       desc: `Kategori ${selectedPlan}`,
+      themeName: selectedThemeName,
       amount: basePrice,
       discount: discountAmount,
       finalAmount: finalPrice,
       status: 'pending',
       userEmail: user?.email || 'demo@ulema.id',
       voucherCode: appliedVoucher ? appliedVoucher.code : '',
-      paymentProof: 'transfer_receipt.png'
+      paymentProof: paymentProofFile || ''
     }
 
     const updated = [newTx, ...transactions]
@@ -95,6 +103,23 @@ export default function TransactionPage() {
 
   // Filter transactions for this user only
   const myTransactions = transactions.filter(t => t.userEmail === (user?.email || 'demo@ulema.id'))
+  
+  // Check if there is already a pending transaction for the currently selected plan
+  const hasPendingTransaction = myTransactions.some(t => t.status === 'pending' && t.desc === `Kategori ${selectedPlan}`)
+
+  // Available themes for the selected plan
+  const availableThemes = themes.filter(t => t.category === selectedPlan)
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPaymentProofFile(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
@@ -167,6 +192,44 @@ export default function TransactionPage() {
                 </div>
               </div>
 
+              {/* Theme Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Desain Tema</label>
+                <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
+                  {availableThemes.map(theme => (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => setSelectedThemeName(theme.name)}
+                      className={`relative flex-shrink-0 w-28 h-40 rounded-xl overflow-hidden border-2 transition-all snap-start ${
+                        selectedThemeName === theme.name ? 'border-brand-500 shadow-md ring-2 ring-brand-100 ring-offset-1' : 'border-slate-100 hover:border-slate-300 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      {theme.thumbnail ? (
+                        <img src={theme.thumbnail} alt={theme.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-slate-100 flex items-center justify-center text-3xl">
+                          {theme.emoji}
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
+                        <p className="text-white text-[10px] font-bold truncate">{theme.name}</p>
+                      </div>
+                      {selectedThemeName === theme.name && (
+                        <div className="absolute top-2 right-2 bg-brand-500 text-white rounded-full p-0.5">
+                          <CheckCircle2 size={12} />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                  {availableThemes.length === 0 && (
+                    <div className="text-xs text-slate-400 p-4 border rounded-xl w-full text-center bg-slate-50">
+                      Belum ada tema di kategori ini.
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Voucher code */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kode Voucher</label>
@@ -224,8 +287,51 @@ export default function TransactionPage() {
                 <p>Silakan transfer nominal pas ke nomor rekening di atas, kemudian klik konfirmasi di bawah.</p>
               </div>
 
-              <button type="submit" className="btn-primary w-full justify-center py-3 text-sm rounded-xl">
-                <CreditCard size={15} /> Konfirmasi & Kirim Bukti Transfer
+              {/* File Upload for Payment Proof */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Unggah Bukti Transfer</label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    required
+                  />
+                  <div className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl transition-colors ${paymentProofFile ? 'border-brand-500 bg-brand-50' : 'border-slate-300 hover:border-brand-300 hover:bg-slate-50'}`}>
+                    {paymentProofFile ? (
+                      <>
+                        <ImageIcon size={18} className="text-brand-600" />
+                        <span className="text-sm font-semibold text-brand-700 truncate">Foto Bukti Terunggah</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={18} className="text-slate-400" />
+                        <span className="text-sm font-medium text-slate-500">Klik untuk memilih foto struk...</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={hasPendingTransaction}
+                className={`w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm ${
+                  hasPendingTransaction 
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                    : 'bg-brand-600 text-white hover:bg-brand-700 hover:shadow-md'
+                }`}
+              >
+                {hasPendingTransaction ? (
+                  <>
+                    <Clock size={16} /> Menunggu Konfirmasi Admin
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={16} /> Konfirmasi & Kirim Bukti Transfer
+                  </>
+                )}
               </button>
             </form>
           </div>
