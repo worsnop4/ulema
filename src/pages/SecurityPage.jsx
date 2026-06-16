@@ -1,16 +1,65 @@
 import { useState } from 'react'
-import { Shield, Eye, EyeOff, Check, Save } from 'lucide-react'
+import { Shield, Eye, EyeOff, Check, Save, AlertCircle } from 'lucide-react'
+import { useAuth } from '../App'
+import { storageService } from '../services/storageService'
 
 export default function SecurityPage() {
+  const { user, login } = useAuth()
+  
   const [showOld, setShowOld] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  
+  const [oldPassword, setOldPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  
+  const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
 
   const handleSave = (e) => {
     e.preventDefault()
+    setError('')
+    setSaved(false)
+    
+    if (!user) return
+    
+    // Validation
+    if (oldPassword !== user.password) {
+      setError('Password lama yang Anda masukkan salah.')
+      return
+    }
+    
+    if (newPassword.length < 8) {
+      setError('Password baru harus minimal 8 karakter.')
+      return
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setError('Konfirmasi password baru tidak cocok.')
+      return
+    }
+
+    // Sync to admin user list
+    const users = storageService.getItem('inviter_registered_users') || []
+    const updatedUsers = users.map(u => {
+      if (u.email === user.email) {
+        return { ...u, password: newPassword }
+      }
+      return u
+    })
+    storageService.setItem('inviter_registered_users', updatedUsers)
+    
+    // Sync active session
+    const updatedUser = { ...user, password: newPassword }
+    login(updatedUser) // this updates 'inviter_user' and state
+    window.dispatchEvent(new Event('local-storage-update'))
+    
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setOldPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setTimeout(() => setSaved(false), 3000)
   }
 
   return (
@@ -33,14 +82,21 @@ export default function SecurityPage() {
 
         <form onSubmit={handleSave} className="space-y-4">
           {[
-            { label: 'Password Lama', show: showOld, toggle: () => setShowOld(v => !v) },
-            { label: 'Password Baru', show: showNew, toggle: () => setShowNew(v => !v) },
-            { label: 'Konfirmasi Password Baru', show: showConfirm, toggle: () => setShowConfirm(v => !v) },
-          ].map(({ label, show, toggle }) => (
+            { label: 'Password Lama', show: showOld, toggle: () => setShowOld(v => !v), value: oldPassword, setter: setOldPassword },
+            { label: 'Password Baru', show: showNew, toggle: () => setShowNew(v => !v), value: newPassword, setter: setNewPassword },
+            { label: 'Konfirmasi Password Baru', show: showConfirm, toggle: () => setShowConfirm(v => !v), value: confirmPassword, setter: setConfirmPassword },
+          ].map(({ label, show, toggle, value, setter }) => (
             <div key={label}>
               <label className="form-label">{label}</label>
               <div className="relative">
-                <input type={show ? 'text' : 'password'} className="form-input pr-11" placeholder="••••••••" />
+                <input 
+                  type={show ? 'text' : 'password'} 
+                  className="form-input pr-11" 
+                  placeholder="••••••••" 
+                  value={value}
+                  onChange={(e) => setter(e.target.value)}
+                  required
+                />
                 <button type="button" onClick={toggle}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                   {show ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -48,6 +104,13 @@ export default function SecurityPage() {
               </div>
             </div>
           ))}
+
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-semibold">
+              <AlertCircle size={16} />
+              {error}
+            </div>
+          )}
 
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
             <p className="text-xs font-semibold text-slate-600 mb-2">Syarat Password:</p>
