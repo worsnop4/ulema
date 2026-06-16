@@ -1,0 +1,199 @@
+/* ── Landing Page Specific Styles ── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── gradient helpers ── */
+.grad-teal { background: linear-gradient(135deg, #1C232E 0%, #151B23 55%, #0F131A 100%); }
+.grad-hero { background: linear-gradient(160deg, #1C232E 0%, #151B23 55%, #19202A 100%); }
+.grad-gold { background: linear-gradient(135deg, #C4A771 0%, #DDC497 50%, #F5DEB3 100%); }
+.grad-card { background: linear-gradient(145deg, rgba(28, 35, 46, 0.8) 0%, rgba(21, 27, 35, 0.7) 100%); }
+
+.text-grad {
+  background: linear-gradient(135deg, #C4A771, #DDC497, #F5DEB3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-grad-teal {
+  background: linear-gradient(135deg, #A0AAB8, #1C232E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── glass ── */
+.glass {
+  background: rgba(28, 35, 46, 0.45);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(221, 196, 151, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.glass-dark {
+  background: rgba(21, 27, 35, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(160, 170, 184, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+.glass-light {
+  background: rgba(248, 246, 242, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(221, 196, 151, 0.3);
+}
+.glass-luxury {
+  background: rgba(28, 35, 46, 0.55);
+  backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(221, 196, 151, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 30px rgba(160, 170, 184, 0.05);
+}
+
+/* ── aurora glow effects ── */
+.royal-glow { box-shadow: 0 0 40px rgba(160, 170, 184, 0.35), 0 0 80px rgba(160, 170, 184, 0.15); }
+.gold-glow { box-shadow: 0 0 30px rgba(221, 196, 151, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15); }
+
+/* ── ticker ── */
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-track { display: flex; width: max-content; animation: ticker 40s linear infinite; }
+.ticker-track:hover { animation-play-state: paused; }
+
+/* ── float WA ── */
+@keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.04); } }
+.wa-float { animation: float 3s ease-in-out infinite; }
+
+/* ── pulse ring ── */
+@keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.7); opacity: 0; } }
+.pulse-ring::before, .pulse-ring::after {
+  content: ''; position: absolute; inset: 0; border-radius: 9999px;
+  background: rgba(221, 196, 151, 0.35); animation: pulse-ring 2s ease-out infinite;
+}
+.pulse-ring::after { animation-delay: 1s; }
+
+/* ── hero slideshow ── */
+@keyframes heroSlideshow {
+  0%, 25% { opacity: 1; transform: scale(1); }
+  33%, 92% { opacity: 0; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.slide-bg {
+  position: absolute; inset: 0; background-size: cover; background-position: center;
+  opacity: 0; animation: heroSlideshow 15s infinite; z-index: 0;
+}
+.slide-1 { animation-delay: 0s; background-image: url('/hero/hero1.jpg'); }
+.slide-2 { animation-delay: 5s; background-image: url('/hero/hero2.jpg'); }
+.slide-3 { animation-delay: 10s; background-image: url('/hero/hero3.jpg'); }
+
+/* ── counter animate ── */
+@keyframes countUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.count-anim { animation: countUp 0.8s ease forwards; }
+
+/* ── accordion ── */
+.faq-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease; }
+.faq-body.open { max-height: 600px; }
+.faq-icon { transition: transform 0.35s ease; }
+.faq-icon.open { transform: rotate(45deg); }
+
+/* ── tab underline ── */
+.tab-btn.active { color: #1F2937; }
+.tab-btn.active::after { content: ''; display: block; height: 3px; background: #1F2937; border-radius: 2px; margin-top: 4px; }
+.tab-btn::after {
+  content: ''; display: block; height: 3px; background: transparent;
+  border-radius: 2px; margin-top: 4px; transition: background 0.25s;
+}
+
+/* ── card hover ── */
+.theme-card { transition: transform 0.3s ease, box-shadow 0.3s ease; background: #1C232E !important; border: 1px solid rgba(221, 196, 151, 0.1) !important; }
+.theme-card h3 { color: #FFFFFF !important; }
+.theme-card p { color: #A0AAB8 !important; }
+.theme-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(28, 35, 46, 0.15); }
+
+/* ── step connector ── */
+.step-line { flex: 1; height: 2px; background: linear-gradient(90deg, #A0AAB8, #DDC497); margin: 0 8px; margin-top: 28px; }
+
+/* ── shimmer on countdown digits ── */
+@keyframes shimmer { 0%, 100% { text-shadow: 0 0 10px rgba(221, 196, 151, 0.4); } 50% { text-shadow: 0 0 25px rgba(221, 196, 151, 0.9), 0 0 50px rgba(221, 196, 151, 0.4); } }
+.countdown-digit { animation: shimmer 2s ease-in-out infinite; }
+
+/* ── nav scrolled ── */
+#navbar { transition: background 0.35s, box-shadow 0.35s; }
+#navbar.scrolled { background: rgba(28, 35, 46, 0.97) !important; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), 0 0 60px rgba(221, 196, 151, 0.05); }
+
+/* ── mobile menu ── */
+#mobileMenu { transition: max-height 0.4s ease, opacity 0.35s ease; max-height: 0; opacity: 0; overflow: hidden; }
+#mobileMenu.open { max-height: 400px; opacity: 1; }
+
+/* ── guarantee badge spin ── */
+@keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.spin-slow { animation: spin-slow 20s linear infinite; }
+
+/* ── responsive video mock ── */
+.phone-mock {
+  width: 180px; height: 360px; border-radius: 36px; border: 6px solid rgba(214, 190, 147, 0.2);
+  background: linear-gradient(180deg, #020D2B 0%, #041B4D 100%); overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(47, 95, 255, 0.25), 0 0 0 1px rgba(214, 190, 147, 0.1);
+}
+@media(min-width:768px) { .phone-mock { width: 220px; height: 440px; } }
+
+/* scroll fade-in */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── aurora cinematic animation ── */
+@keyframes aurora-pulse { 0%, 100% { opacity: 0.15; transform: scale(1) rotate(0deg); } 50% { opacity: 0.30; transform: scale(1.15) rotate(3deg); } }
+.aurora-orb { animation: aurora-pulse 8s ease-in-out infinite; pointer-events: none; }
+.aurora-orb-2 { animation: aurora-pulse 12s ease-in-out infinite; animation-delay: 4s; pointer-events: none; }
+
+/* ── star particles ── */
+@keyframes particle-float { 0%, 100% { opacity: 0.2; transform: translateY(0) scale(1); } 50% { opacity: 0.8; transform: translateY(-18px) scale(1.1); } }
+.particle { position: absolute; border-radius: 50%; background: rgba(214, 190, 147, 0.7); pointer-events: none; }
+.p1 { width: 3px; height: 3px; top: 18%; left: 12%; animation: particle-float 5s ease-in-out infinite; }
+.p2 { width: 2px; height: 2px; top: 35%; left: 42%; animation: particle-float 7s ease-in-out infinite 1.5s; }
+.p3 { width: 3px; height: 3px; top: 65%; left: 25%; animation: particle-float 6s ease-in-out infinite 3s; }
+.p4 { width: 2px; height: 2px; top: 22%; left: 75%; animation: particle-float 8s ease-in-out infinite 0.8s; }
+.p5 { width: 3px; height: 3px; top: 78%; left: 80%; animation: particle-float 5.5s ease-in-out infinite 2.2s; }
+.p6 { width: 2px; height: 2px; top: 50%; left: 90%; animation: particle-float 9s ease-in-out infinite 1s; }
+
+/* ── feature cards on white section → luxury recolor ── */
+.feature-card { background: linear-gradient(145deg, rgba(4, 27, 77, 0.85) 0%, rgba(7, 31, 90, 0.75) 100%) !important; border: 1px solid rgba(214, 190, 147, 0.12) !important; color: #F8F6F2; }
+.feature-card h3 { color: #F8F6F2 !important; }
+.feature-card p { color: rgba(214, 190, 147, 0.7) !important; }
+.feature-card:hover { border-color: rgba(47, 95, 255, 0.3) !important; box-shadow: 0 16px 48px rgba(47, 95, 255, 0.15) !important; }
+
+/* ── FAQ Container ── */
+.faq-container { border: 1px solid rgba(221, 196, 151, 0.2) !important; }
+.faq-toggle:hover { background: rgba(28, 35, 46, 0.05) !important; }
+.faq-toggle span:first-child { color: #1F2937 !important; }
+.faq-body p { color: #4B5563 !important; }
+
+/* ── How it works steps — white section ── */
+.step-num { background: linear-gradient(135deg, #C4A771, #DDC497) !important; }
+
+/* ── "See all themes" button ── */
+.catalog-see-all { border-color: rgba(221, 196, 151, 0.5) !important; color: #DDC497 !important; }
+.catalog-see-all:hover { background: rgba(221, 196, 151, 0.15) !important; color: #F5DEB3 !important; }
+
+/* ── Sections background override ── */
+section#promo { background: transparent !important; }
+section#promo .bg-cream-dark { background: #F4F6F5 !important; }
+/* body { background: #F4F6F5; color: #1F2937; } */
+
+/* ── Section heading recolor ── */
+section.bg-white h2, section#features h2, section#how-it-works h2, section.bg-cream h2, section#catalog h2, section#faq h2 { color: #1F2937 !important; }
+section.bg-white p.text-gray-500, section#features p.text-gray-500, section#how-it-works p.text-gray-500, section.bg-cream p.text-gray-500, section#catalog p.text-gray-500, section#faq p.text-gray-500 { color: #6B7280 !important; }
+section#how-it-works h3 { color: #1F2937 !important; }
+
+/* ── Feature Cards (Dark Slate) ── */
+.feature-card { background: #1C232E !important; border: 1px solid rgba(221, 196, 151, 0.1) !important; }
+.feature-card h3 { color: #FFFFFF !important; }
+.feature-card p { color: #A0AAB8 !important; }
+
+/* ── Section badges ── */
+.section-badge-teal { background: rgba(28, 35, 46, 0.06) !important; color: #1F2937 !important; border: 1px solid rgba(221, 196, 151, 0.6); }
+
+/* ── Tab buttons ── */
+.tab-btn { color: #6B7280 !important; }
+.tab-btn:hover { color: #1F2937 !important; }
+
+/* ── Catalog "see all" override ── */
+a.catalog-see-all-link { border-color: rgba(221, 196, 151, 0.4) !important; color: #DDC497 !important; }
+a.catalog-see-all-link:hover { background: rgba(221, 196, 151, 0.15) !important; color: #F5DEB3 !important; border-color: rgba(221, 196, 151, 0.7) !important; }
