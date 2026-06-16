@@ -40,6 +40,7 @@ async function getCroppedImg(imageSrc, pixelCrop) {
 }
 
 export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspect = undefined }) {
+  const [currentAspect, setCurrentAspect] = useState(aspect)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
@@ -76,7 +77,7 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspe
           image={imageSrc}
           crop={crop}
           zoom={zoom}
-          aspect={aspect}
+          aspect={currentAspect}
           onCropChange={setCrop}
           onCropComplete={onCropComplete}
           onZoomChange={setZoom}
@@ -85,6 +86,27 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspe
       </div>
 
       <div className="bg-black/80 text-white p-6 sm:pb-6 pb-10 backdrop-blur-sm z-10 sm:rounded-b-2xl sm:mx-auto sm:max-w-2xl w-full flex flex-col gap-4">
+        
+        {/* Aspect Ratio Selector */}
+        <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+          {[
+            { label: 'Bebas', value: undefined },
+            { label: '1:1', value: 1 },
+            { label: '3:4', value: 3/4 },
+            { label: '4:3', value: 4/3 },
+            { label: '9:16', value: 9/16 },
+            { label: '16:9', value: 16/9 },
+          ].map(opt => (
+            <button
+              key={opt.label}
+              onClick={() => setCurrentAspect(opt.value)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-colors snap-start ${currentAspect === opt.value ? 'bg-brand-500 text-white shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+            >
+              Rasio {opt.label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex items-center gap-4">
           <span className="text-xs font-semibold text-slate-400">Zoom</span>
           <input
