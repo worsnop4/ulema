@@ -174,11 +174,11 @@ export default function ModuleGrid({ onSelectModule }) {
       case 'livestream': return data.livestreamEnabled ? 'done' : 'empty';
       case 'love_story': return data.loveStory?.some(s => s.title) ? 'done' : 'empty';
       case 'turut_mengundang': return data.families?.some(f => f.members.some(m => m.trim() !== '')) ? 'done' : 'empty';
-      case 'musik': return data.musicUrl ? 'done' : 'empty';
+      case 'musik': return (data.musicUrl || data.musicId) ? 'done' : 'empty';
       case 'ganti_tema': return data.themeId ? 'done' : 'empty';
       case 'ucapan_rsvp': return (data.rsvps?.length > 0 || data.wishes?.length > 0) ? 'done' : 'empty';
-      case 'font': return data.customFonts ? 'done' : 'empty';
-      case 'edit_teks': return data.customLabels ? 'done' : 'empty';
+      case 'font': return data.fontConfig ? 'done' : 'empty';
+      case 'edit_teks': return data.customTexts ? 'done' : 'empty';
       default: return defaultStatus;
     }
   }
