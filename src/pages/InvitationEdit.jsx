@@ -35,10 +35,14 @@ export default function InvitationEdit() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const totalPengunjung = (data.guests || []).length
+  const totalUcapan = (data.rsvps || []).filter(r => r.wish && r.wish.trim() !== '').length
+  const totalRsvp = (data.rsvps || []).length
+
   const stats = [
-    { label: 'Pengunjung', value: '1,284', icon: Users, color: 'text-brand-600', bg: 'bg-brand-50' },
-    { label: 'Ucapan', value: '347', icon: MessageSquare, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'RSVP', value: '218', icon: CalendarCheck, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Pengunjung', value: totalPengunjung.toString(), icon: Users, color: 'text-brand-600', bg: 'bg-brand-50' },
+    { label: 'Ucapan', value: totalUcapan.toString(), icon: MessageSquare, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'RSVP', value: totalRsvp.toString(), icon: CalendarCheck, color: 'text-amber-600', bg: 'bg-amber-50' },
   ]
 
   return (
