@@ -7,7 +7,9 @@ import AdminTransactions from '../components/admin/AdminTransactions'
 import AdminThemes from '../components/admin/AdminThemes'
 import AdminIllustrations from '../components/admin/AdminIllustrations'
 import AdminFinance from '../components/admin/AdminFinance'
+import AdminUsers from '../components/admin/AdminUsers'
 import { storageService } from '../services/storageService'
+import { Users as UsersIcon } from 'lucide-react'
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate()
@@ -32,6 +34,7 @@ export default function AdminDashboardPage() {
         <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
           {[
             { id: 'dashboard', label: 'Analitik & Pembayaran', icon: CreditCard },
+            { id: 'users', label: 'Kelola Pengguna', icon: UsersIcon },
             { id: 'themes', label: 'Daftar Tema', icon: Palette },
             { id: 'illustrations', label: 'Kelola Ilustrasi', icon: ImageIcon },
             { id: 'finance', label: 'Keuangan & Kupon', icon: Settings }
@@ -55,6 +58,7 @@ export default function AdminDashboardPage() {
 
       {/* Render Active Tab Component */}
       {activeTab === 'dashboard' && <AdminTransactions />}
+      {activeTab === 'users' && <AdminUsers />}
       {activeTab === 'themes' && <AdminThemes />}
       {activeTab === 'illustrations' && <AdminIllustrations />}
       {activeTab === 'finance' && <AdminFinance />}
