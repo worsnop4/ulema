@@ -10,20 +10,13 @@ export default function GantiTemaForm() {
   const selected = data.themeId || 1
   const activeTheme = themes.find(t => t.id === selected) || themes[0]
 
-  const TIER_HIERARCHY = {
-    'Special': ['Special'],
-    'Adat': ['Special', 'Adat'],
-    'Motion': ['Special', 'Adat', 'Motion'],
-    'Luxury': ['Special', 'Adat', 'Motion', 'Luxury'],
-  }
+  // Filter themes based on user package (Luxury gets all, others get their specific category)
+  const availableThemes = user?.package === 'Luxury' 
+    ? themes 
+    : themes.filter(t => t.category === user?.package)
 
-  const isThemeAllowed = (themeCat) => {
-    if (!user) return true
-    if (user.role === 'admin') return true
-    const userPackage = user.package || 'Special'
-    const allowed = TIER_HIERARCHY[userPackage] || ['Special']
-    return allowed.includes(themeCat || 'Special')
-  }
+  // Admin sees all themes
+  const displayThemes = user?.role === 'admin' ? themes : availableThemes
 
   const handleUpdateColor = (key, val) => {
     updateData({
@@ -45,26 +38,20 @@ export default function GantiTemaForm() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3">
-        {themes.map(theme => {
-          const allowed = isThemeAllowed(theme.category)
+        {displayThemes.map(theme => {
           const isCurrent = selected === theme.id
           
           return (
             <div key={theme.id} className="relative flex flex-col">
               <button
                 type="button"
-                disabled={!allowed}
                 onClick={() => {
-                  if (allowed) {
-                    updateData({ themeId: theme.id })
-                  }
+                  updateData({ themeId: theme.id })
                 }}
                 className={`text-left p-3 rounded-2xl border-2 transition-all flex-1 w-full ${
                   isCurrent 
                     ? 'border-brand-400 bg-brand-50/5' 
-                    : !allowed 
-                      ? 'border-slate-100 bg-slate-50 opacity-70 cursor-not-allowed' 
-                      : 'border-slate-100 hover:border-slate-200'
+                    : 'border-slate-100 hover:border-slate-200'
                 }`}
               >
                 <div className="flex gap-1 mb-2.5">
@@ -89,17 +76,14 @@ export default function GantiTemaForm() {
                   </div>
                 )}
               </button>
-              {!allowed && (
-                <a
-                  href="/dashboard/transactions"
-                  className="absolute top-2 right-2 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full hover:bg-amber-600 transition-all shadow-sm"
-                >
-                  Upgrade
-                </a>
-              )}
             </div>
           )
         })}
+        {displayThemes.length === 0 && (
+          <div className="col-span-2 text-center py-6 text-slate-400 text-xs">
+            Belum ada tema di kategori ini.
+          </div>
+        )}
       </div>
 
       {/* ── Kustomisasi Warna Tema ── */}
