@@ -137,20 +137,14 @@ export default function AdminThemes() {
       } catch (e) {}
     })
 
-    const baselineCounts = {
-      1: 520, 2: 210, 3: 310, 4: 125, 5: 95, 6: 80
-    }
-
     const list = themes.map(t => {
       const realCount = realCounts[t.id] || 0
-      const baseline = baselineCounts[t.id] || 15
-      const totalCount = realCount + baseline
       return {
         id: t.id,
         name: t.name,
         emoji: t.emoji,
         colors: t.colors,
-        count: totalCount,
+        count: realCount,
       }
     })
 
