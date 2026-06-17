@@ -15,54 +15,69 @@ import GuestsPage from './pages/GuestsPage'
 
 // Simple auth context
 import { createContext, useContext, useState, useEffect } from 'react'
-import { storageService } from './services/storageService'
+import { supabase } from './lib/supabase'
 
 export const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
 
 function ProtectedRoute({ children }) {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div></div>
   if (!user) return <Navigate to="/login" replace />
   return children
 }
 
 function AdminRoute({ children }) {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div></div>
   if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />
   return children
 }
 
 export default function App() {
-  const [user, setUser] = useState(() => storageService.getItem('inviter_user'))
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  // Watch for local storage updates to sync auth user details (e.g. package upgrades)
   useEffect(() => {
-    const syncUser = () => {
-      const stored = storageService.getItem('inviter_user')
-      if (stored) {
-        setUser(stored)
+    let mounted = true
+
+    const fetchProfile = async (session) => {
+      if (!session) {
+        if (mounted) { setUser(null); setLoading(false); }
+        return
+      }
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      if (mounted) {
+        if (profile) {
+          setUser({ ...session.user, ...profile, package: profile.package_type })
+        } else {
+          setUser(session.user)
+        }
+        setLoading(false)
       }
     }
-    window.addEventListener('storage', syncUser)
-    window.addEventListener('local-storage-update', syncUser)
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      fetchProfile(session)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoading(true)
+      fetchProfile(session)
+    })
+
     return () => {
-      window.removeEventListener('storage', syncUser)
-      window.removeEventListener('local-storage-update', syncUser)
+      mounted = false
+      subscription.unsubscribe()
     }
   }, [])
 
-  const login = (userData) => {
-    storageService.setItem('inviter_user', userData)
-    setUser(userData)
-  }
-
-  const logout = () => {
-    storageService.removeItem('inviter_user')
-    setUser(null)
+  const logout = async () => {
+    await supabase.auth.signOut()
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, logout }}>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />

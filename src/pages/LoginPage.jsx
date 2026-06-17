@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../App'
+import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Loader2, Heart, User, Mail, Lock, ArrowRight, Send, Star } from 'lucide-react'
 import Logo from '../components/Logo'
 import { storageService } from '../services/storageService'
@@ -27,37 +28,28 @@ export default function LoginPage() {
     }
   }, [searchParams])
 
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, navigate])
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
     setError('')
     if (!email || !password) { setError('Email dan password harus diisi.'); return }
     setLoading(true)
     
-    // Simulate API delay
-    await new Promise(r => setTimeout(r, 1000))
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password
+    })
 
-    const usersStored = storageService.getItem('inviter_registered_users')
-    const usersList = usersStored || [
-      { name: 'Doni & Rizka', email: 'demo@ulema.id', password: 'demo1234', role: 'user', package: 'Luxury', slug: 'doni-rizka' }
-    ]
-
-    // Initialize list if not present
-    if (!usersStored) {
-      storageService.setItem('inviter_registered_users', usersList)
-    }
-
-    if (email.toLowerCase() === 'admin@ulema.id' && password === 'admin1234') {
-      login({ name: 'System Admin', email: email.toLowerCase(), role: 'admin', avatar: null })
-      navigate('/dashboard/admin')
-    } else {
-      const found = usersList.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
-      if (found) {
-        login(found)
-        navigate('/dashboard')
-      } else {
-        setError('Email atau password salah. Silakan coba lagi.')
-        setLoading(false)
-      }
+    if (error) {
+      setError(error.message)
+      setLoading(false)
     }
   }
 
@@ -70,67 +62,51 @@ export default function LoginPage() {
     }
     setLoading(true)
 
-    // Simulate API delay
-    await new Promise(r => setTimeout(r, 1000))
-
     try {
-      const usersStored = storageService.getItem('inviter_registered_users')
-      const usersList = usersStored || [
-        { name: 'Doni & Rizka', email: 'demo@ulema.id', password: 'demo1234', role: 'user', package: 'Luxury', slug: 'doni-rizka' }
-      ]
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: { data: { name: name.trim() } }
+      })
 
-      const exists = usersList.some(u => u.email.toLowerCase() === email.trim().toLowerCase())
-      if (exists) {
-        setError('Email sudah terdaftar. Silakan masuk menggunakan tab Masuk.')
+      if (authError) {
+        setError(authError.message)
         setLoading(false)
         return
       }
 
-      // Generate unique slug
-      let slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-      if (!slug) slug = `undangan-${Date.now()}`
+      if (authData.user) {
+        // Create initial invitation data
+        const category = selectedCategory || 'Special'
+        const themeName = selectedThemeName || 'Classic Elegance'
 
-      // Check duplicate slug
-      const isSlugTaken = usersList.some(u => u.slug === slug)
-      if (isSlugTaken) {
+        const { DEFAULT_THEMES, defaultInvitationData } = await import('../hooks/useSharedInvitation')
+        const matchedTheme = DEFAULT_THEMES.find(t => t.name.toLowerCase().includes(themeName.toLowerCase()) || t.name === themeName) || DEFAULT_THEMES[0]
+
+        let slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        if (!slug) slug = `undangan-${Date.now()}`
         slug = `${slug}-${Math.floor(Math.random() * 1000)}`
+
+        const initialData = {
+          ...defaultInvitationData,
+          slug,
+          themeId: matchedTheme.id,
+          groom: { ...defaultInvitationData.groom, nickname: name.split('&')[0]?.trim() || 'Groom' },
+          bride: { ...defaultInvitationData.bride, nickname: name.split('&')[1]?.trim() || 'Bride' }
+        }
+
+        // Insert into invitations table
+        await supabase.from('invitations').insert({
+          user_id: authData.user.id,
+          theme_id: matchedTheme.id,
+          groom_name: initialData.groom.nickname,
+          bride_name: initialData.bride.nickname,
+          data: initialData
+        })
+
+        // Temporary fallback for existing components that rely on local storage (Phase 4 will remove this)
+        storageService.setItem(`inviter_template_data_${authData.user.email}`, initialData)
       }
-
-      const category = selectedCategory || 'Special'
-      const themeName = selectedThemeName || 'Classic Elegance'
-
-      const newUser = {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        password,
-        role: 'user',
-        package: 'none', // Status none means they need to pay first
-        selectedCategory: category,
-        selectedThemeName: themeName,
-        slug,
-        expiry: null
-      }
-
-      usersList.push(newUser)
-      storageService.setItem('inviter_registered_users', usersList)
-
-      // Initialize default invitation data for this user
-      const { DEFAULT_THEMES, defaultInvitationData } = await import('../hooks/useSharedInvitation')
-      const matchedTheme = DEFAULT_THEMES.find(t => t.name.toLowerCase().includes(themeName.toLowerCase()) || t.name === themeName) || DEFAULT_THEMES[0]
-
-      const initialData = {
-        ...defaultInvitationData,
-        slug,
-        themeId: matchedTheme.id,
-        groom: { ...defaultInvitationData.groom, nickname: name.split('&')[0]?.trim() || 'Groom' },
-        bride: { ...defaultInvitationData.bride, nickname: name.split('&')[1]?.trim() || 'Bride' }
-      }
-      storageService.setItem(`inviter_template_data_${newUser.email}`, initialData)
-
-      // Log in the user
-      login(newUser)
-      // Redirect to dashboard (will show payment checkout)
-      navigate('/dashboard')
     } catch (err) {
       setError('Terjadi kesalahan saat pendaftaran. Coba lagi.')
       setLoading(false)
