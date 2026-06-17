@@ -291,12 +291,8 @@ export default function TransactionPage() {
                   </div>
                 </div>
               ))}
-              {myTransactions.length === 0 && (
-                <div className="text-center py-10 text-slate-400 text-sm">
-                  📭 Belum ada riwayat transaksi.
-                </div>
-              )}
             </div>
+            )}
           </div>
           
           {/* Instant Theme Change Section (Only for active users) */}
