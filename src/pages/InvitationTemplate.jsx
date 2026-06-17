@@ -136,14 +136,7 @@ export default function InvitationTemplate() {
     handleRsvpSubmit 
   } = useRsvp(updateData)
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[100dvh] space-y-4" style={{ backgroundColor: '#faf7f2' }}>
-        <div className="w-8 h-8 rounded-full border-2 border-slate-400 border-t-slate-800 animate-spin" />
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Membuka Undangan...</p>
-      </div>
-    )
-  }
+
 
   // Reset cover screen overlay when cover styles or photos are changed in the editor
   useEffect(() => {
@@ -262,6 +255,15 @@ export default function InvitationTemplate() {
 
   // Choose component from registry
   const ThemeComponent = THEME_COMPONENTS[layout] || WatercolorFloralTheme
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] space-y-4" style={{ backgroundColor: '#faf7f2' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-slate-400 border-t-slate-800 animate-spin" />
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Membuka Undangan...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen w-full font-sans overflow-hidden">
