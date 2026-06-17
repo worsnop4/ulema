@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Edit2, Trash2, Shield, User as UserIcon, X, Save } from 'lucide-react'
-import { storageService } from '../../services/storageService'
+import { Plus, Edit2, Trash2, Shield, User as UserIcon, X, Save, Loader2 } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([])
@@ -21,23 +21,23 @@ export default function AdminUsers() {
   const [editingEmail, setEditingEmail] = useState(null)
   const [error, setError] = useState('')
 
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
     loadUsers()
   }, [])
 
-  const loadUsers = () => {
-    const stored = storageService.getItem('inviter_registered_users') || []
-    setUsers(stored)
+  const loadUsers = async () => {
+    setIsLoading(true)
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+    if (data) setUsers(data)
+    setIsLoading(false)
   }
 
-  const handleDelete = (email) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
-      const updatedUsers = users.filter(u => u.email !== email)
-      storageService.setItem('inviter_registered_users', updatedUsers)
-      
-      // Also clean up their invitation data
-      storageService.removeItem(`inviter_template_data_${email}`)
-      setUsers(updatedUsers)
+  const handleDelete = async (id) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini? Mengingat ini adalah Supabase Auth, penghapusan terbaik dilakukan via Supabase Dashboard. Fungsi ini hanya menghapus dari tabel profiles.')) {
+      await supabase.from('profiles').delete().eq('id', id)
+      loadUsers()
     }
   }
 
@@ -63,62 +63,33 @@ export default function AdminUsers() {
     setIsModalOpen(true)
   }
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault()
     setError('')
     
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('Semua field wajib diisi!')
+    if (!formData.name || !formData.email) {
+      setError('Nama dan Email wajib diisi!')
       return
     }
 
-    let updatedUsers = [...users]
-    
     if (modalMode === 'add') {
-      // Check duplicate
-      if (updatedUsers.some(u => u.email.toLowerCase() === formData.email.toLowerCase())) {
-        setError('Email sudah terdaftar!')
-        return
-      }
-      
-      // Generate slug if empty
-      let newSlug = formData.slug
-      if (!newSlug) {
-        newSlug = formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-        if (updatedUsers.some(u => u.slug === newSlug)) {
-          newSlug = `${newSlug}-${Math.floor(Math.random() * 1000)}`
-        }
-      }
-
-      const newUser = { ...formData, email: formData.email.toLowerCase(), slug: newSlug }
-      updatedUsers.push(newUser)
-      
+      setError('Penambahan User Baru via Admin dinonaktifkan. Silakan arahkan User untuk Sign Up langsung di halaman Login, atau gunakan Supabase Dashboard.')
+      return
     } else {
       // Edit mode
-      // Check if email changed and if new email already exists
-      if (formData.email.toLowerCase() !== editingEmail.toLowerCase()) {
-        if (updatedUsers.some(u => u.email.toLowerCase() === formData.email.toLowerCase())) {
-          setError('Email sudah digunakan oleh pengguna lain!')
-          return
-        }
-        // Need to migrate data from old email to new email
-        const oldData = storageService.getItem(`inviter_template_data_${editingEmail}`)
-        if (oldData) {
-          storageService.setItem(`inviter_template_data_${formData.email.toLowerCase()}`, oldData)
-          storageService.removeItem(`inviter_template_data_${editingEmail}`)
-        }
-      }
+      const { error } = await supabase.from('profiles').update({
+        full_name: formData.name,
+        role: formData.role,
+        package_name: formData.package
+      }).eq('email', editingEmail)
       
-      updatedUsers = updatedUsers.map(u => {
-        if (u.email === editingEmail) {
-          return { ...u, ...formData, email: formData.email.toLowerCase() }
-        }
-        return u
-      })
+      if (error) {
+        setError('Gagal mengupdate profil: ' + error.message)
+        return
+      }
     }
 
-    storageService.setItem('inviter_registered_users', updatedUsers)
-    setUsers(updatedUsers)
+    loadUsers()
     setIsModalOpen(false)
   }
 
@@ -155,8 +126,8 @@ export default function AdminUsers() {
                         {user.role === 'admin' ? <Shield size={18} className="text-brand-600" /> : <UserIcon size={18} />}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-800 text-sm">{user.name}</p>
-                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">pwd: {user.password}</p>
+                        <p className="font-semibold text-slate-800 text-sm">{user.full_name || 'Tanpa Nama'}</p>
+                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">Supabase Auth</p>
                       </div>
                     </div>
                   </td>
@@ -168,8 +139,8 @@ export default function AdminUsers() {
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-600'}`}>
                         {user.role}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.package !== 'none' ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
-                        {user.package === 'none' ? 'Belum Bayar' : user.package}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.package_name && user.package_name !== 'none' ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
+                        {user.package_name === 'none' || !user.package_name ? 'Belum Bayar' : user.package_name}
                       </span>
                     </div>
                   </td>
@@ -184,10 +155,14 @@ export default function AdminUsers() {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEditModal(user)} className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
+                      <button onClick={() => openEditModal({
+                        ...user, 
+                        name: user.full_name, 
+                        package: user.package_name
+                      })} className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(user.email)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <button onClick={() => handleDelete(user.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                         <Trash2 size={16} />
                       </button>
                     </div>

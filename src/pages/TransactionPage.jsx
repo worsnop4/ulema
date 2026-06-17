@@ -1,26 +1,38 @@
 import { useState, useEffect } from 'react'
-import { getTransactions, saveTransactions, getPricing, getVouchers, getThemes } from '../hooks/useSharedInvitation'
-import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles, MessageCircle } from 'lucide-react'
+import { getPricing, getVouchers, getThemes } from '../hooks/useSharedInvitation'
+import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles, MessageCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
 import { uploadMedia } from '../components/common/FormHelpers'
+import { supabase } from '../lib/supabase'
 
 export default function TransactionPage() {
   const { user } = useAuth()
   
-  // States for dynamic data
-  const [transactions, setTransactions] = useState(() => getTransactions())
+  const [transactions, setTransactions] = useState([])
+  const [isLoadingTx, setIsLoadingTx] = useState(true)
   const [pricing, setPricing] = useState(() => getPricing())
   const [vouchers, setVouchers] = useState(() => getVouchers())
   const [themes] = useState(() => getThemes())
 
-  const myTransactionsInitial = transactions.filter(t => t.userEmail === (user?.email || 'demo@ulema.id'))
-  const hasPendingInitial = myTransactionsInitial.some(t => t.status === 'pending')
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
 
-  const [showPaymentForm, setShowPaymentForm] = useState(() => {
-    // Show form by default if user has NO package AND no pending transactions
-    return (user?.package === 'none') && !hasPendingInitial
-  })
+  useEffect(() => {
+    async function fetchTx() {
+      if (!user?.id) return
+      setIsLoadingTx(true)
+      const { data } = await supabase.from('transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (data) setTransactions(data)
+      
+      const hasPending = data?.some(t => t.status === 'pending')
+      setShowPaymentForm(user?.package === 'none' && !hasPending)
+      setIsLoadingTx(false)
+    }
+    fetchTx()
+  }, [user])
 
   // Form states
   const [selectedPlan, setSelectedPlan] = useState(() => {
@@ -40,7 +52,6 @@ export default function TransactionPage() {
   // Sync changes
   useEffect(() => {
     const handleUpdate = () => {
-      setTransactions(getTransactions())
       setPricing(getPricing())
       setVouchers(getVouchers())
     }
@@ -83,26 +94,25 @@ export default function TransactionPage() {
   }
 
   // Handle Payment Submission
-  const handlePay = (e) => {
+  const handlePay = async (e) => {
     e.preventDefault()
     
-    const newTx = {
-      id: `INV-${Date.now().toString().slice(-6)}`,
-      date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-      desc: `Kategori ${selectedPlan}`,
-      themeName: selectedThemeName,
-      amount: basePrice,
-      discount: discountAmount,
-      finalAmount: finalPrice,
+    const { data: newTxRow, error } = await supabase.from('transactions').insert({
+      user_id: user.id,
+      package_name: selectedPlan,
+      amount: finalPrice,
       status: 'pending',
-      userEmail: user?.email || 'demo@ulema.id',
-      voucherCode: appliedVoucher ? appliedVoucher.code : '',
-      paymentProof: paymentProofFile || ''
+      payment_proof_url: paymentProofFile || ''
+    }).select().single()
+
+    if (error) {
+      alert('Gagal mengirim transaksi: ' + error.message)
+      return
     }
 
-    const updated = [newTx, ...transactions]
-    saveTransactions(updated)
-    setTransactions(updated)
+    if (newTxRow) {
+      setTransactions(prev => [newTxRow, ...prev])
+    }
 
     // Clear form
     setVoucherCode('')
@@ -114,10 +124,15 @@ export default function TransactionPage() {
     }, 3000)
   }
 
-  // Filter transactions for this user only
-  const myTransactions = transactions.filter(t => t.userEmail === (user?.email || 'demo@ulema.id'))
+  const myTransactions = transactions.map(t => ({
+    id: t.id,
+    date: new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+    desc: `Kategori ${t.package_name}`,
+    finalAmount: t.amount,
+    status: t.status,
+    paymentProof: t.payment_proof_url
+  }))
   
-  // Check if there is already a pending transaction for the currently selected plan
   const hasPendingTransaction = myTransactions.some(t => t.status === 'pending' && t.desc === `Kategori ${selectedPlan}`)
 
   // Available themes for the selected plan
@@ -235,8 +250,19 @@ export default function TransactionPage() {
           {/* Transaction History (Main View) */}
           <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
             <h2 className="font-semibold text-slate-800 text-base mb-4 border-b pb-2">Riwayat Pembayaran</h2>
-            <div className="space-y-3">
-              {myTransactions.map(tx => (
+            {isLoadingTx ? (
+              <div className="flex flex-col items-center justify-center py-10 space-y-3">
+                <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+                <p className="text-sm font-medium text-slate-500">Memuat riwayat transaksi...</p>
+              </div>
+            ) : myTransactions.length === 0 ? (
+              <div className="text-center py-10 bg-slate-50/50 rounded-xl border border-slate-100">
+                <CreditCard className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                <p className="text-slate-500 font-medium">Belum ada riwayat transaksi.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myTransactions.map(tx => (
                 <div key={tx.id} className="border border-slate-100 rounded-xl p-4 space-y-2 bg-slate-50/30">
                   <div className="flex justify-between items-start">
                     <div>

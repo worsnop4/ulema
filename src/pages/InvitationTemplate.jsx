@@ -122,7 +122,7 @@ export default function InvitationTemplate() {
   const [scrolled, setScrolled] = useState(false)
   const [showGifts, setShowGifts] = useState(false)
 
-  const [data, updateData] = useSharedInvitation()
+  const [data, updateData, isLoading] = useSharedInvitation()
   const countdownTarget = getCountdownTarget(data)
   const countdown = useCountdown(countdownTarget)
   
@@ -135,6 +135,15 @@ export default function InvitationTemplate() {
     rsvpSent, setRsvpSent, 
     handleRsvpSubmit 
   } = useRsvp(updateData)
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] space-y-4" style={{ backgroundColor: '#faf7f2' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-slate-400 border-t-slate-800 animate-spin" />
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Membuka Undangan...</p>
+      </div>
+    )
+  }
 
   // Reset cover screen overlay when cover styles or photos are changed in the editor
   useEffect(() => {

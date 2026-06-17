@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../App'
 import {
   Users, MessageSquare, CalendarCheck, Copy, Check, ExternalLink,
-  Share2, Eye, CalendarDays
+  Share2, Eye, CalendarDays, Loader2
 } from 'lucide-react'
 import ModuleGrid from '../components/ModuleGrid'
 import EditModal from '../components/EditModal'
@@ -11,13 +11,13 @@ import { useSharedInvitation } from '../hooks/useSharedInvitation'
 
 export default function InvitationEdit() {
   const { user } = useAuth()
-  const [data] = useSharedInvitation()
+  const [data, , isLoading] = useSharedInvitation()
   
   let BASE_URL = '/invite/doni-rizka'
   const adminDemo = storageService.getItem('inviter_admin_demo_mode')
   if (adminDemo) {
     // Dynamically use the active themeId from data, fallback to adminDemo
-    BASE_URL = `/invite/demo?theme=${data.themeId || adminDemo}`
+    BASE_URL = `/invite/demo?theme=${data?.themeId || adminDemo}`
   } else if (user?.slug) {
     BASE_URL = `/invite/${user.slug}`
   }
@@ -35,10 +35,19 @@ export default function InvitationEdit() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const totalViews = data.views || 0
-  const totalGuests = (data.guests || []).length
-  const totalUcapan = (data.rsvps || []).filter(r => r.wish && r.wish.trim() !== '').length
-  const totalRsvp = (data.rsvps || []).length
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+        <p className="text-sm font-medium text-slate-500">Memuat editor undangan...</p>
+      </div>
+    )
+  }
+
+  const totalViews = data?.views || 0
+  const totalGuests = (data?.guests || []).length
+  const totalUcapan = (data?.rsvps || []).filter(r => r.wish && r.wish.trim() !== '').length
+  const totalRsvp = (data?.rsvps || []).length
 
   const stats = [
     { label: 'Pengunjung', value: totalViews.toString(), icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50' },

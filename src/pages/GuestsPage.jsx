@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSharedInvitation } from '../hooks/useSharedInvitation'
 import {
   Users, UserPlus, FileSpreadsheet, Smartphone, Send, Trash2, Edit3, Search,
-  Check, Save, Clipboard, Info, CheckSquare, Square, RefreshCw, X, MessageSquare, AlertCircle
+  Check, Save, Clipboard, Info, CheckSquare, Square, RefreshCw, X, MessageSquare, AlertCircle, Loader2
 } from 'lucide-react'
 
 // Helper to clean and format Indonesian phone numbers to E.164 format for WhatsApp API
@@ -19,7 +19,7 @@ const cleanAndFormatPhone = (phone) => {
 }
 
 export default function GuestsPage() {
-  const [invitationData, updateInvitationData] = useSharedInvitation()
+  const [invitationData, updateInvitationData, isLoading] = useSharedInvitation()
   const guests = invitationData.guests || []
   const template = invitationData.blastMessageTemplate || ''
   
@@ -350,6 +350,15 @@ export default function GuestsPage() {
       .replace(/{nama}/g, exampleName)
       .replace(/{link}/g, exampleUrl)
   }, [template, guests])
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+        <p className="text-sm font-medium text-slate-500">Memuat data tamu...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6">

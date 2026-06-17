@@ -1,87 +1,67 @@
 import React, { useState, useEffect } from 'react'
-import { getTransactions, saveTransactions, getPricing } from '../../hooks/useSharedInvitation'
-import { storageService } from '../../services/storageService'
-import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare, Image as ImageIcon, X } from 'lucide-react'
+import { getPricing } from '../../hooks/useSharedInvitation'
+import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare, Image as ImageIcon, X, Loader2 } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 
 export default function AdminTransactions() {
-  const [transactions, setTransactions] = useState(() => getTransactions())
+  const [transactions, setTransactions] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const [pricing, setPricing] = useState(() => getPricing())
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
   const [viewProofImage, setViewProofImage] = useState(null)
 
   useEffect(() => {
-    const storedUsers = storageService.getItem('inviter_registered_users') || []
-    setUsers(storedUsers)
-
-    const handleUpdate = () => {
-      setTransactions(getTransactions())
-      setPricing(getPricing())
-      setUsers(storageService.getItem('inviter_registered_users') || [])
-    }
-    window.addEventListener('local-storage-update', handleUpdate)
-    return () => window.removeEventListener('local-storage-update', handleUpdate)
+    fetchData()
   }, [])
 
-  const handleApprovePayment = (txId, userEmail, packageDesc) => {
-    const updated = transactions.map(tx => {
-      if (tx.id === txId) {
-        return { ...tx, status: 'paid' }
-      }
-      return tx
-    })
-    saveTransactions(updated)
-    setTransactions(updated)
-
-    try {
-      let packageName = 'Special'
-      if (packageDesc.includes('Luxury')) packageName = 'Luxury'
-      else if (packageDesc.includes('Motion')) packageName = 'Motion'
-      else if (packageDesc.includes('Adat')) packageName = 'Adat'
-
-      const oneYear = new Date()
-      oneYear.setFullYear(oneYear.getFullYear() + 1)
-      const expiryStr = oneYear.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-
-      const usersStored = storageService.getItem('inviter_registered_users')
-      if (usersStored) {
-        const users = usersStored
-        const updatedUsers = users.map(u => {
-          if (u.email.toLowerCase() === userEmail.toLowerCase()) {
-            return { ...u, package: packageName, expiry: expiryStr }
-          }
-          return u
-        })
-        storageService.setItem('inviter_registered_users', updatedUsers)
-      }
-
-      const stored = storageService.getItem('inviter_user')
-      if (stored) {
-        const u = stored
-        if (u.email.toLowerCase() === userEmail.toLowerCase()) {
-          const updatedUser = { ...u, package: packageName, expiry: expiryStr }
-          storageService.setItem('inviter_user', updatedUser)
-          window.dispatchEvent(new Event('storage'))
-        }
-      }
-    } catch (e) {
-      console.error(e)
+  async function fetchData() {
+    setIsLoading(true)
+    const [txRes, usersRes] = await Promise.all([
+      supabase.from('transactions').select('*, profiles(email)').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('*')
+    ])
+    
+    if (txRes.data) {
+      const mappedTx = txRes.data.map(t => ({
+        ...t,
+        userEmail: t.profiles?.email || 'Unknown',
+        date: new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        desc: `Kategori ${t.package_name}`,
+        finalAmount: t.amount,
+        paymentProof: t.payment_proof_url
+      }))
+      setTransactions(mappedTx)
     }
+    
+    if (usersRes.data) {
+      setUsers(usersRes.data)
+    }
+    setIsLoading(false)
+  }
 
-    setMessage(`🎉 Pembayaran ${txId} disetujui! Kategori ${packageDesc.replace('Kategori ', '')} berhasil diaktifkan untuk ${userEmail}.`)
+  const handleApprovePayment = async (txId, userId, packageDesc, userEmail) => {
+    let packageName = 'Special'
+    if (packageDesc.includes('Luxury')) packageName = 'Luxury'
+    else if (packageDesc.includes('Motion')) packageName = 'Motion'
+    else if (packageDesc.includes('Adat')) packageName = 'Adat'
+
+    // Update Transaction
+    await supabase.from('transactions').update({ status: 'paid' }).eq('id', txId)
+    // Update User Profile
+    await supabase.from('profiles').update({ package_name: packageName }).eq('id', userId)
+
+    fetchData() // Refresh
+
+    setMessage(`🎉 Pembayaran disetujui! Kategori ${packageName} berhasil diaktifkan untuk ${userEmail}.`)
     setTimeout(() => setMessage(''), 4000)
   }
 
-  const handleRejectPayment = (txId) => {
-    const updated = transactions.map(tx => {
-      if (tx.id === txId) {
-        return { ...tx, status: 'rejected' }
-      }
-      return tx
-    })
-    saveTransactions(updated)
-    setTransactions(updated)
-    setMessage(`❌ Pembayaran ${txId} telah ditolak.`)
+  const handleRejectPayment = async (txId) => {
+    await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txId)
+    fetchData() // Refresh
+
+    setMessage(`❌ Pembayaran telah ditolak.`)
     setTimeout(() => setMessage(''), 3000)
   }
 
@@ -207,7 +187,7 @@ export default function AdminTransactions() {
                     <span className="font-bold font-mono text-sm text-slate-900">Rp {tx.finalAmount.toLocaleString('id-ID')}</span>
                   </div>
                   <div className="flex gap-1.5 flex-wrap justify-end">
-                    {tx.paymentProof && tx.paymentProof.startsWith('data:image') && (
+                    {tx.paymentProof && (tx.paymentProof.startsWith('data:image') || tx.paymentProof.startsWith('http')) && (
                       <button onClick={() => setViewProofImage(tx.paymentProof)} className="flex items-center gap-1 bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold px-3 py-1.5 rounded-xl text-xs transition-colors">
                         <ImageIcon size={13} /> Cek Bukti
                       </button>
@@ -215,7 +195,7 @@ export default function AdminTransactions() {
                     <button onClick={() => handleRejectPayment(tx.id)} className="flex items-center gap-1 bg-red-50 text-red-700 hover:bg-red-100 font-bold px-3 py-1.5 rounded-xl text-xs transition-colors">
                       <XSquare size={13} /> Tolak
                     </button>
-                    <button onClick={() => handleApprovePayment(tx.id, tx.userEmail, tx.desc)} className="flex items-center gap-1 bg-green-600 text-white hover:bg-green-700 font-bold px-3 py-1.5 rounded-xl text-xs transition-all shadow-sm shadow-green-200">
+                    <button onClick={() => handleApprovePayment(tx.id, tx.user_id, tx.desc, tx.userEmail)} className="flex items-center gap-1 bg-green-600 text-white hover:bg-green-700 font-bold px-3 py-1.5 rounded-xl text-xs transition-all shadow-sm shadow-green-200">
                       <CheckSquare size={13} /> Setujui
                     </button>
                   </div>

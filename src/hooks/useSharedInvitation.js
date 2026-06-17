@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { storageService } from '../services/storageService'
 import { defaultInvitationData, DEFAULT_THEMES, DEFAULT_ILLUSTRATIONS } from '../data/defaultData'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../App'
 
 const STORAGE_KEY = 'inviter_template_data'
 
@@ -92,124 +94,65 @@ export function getCountdownTarget(data) {
   return `${first.date}T${start}:00`
 }
 
-const getStorageKey = () => {
-  // 1. Check if we are viewing a specific slug from URL path (Highest Priority for /invite)
+export function useSharedInvitation() {
+  const { user } = useAuth() || {}
+  const [data, setData] = useState(defaultInvitationData)
+  const [loading, setLoading] = useState(true)
+
   const pathParts = window.location.pathname.split('/')
   const inviteIdx = pathParts.indexOf('invite')
-  if (inviteIdx !== -1 && pathParts[inviteIdx + 1]) {
-    const slug = pathParts[inviteIdx + 1]
-    
-    if (slug === 'demo') {
-      const params = new URLSearchParams(window.location.search)
-      const themeId = params.get('theme') || '1'
-      return `inviter_demo_data_${themeId}`
-    }
-
-    const users = storageService.getItem('inviter_registered_users')
-    if (users && Array.isArray(users)) {
-      const matchedUser = users.find(u => u.slug === slug)
-      if (matchedUser) {
-        return `inviter_template_data_${matchedUser.email}`
-      }
-    }
-  }
-
-  // 2. Admin Demo Mode (Dashboard)
+  const isPublicInvite = inviteIdx !== -1 && pathParts[inviteIdx + 1]
+  const publicSlug = isPublicInvite ? pathParts[inviteIdx + 1] : null
   const adminDemo = storageService.getItem('inviter_admin_demo_mode')
-  if (adminDemo) {
-    return `inviter_demo_data_${adminDemo}`
-  }
-
-  // 3. Logged-in User (Dashboard)
-  const userStored = storageService.getItem('inviter_user')
-  if (userStored && userStored.email && userStored.role !== 'admin') {
-    return `inviter_template_data_${userStored.email}`
-  }
-
-  return 'inviter_template_data'
-}
-
-export function useSharedInvitation() {
-  const [storageKey, setStorageKey] = useState(getStorageKey)
-
-  const [data, setData] = useState(() => {
-    const stored = storageService.getItem(storageKey)
-    let parsedData = stored ? { ...defaultInvitationData, ...stored } : { ...defaultInvitationData }
-    
-    if (storageKey.startsWith('inviter_demo_data_')) {
-      const tId = parseInt(storageKey.split('_').pop(), 10)
-      if (!isNaN(tId)) {
-        parsedData.themeId = tId
-      }
-    }
-    return parsedData
-  })
 
   useEffect(() => {
-    const handleKeyChange = () => {
-      const newKey = getStorageKey()
-      if (newKey !== storageKey) {
-        setStorageKey(newKey)
+    let mounted = true
+    async function fetchData() {
+      setLoading(true)
+      
+      if (isPublicInvite && publicSlug !== 'demo') {
+        const { data: inviteRow } = await supabase.from('invitations').select('*').eq('data->>slug', publicSlug).single()
+        if (mounted && inviteRow) {
+           setData({ ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id })
+        }
+      } else if (user && user.role !== 'admin') {
+        const { data: inviteRow } = await supabase.from('invitations').select('*').eq('user_id', user.id).single()
+        if (mounted && inviteRow) {
+           setData({ ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id })
+        }
+      } else if (adminDemo || publicSlug === 'demo') {
+        const themeId = adminDemo || new URLSearchParams(window.location.search).get('theme') || '1'
+        if (mounted) {
+          setData({ ...defaultInvitationData, themeId: parseInt(themeId, 10) })
+        }
       }
+      
+      if (mounted) setLoading(false)
     }
-    window.addEventListener('storage', handleKeyChange)
-    window.addEventListener('local-storage-update', handleKeyChange)
-    return () => {
-      window.removeEventListener('storage', handleKeyChange)
-      window.removeEventListener('local-storage-update', handleKeyChange)
-    }
-  }, [storageKey])
-
-  useEffect(() => {
-    const stored = storageService.getItem(storageKey)
-    let parsedData = stored ? { ...defaultInvitationData, ...stored } : { ...defaultInvitationData }
     
-    if (storageKey.startsWith('inviter_demo_data_')) {
-      const tId = parseInt(storageKey.split('_').pop(), 10)
-      if (!isNaN(tId)) {
-        parsedData.themeId = tId
-      }
-    }
-    setData(parsedData)
-  }, [storageKey])
+    fetchData()
+    return () => { mounted = false }
+  }, [user, isPublicInvite, publicSlug, adminDemo])
 
-  const updateData = (updater, onError) => {
+  const updateData = useCallback(async (updater, onError) => {
     setData(prev => {
       const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater }
-      try {
-        storageService.setItem(storageKey, next)
-      } catch (e) {
-        if (onError) onError(e)
-        return prev
+      
+      if (next.id && !adminDemo && (!isPublicInvite || publicSlug !== 'demo')) {
+         supabase.from('invitations').update({ 
+           data: next,
+           groom_name: next.groom?.nickname,
+           bride_name: next.bride?.nickname,
+           theme_id: next.themeId
+         }).eq('id', next.id).then(({error}) => {
+           if (error && onError) onError(error)
+         })
       }
       return next
     })
-  }
+  }, [adminDemo, isPublicInvite, publicSlug])
 
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === storageKey && e.newValue) {
-        try {
-          setData({ ...defaultInvitationData, ...JSON.parse(e.newValue) })
-        } catch { /* ignore */ }
-      }
-    }
-    const handleCustomStorage = () => {
-      const stored = storageService.getItem(storageKey)
-      if (stored) {
-        setData({ ...defaultInvitationData, ...stored })
-      }
-    }
-
-    window.addEventListener('storage', handleStorage)
-    window.addEventListener('local-storage-update', handleCustomStorage)
-    return () => {
-      window.removeEventListener('storage', handleStorage)
-      window.removeEventListener('local-storage-update', handleCustomStorage)
-    }
-  }, [storageKey])
-
-  return [data, updateData]
+  return [data, updateData, loading]
 }
 
 export function getIllustrations() {
