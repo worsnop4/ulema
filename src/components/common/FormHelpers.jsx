@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Upload, X, Save, Check, ChevronDown, ChevronRight, Crop } from 'lucide-react'
 import ImageCropperModal from './ImageCropperModal'
+import { supabase } from '../../lib/supabase'
 
 export function ToggleSwitch({ checked, onChange }) {
   return (
@@ -37,6 +38,25 @@ export function compressImage(file, maxWidth = 550, quality = 0.5) {
   })
 }
 
+export async function uploadMedia(blob, pathPrefix = 'uploads') {
+  const fileName = `${pathPrefix}_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`
+  
+  const { error } = await supabase.storage
+    .from('invitation-media')
+    .upload(fileName, blob, {
+      contentType: 'image/jpeg',
+      upsert: false
+    })
+
+  if (error) throw error
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('invitation-media')
+    .getPublicUrl(fileName)
+
+  return publicUrl
+}
+
 export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
   const inputRef = useRef()
   const [error, setError] = useState(null)
@@ -62,10 +82,18 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
     try {
       const res = await fetch(croppedBase64)
       const blob = await res.blob()
-      const compressed = await compressImage(blob)
-      onChange(compressed)
+      
+      // Compress first
+      const compressedBase64 = await compressImage(blob)
+      const finalRes = await fetch(compressedBase64)
+      const finalBlob = await finalRes.blob()
+      
+      // Upload to Supabase Storage
+      const publicUrl = await uploadMedia(finalBlob, 'photo')
+      
+      onChange(publicUrl)
     } catch (err) {
-      setError('Gagal memproses foto: ' + err.message)
+      setError('Gagal mengunggah foto: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -148,10 +176,18 @@ export function PremiumPhotoUploadBox({ value, onChange, helperText }) {
     try {
       const res = await fetch(croppedBase64)
       const blob = await res.blob()
-      const compressed = await compressImage(blob, 550, 0.5)
-      onChange(compressed)
+      
+      // Compress first
+      const compressedBase64 = await compressImage(blob, 550, 0.5)
+      const finalRes = await fetch(compressedBase64)
+      const finalBlob = await finalRes.blob()
+      
+      // Upload to Supabase Storage
+      const publicUrl = await uploadMedia(finalBlob, 'premium_cover')
+      
+      onChange(publicUrl)
     } catch (err) {
-      setError('Gagal memproses foto: ' + err.message)
+      setError('Gagal mengunggah foto: ' + err.message)
     } finally {
       setLoading(false)
     }

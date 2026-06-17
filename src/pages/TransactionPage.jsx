@@ -3,6 +3,7 @@ import { getTransactions, saveTransactions, getPricing, getVouchers, getThemes }
 import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles, MessageCircle } from 'lucide-react'
 import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
+import { uploadMedia } from '../components/common/FormHelpers'
 
 export default function TransactionPage() {
   const { user } = useAuth()
@@ -122,14 +123,19 @@ export default function TransactionPage() {
   // Available themes for the selected plan
   const availableThemes = themes.filter(t => t.category === selectedPlan)
 
-  const handleFileUpload = (e) => {
+  const [isUploadingProof, setIsUploadingProof] = useState(false)
+
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPaymentProofFile(reader.result)
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+    setIsUploadingProof(true)
+    try {
+      const publicUrl = await uploadMedia(file, 'payment_proof')
+      setPaymentProofFile(publicUrl)
+    } catch (err) {
+      alert('Gagal mengunggah bukti transfer: ' + err.message)
+    } finally {
+      setIsUploadingProof(false)
     }
   }
 
@@ -460,11 +466,18 @@ export default function TransactionPage() {
               </div>
 
               {/* Payment Details */}
-              <div className="border border-amber-100 rounded-xl p-4 bg-amber-50/50 text-xs text-amber-800 space-y-1.5">
-                <p className="font-bold">🏦 Informasi Rekening Pembayaran:</p>
-                <p>Transfer Bank Mandiri: <strong>123-456-789-0</strong>01 a/n <strong>PT Ulema Digital</strong></p>
-                <p>Silakan transfer nominal pas ke nomor rekening di atas, kemudian klik konfirmasi di bawah.</p>
-              </div>
+              {isUploadingProof ? (
+                <div className="text-center py-4">
+                  <Loader2 size={24} className="mx-auto mb-2 text-brand-400 animate-spin" />
+                  <p className="text-sm font-semibold text-slate-700">Mengunggah...</p>
+                </div>
+              ) : (
+                <div className="border border-amber-100 rounded-xl p-4 bg-amber-50/50 text-xs text-amber-800 space-y-1.5">
+                  <p className="font-bold">🏦 Informasi Rekening Pembayaran:</p>
+                  <p>Transfer Bank Mandiri: <strong>123-456-789-0</strong>01 a/n <strong>PT Ulema Digital</strong></p>
+                  <p>Silakan transfer nominal pas ke nomor rekening di atas, kemudian klik konfirmasi di bawah.</p>
+                </div>
+              )}
 
               {/* File Upload for Payment Proof */}
               <div>
