@@ -49,7 +49,7 @@ export default function App() {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
       if (mounted) {
         if (profile) {
-          setUser({ ...session.user, ...profile, package: profile.package_type })
+          setUser({ ...session.user, ...profile, package: profile.package_type || 'none' })
         } else {
           setUser(session.user)
         }
