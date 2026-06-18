@@ -70,7 +70,11 @@ export default function LoginPage() {
       })
 
       if (authError) {
-        setError(authError.message)
+        let errorMsg = authError.message
+        if (errorMsg === '{}' || typeof errorMsg !== 'string') {
+          errorMsg = "Pengiriman email ditolak oleh Resend. Pastikan Sender Email di Supabase adalah onboarding@resend.dev (jika belum verifikasi domain) atau cek konfigurasi API Key Resend Anda."
+        }
+        setError(errorMsg)
         setLoading(false)
         return
       }
