@@ -126,7 +126,7 @@ export default function AdminUsers() {
                         {user.role === 'admin' ? <Shield size={18} className="text-brand-600" /> : <UserIcon size={18} />}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-800 text-sm">{user.full_name || 'Tanpa Nama'}</p>
+                        <p className="font-semibold text-slate-800 text-sm">{user.name || 'Tanpa Nama'}</p>
                         <p className="text-[11px] text-slate-400 font-mono mt-0.5">Supabase Auth</p>
                       </div>
                     </div>
