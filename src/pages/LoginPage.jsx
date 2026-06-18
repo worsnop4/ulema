@@ -86,6 +86,15 @@ export default function LoginPage() {
       }
 
       if (authData.user) {
+        // Ensure user profile exists (fallback if trigger fails)
+        await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          email: authData.user.email,
+          full_name: name.trim(),
+          role: 'user',
+          package_name: 'none'
+        })
+
         // Create initial invitation data
         const category = selectedCategory || 'Special'
         const themeName = selectedThemeName || 'Classic Elegance'
