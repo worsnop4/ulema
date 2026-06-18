@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../App'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Loader2, Heart, User, Mail, Lock, ArrowRight, Send, Star } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Heart, User, Mail, Lock, ArrowRight, Send, Star, Phone } from 'lucide-react'
 import Logo from '../components/Logo'
 import { storageService } from '../services/storageService'
 
@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [phone, setPhone] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -56,9 +58,13 @@ export default function LoginPage() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    if (!name.trim() || !email.trim() || !password) { 
+    if (!name.trim() || !email.trim() || !phone.trim() || !password || !confirmPassword) { 
       setError('Semua data registrasi harus diisi.')
       return 
+    }
+    if (password !== confirmPassword) {
+      setError('Password dan Konfirmasi Password tidak cocok.')
+      return
     }
     setLoading(true)
 
@@ -66,7 +72,7 @@ export default function LoginPage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: { data: { name: name.trim() } }
+        options: { data: { name: name.trim(), phone: phone.trim() } }
       })
 
       if (authError) {
@@ -319,6 +325,23 @@ export default function LoginPage() {
                 </div>
               </div>
             )}
+
+            {isRegister && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Nomor WhatsApp</label>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    className="w-full h-12 bg-[#F8FAFC] border-[1.5px] border-[#E2E8F0] rounded-lg pl-11 pr-4 text-[15px] text-gray-800 placeholder-gray-400 focus:border-[#1C232E] focus:ring-2 focus:ring-[#1C232E]/10 focus:outline-none transition-all"
+                    placeholder="misal: 08123456789"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    required
+                  />
+                  <Phone size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+            )}
             
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
@@ -355,6 +378,24 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {isRegister && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Konfirmasi Password</label>
+                <div className="relative">
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    className="w-full h-12 bg-[#F8FAFC] border-[1.5px] border-[#E2E8F0] rounded-lg pl-11 pr-12 text-[15px] text-gray-800 placeholder-gray-400 focus:border-[#13325C] focus:ring-2 focus:ring-[#13325C]/10 focus:outline-none transition-all"
+                    placeholder="Ulangi password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <Lock size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-4 py-3">

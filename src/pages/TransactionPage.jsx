@@ -7,7 +7,7 @@ import { uploadMedia } from '../components/common/FormHelpers'
 import { supabase } from '../lib/supabase'
 
 export default function TransactionPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   
   const [transactions, setTransactions] = useState([])
   const [isLoadingTx, setIsLoadingTx] = useState(true)
@@ -174,6 +174,42 @@ export default function TransactionPage() {
   const dashboardThemes = user?.package === 'Luxury' 
     ? themes // Luxury gets all themes
     : themes.filter(t => t.category === user?.package) // Others get themes from their package
+
+  const isAccountLocked = user && user.role !== 'admin' && user.package === 'none' && myTransactions.some(t => t.status === 'pending')
+
+  if (isAccountLocked) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white max-w-md w-full rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-6">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500">
+            <Clock size={40} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Akun Sedang Terkunci</h2>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Kami sedang memverifikasi bukti pembayaran Anda. Selama proses ini, akun Anda sementara dikunci. Mohon tunggu persetujuan dari Admin.
+            </p>
+          </div>
+          <div className="pt-4 flex flex-col gap-3">
+             <a 
+                href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm bg-green-500 text-white hover:bg-green-600 hover:shadow-md"
+              >
+                <MessageCircle size={16} /> Hubungi Admin via WhatsApp
+              </a>
+              <button 
+                onClick={logout}
+                className="text-slate-400 hover:text-slate-600 text-sm font-semibold mt-2"
+              >
+                Keluar (Logout)
+              </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
