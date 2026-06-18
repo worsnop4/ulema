@@ -49,7 +49,7 @@ export default function AdminTransactions() {
     // Update Transaction
     await supabase.from('transactions').update({ status: 'paid' }).eq('id', txId)
     // Update User Profile
-    await supabase.from('profiles').update({ package_name: packageName }).eq('id', userId)
+    await supabase.from('profiles').update({ package_type: packageName }).eq('id', userId)
 
     fetchData() // Refresh
 

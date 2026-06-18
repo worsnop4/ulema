@@ -56,7 +56,7 @@ export default function AdminUsers() {
       email: user.email || '',
       password: user.password || '',
       role: user.role || 'user',
-      package: user.package || 'none',
+      package: user.package_type || 'none',
       slug: user.slug || ''
     })
     setError('')
@@ -78,9 +78,9 @@ export default function AdminUsers() {
     } else {
       // Edit mode
       const { error } = await supabase.from('profiles').update({
-        full_name: formData.name,
+        name: formData.name,
         role: formData.role,
-        package_name: formData.package
+        package_type: formData.package
       }).eq('email', editingEmail)
       
       if (error) {
@@ -139,8 +139,8 @@ export default function AdminUsers() {
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-600'}`}>
                         {user.role}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.package_name && user.package_name !== 'none' ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
-                        {user.package_name === 'none' || !user.package_name ? 'Belum Bayar' : user.package_name}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.package_type && user.package_type !== 'none' ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
+                        {user.package_type === 'none' || !user.package_type ? 'Belum Bayar' : user.package_type}
                       </span>
                     </div>
                   </td>
@@ -155,11 +155,7 @@ export default function AdminUsers() {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEditModal({
-                        ...user, 
-                        name: user.full_name, 
-                        package: user.package_name
-                      })} className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
+                      <button onClick={() => openEditModal(user)} className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
                         <Edit2 size={16} />
                       </button>
                       <button onClick={() => handleDelete(user.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">

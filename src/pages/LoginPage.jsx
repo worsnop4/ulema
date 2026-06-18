@@ -90,9 +90,9 @@ export default function LoginPage() {
         await supabase.from('profiles').upsert({
           id: authData.user.id,
           email: authData.user.email,
-          full_name: name.trim(),
+          name: name.trim(),
           role: 'user',
-          package_name: 'none'
+          package_type: 'none'
         })
 
         // Create initial invitation data
