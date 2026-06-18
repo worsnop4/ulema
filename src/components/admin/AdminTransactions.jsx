@@ -66,8 +66,9 @@ export default function AdminTransactions() {
   }
 
   const totalRevenue = users.reduce((sum, user) => {
-    if (user.package && user.package !== 'none') {
-      return sum + (pricing[user.package] || 0)
+    const pkg = (user.package_type === 'free' ? 'none' : user.package_type) || 'none'
+    if (pkg && pkg !== 'none') {
+      return sum + (pricing[pkg] || 0)
     }
     return sum
   }, 0)
@@ -82,7 +83,8 @@ export default function AdminTransactions() {
   let topThemePercentage = 0
   if (users.length > 0) {
     const packageCounts = users.reduce((acc, user) => {
-      acc[user.package] = (acc[user.package] || 0) + 1
+      const pkg = (user.package_type === 'free' ? 'none' : user.package_type) || 'none'
+      acc[pkg] = (acc[pkg] || 0) + 1
       return acc
     }, {})
     
@@ -218,13 +220,13 @@ export default function AdminTransactions() {
               <div key={i} className="border border-slate-100 rounded-xl p-3 flex flex-col gap-1.5 bg-slate-50/50">
                 <div className="flex justify-between items-center">
                   <p className="font-bold text-slate-800 text-xs">{u.name}</p>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${u.package !== 'none' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                    {u.package !== 'none' ? 'Aktif' : 'Non-aktif'}
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${u.package_type && u.package_type !== 'none' && u.package_type !== 'free' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {u.package_type && u.package_type !== 'none' && u.package_type !== 'free' ? 'Aktif' : 'Non-aktif'}
                   </span>
                 </div>
                 <div className="flex justify-between text-[10px] text-slate-400">
                   <span>{u.email}</span>
-                  <span className="font-bold text-slate-700">{u.package === 'none' ? 'Belum Bayar' : u.package}</span>
+                  <span className="font-bold text-slate-700">{!u.package_type || u.package_type === 'none' || u.package_type === 'free' ? 'Belum Bayar' : u.package_type}</span>
                 </div>
               </div>
             ))}

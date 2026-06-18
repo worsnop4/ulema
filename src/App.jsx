@@ -49,7 +49,8 @@ export default function App() {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
       if (mounted) {
         if (profile) {
-          setUser({ ...session.user, ...profile, package: profile.package_type || 'none' })
+          const mappedPackage = (profile.package_type === 'free' ? 'none' : profile.package_type) || 'none'
+          setUser({ ...session.user, ...profile, package: mappedPackage })
         } else {
           setUser({ ...session.user, role: 'user', package: 'none' })
         }

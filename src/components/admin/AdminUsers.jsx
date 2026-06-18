@@ -56,7 +56,7 @@ export default function AdminUsers() {
       email: user.email || '',
       password: user.password || '',
       role: user.role || 'user',
-      package: user.package_type || 'none',
+      package: (user.package_type === 'free' ? 'none' : user.package_type) || 'none',
       slug: user.slug || ''
     })
     setError('')
@@ -139,8 +139,8 @@ export default function AdminUsers() {
                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-600'}`}>
                         {user.role}
                       </span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.package_type && user.package_type !== 'none' ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
-                        {user.package_type === 'none' || !user.package_type ? 'Belum Bayar' : user.package_type}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase ${user.package_type && user.package_type !== 'none' && user.package_type !== 'free' ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500'}`}>
+                        {user.package_type === 'none' || user.package_type === 'free' || !user.package_type ? 'Belum Bayar' : user.package_type}
                       </span>
                     </div>
                   </td>
