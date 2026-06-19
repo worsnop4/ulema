@@ -47,9 +47,18 @@ export default function AdminTransactions() {
     else if (packageDesc.includes('Adat')) packageName = 'Adat'
 
     // Update Transaction
-    await supabase.from('transactions').update({ status: 'paid' }).eq('id', txId)
+    const { error: txError } = await supabase.from('transactions').update({ status: 'paid' }).eq('id', txId)
+    if (txError) {
+      alert('Gagal menyetujui transaksi (Cek RLS): ' + txError.message)
+      return
+    }
+
     // Update User Profile
-    await supabase.from('profiles').update({ package_type: packageName }).eq('id', userId)
+    const { error: profileError } = await supabase.from('profiles').update({ package_type: packageName }).eq('id', userId)
+    if (profileError) {
+      alert('Transaksi disetujui tapi gagal update paket user: ' + profileError.message)
+      return
+    }
 
     fetchData() // Refresh
 
@@ -58,7 +67,11 @@ export default function AdminTransactions() {
   }
 
   const handleRejectPayment = async (txId) => {
-    await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txId)
+    const { error } = await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txId)
+    if (error) {
+      alert('Gagal menolak transaksi: ' + error.message)
+      return
+    }
     fetchData() // Refresh
 
     setMessage(`❌ Pembayaran telah ditolak.`)
