@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import Cropper from 'react-easy-crop'
 import { X, Check } from 'lucide-react'
 
@@ -64,7 +65,7 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspe
     }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex flex-col bg-black/90 sm:p-6 p-0">
       <div className="flex justify-between items-center p-4 bg-black/50 text-white z-10 backdrop-blur-sm sm:rounded-t-2xl sm:mx-auto sm:max-w-2xl w-full">
         <h3 className="font-semibold">Sesuaikan Gambar</h3>
@@ -133,6 +134,7 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel, aspe
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

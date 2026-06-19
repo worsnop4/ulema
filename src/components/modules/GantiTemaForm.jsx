@@ -13,7 +13,7 @@ export default function GantiTemaForm() {
   // Filter themes based on user package (Luxury gets all, others get their specific category)
   const availableThemes = user?.package === 'Luxury' 
     ? themes 
-    : themes.filter(t => t.category === user?.package)
+    : themes.filter(t => t.category === user?.package || t.category === 'Special')
 
   // Admin sees all themes
   const displayThemes = user?.role === 'admin' ? themes : availableThemes

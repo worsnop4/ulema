@@ -134,11 +134,36 @@ export function useSharedInvitation() {
     return () => { mounted = false }
   }, [user, isPublicInvite, publicSlug, adminDemo])
 
-  const updateData = useCallback(async (updater, onError) => {
+  // Handle cross-component and cross-tab sync
+  useEffect(() => {
+    const channel = new BroadcastChannel('inviter_sync')
+    channel.onmessage = (e) => {
+      if (e.data) setData(e.data)
+    }
+    const handleLocalSync = (e) => {
+      if (e.detail) setData(e.detail)
+    }
+    window.addEventListener('INVITATION_DATA_SYNC', handleLocalSync)
+    
+    return () => {
+      channel.close()
+      window.removeEventListener('INVITATION_DATA_SYNC', handleLocalSync)
+    }
+  }, [])
+
+  const updateData = useCallback(async (updater, onError, skipSave = false) => {
+    let nextState;
     setData(prev => {
       const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater }
       
-      if (next.id && !adminDemo && (!isPublicInvite || publicSlug !== 'demo')) {
+      // Auto-generate slug
+      if (next.groom?.nickname && next.bride?.nickname) {
+        next.slug = `${next.groom.nickname}-${next.bride.nickname}`.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-')
+      }
+
+      nextState = next;
+      
+      if (!skipSave && next.id && !adminDemo && (!isPublicInvite || publicSlug !== 'demo')) {
          supabase.from('invitations').update({ 
            data: next,
            groom_name: next.groom?.nickname,
@@ -150,9 +175,17 @@ export function useSharedInvitation() {
       }
       return next
     })
+
+    if (!skipSave && nextState) {
+      // Small timeout to allow React to flush the synchronous state update
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('INVITATION_DATA_SYNC', { detail: nextState }))
+        new BroadcastChannel('inviter_sync').postMessage(nextState)
+      }, 0)
+    }
   }, [adminDemo, isPublicInvite, publicSlug])
 
-  return [data, updateData, loading]
+  return [data, updateData, loading, setData]
 }
 
 export function getIllustrations() {

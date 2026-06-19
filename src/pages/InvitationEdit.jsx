@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../App'
 import {
   Users, MessageSquare, CalendarCheck, Copy, Check, ExternalLink,
@@ -18,6 +18,8 @@ export default function InvitationEdit() {
   if (adminDemo) {
     // Dynamically use the active themeId from data, fallback to adminDemo
     BASE_URL = `/invite/demo?theme=${data?.themeId || adminDemo}`
+  } else if (data?.slug) {
+    BASE_URL = `/invite/${data.slug}`
   } else if (user?.slug) {
     BASE_URL = `/invite/${user.slug}`
   }
