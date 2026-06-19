@@ -47,7 +47,7 @@ export default function AdminTransactions() {
     else if (packageDesc.includes('Adat')) packageName = 'Adat'
 
     // Update Transaction
-    const { error: txError } = await supabase.from('transactions').update({ status: 'success' }).eq('id', txId)
+    const { error: txError } = await supabase.from('transactions').update({ status: 'approved' }).eq('id', txId)
     if (txError) {
       alert('Gagal menyetujui transaksi (Cek RLS): ' + txError.message)
       return

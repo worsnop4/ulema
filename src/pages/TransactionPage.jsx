@@ -305,7 +305,7 @@ export default function TransactionPage() {
                       <p className="font-bold text-slate-800 text-xs">{tx.desc}</p>
                       <p className="text-[10px] text-slate-400 font-mono mt-0.5">{tx.id} • {tx.date}</p>
                     </div>
-                    {tx.status === 'success' ? (
+                    {tx.status === 'approved' ? (
                       <span className="text-[9px] font-bold px-1.5 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5">
                         <CheckCircle2 size={9} /> Lunas
                       </span>
@@ -610,7 +610,7 @@ export default function TransactionPage() {
                       <p className="font-bold text-slate-800 text-xs">{tx.desc}</p>
                       <p className="text-[10px] text-slate-400 font-mono mt-0.5">{tx.id} • {tx.date}</p>
                     </div>
-                    {tx.status === 'success' ? (
+                    {tx.status === 'approved' ? (
                       <span className="text-[9px] font-bold px-1.5 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5">
                         <CheckCircle2 size={9} /> Lunas
                       </span>
