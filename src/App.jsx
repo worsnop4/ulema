@@ -1,16 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
-import DashboardLayout from './layouts/DashboardLayout'
-import InvitationEdit from './pages/InvitationEdit'
-import IllustrationsPage from './pages/IllustrationsPage'
-import ProfilePage from './pages/ProfilePage'
-import SecurityPage from './pages/SecurityPage'
-import TransactionPage from './pages/TransactionPage'
-import ReferralPage from './pages/ReferralPage'
 import InvitationTemplate from './pages/InvitationTemplate'
-import AdminDashboardPage from './pages/AdminDashboardPage'
-import GuestsPage from './pages/GuestsPage'
+
+// Lazy Load Heavy Dashboard Pages
+const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))
+const InvitationEdit = lazy(() => import('./pages/InvitationEdit'))
+const IllustrationsPage = lazy(() => import('./pages/IllustrationsPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const SecurityPage = lazy(() => import('./pages/SecurityPage'))
+const TransactionPage = lazy(() => import('./pages/TransactionPage'))
+const ReferralPage = lazy(() => import('./pages/ReferralPage'))
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
+const GuestsPage = lazy(() => import('./pages/GuestsPage'))
 
 
 // Simple auth context
@@ -79,36 +83,45 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ user, loading, logout }}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          {/* Public invitation page — no auth needed, guests open this */}
-          <Route path="/invite/:slug" element={<InvitationTemplate />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute><DashboardLayout /></ProtectedRoute>
-          }>
-            <Route index element={
-              user?.role === 'admin' 
-                ? <Navigate to="/dashboard/admin" replace /> 
-                : user?.package === 'none'
-                  ? <Navigate to="/dashboard/transactions" replace />
-                  : <Navigate to="/dashboard/invitation/edit" replace />
-            } />
-            <Route path="invitation/edit" element={<InvitationEdit />} />
-            <Route path="guests" element={<GuestsPage />} />
-            <Route path="admin" element={
-              <AdminRoute><AdminDashboardPage /></AdminRoute>
-            } />
-            <Route path="illustrations" element={
-              <AdminRoute><IllustrationsPage /></AdminRoute>
-            } />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="security" element={<SecurityPage />} />
-            <Route path="transactions" element={<TransactionPage />} />
-            <Route path="referrals" element={<ReferralPage />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-4 border-slate-200 border-t-brand-600 rounded-full animate-spin"></div>
+              <p className="font-serif text-sm text-slate-500 animate-pulse">Menyiapkan Halaman...</p>
+            </div>
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            {/* Public invitation page — no auth needed, guests open this */}
+            <Route path="/invite/:slug" element={<InvitationTemplate />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute><DashboardLayout /></ProtectedRoute>
+            }>
+              <Route index element={
+                user?.role === 'admin' 
+                  ? <Navigate to="/dashboard/admin" replace /> 
+                  : user?.package === 'none'
+                    ? <Navigate to="/dashboard/transactions" replace />
+                    : <Navigate to="/dashboard/invitation/edit" replace />
+              } />
+              <Route path="invitation/edit" element={<InvitationEdit />} />
+              <Route path="guests" element={<GuestsPage />} />
+              <Route path="admin" element={
+                <AdminRoute><AdminDashboardPage /></AdminRoute>
+              } />
+              <Route path="illustrations" element={
+                <AdminRoute><IllustrationsPage /></AdminRoute>
+              } />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="security" element={<SecurityPage />} />
+              <Route path="transactions" element={<TransactionPage />} />
+              <Route path="referrals" element={<ReferralPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthContext.Provider>
   )

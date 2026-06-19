@@ -1,18 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSharedInvitation, getCountdownTarget, getThemes } from '../hooks/useSharedInvitation'
 import { useAudioPlayer } from '../hooks/useAudioPlayer'
 import { useRsvp } from '../hooks/useRsvp'
 
-// Import Theme Layout Components
-import WatercolorFloralTheme from '../themes/WatercolorFloralTheme'
-import DarkLuxuryTheme from '../themes/DarkLuxuryTheme'
-import ModernMinimalistTheme from '../themes/ModernMinimalistTheme'
-import PlayfulIllustrativeTheme from '../themes/PlayfulIllustrativeTheme'
-import TraditionalAdatTheme from '../themes/TraditionalAdatTheme'
-import Special001Theme from '../themes/Special001Theme'
-import Special002Theme from '../themes/Special002Theme'
-import Special003Theme from '../themes/Special003Theme'
+// Import Theme Layout Components via Lazy Loading (Code Splitting)
+const WatercolorFloralTheme = lazy(() => import('../themes/WatercolorFloralTheme'))
+const DarkLuxuryTheme = lazy(() => import('../themes/DarkLuxuryTheme'))
+const ModernMinimalistTheme = lazy(() => import('../themes/ModernMinimalistTheme'))
+const PlayfulIllustrativeTheme = lazy(() => import('../themes/PlayfulIllustrativeTheme'))
+const TraditionalAdatTheme = lazy(() => import('../themes/TraditionalAdatTheme'))
+const Special001Theme = lazy(() => import('../themes/Special001Theme'))
+const Special002Theme = lazy(() => import('../themes/Special002Theme'))
+const Special003Theme = lazy(() => import('../themes/Special003Theme'))
 
 const THEME_COMPONENTS = {
   'watercolor-floral': WatercolorFloralTheme,
@@ -291,43 +291,49 @@ export default function InvitationTemplate() {
         }
       `}</style>
 
-      {/* Render dynamically selected theme subcomponent */}
-      <ThemeComponent
-        data={data}
-        primaryColor={primaryColor}
-        accentColor={accentColor}
-        bgColor={bgColor}
-        guestName={guestName}
-        countdown={countdown}
-        opened={opened}
-        setOpened={setOpened}
-        animateClose={animateClose}
-        setAnimateClose={setAnimateClose}
-        musicPlaying={musicPlaying}
-        setMusicPlaying={setMusicPlaying}
-        scrolled={scrolled}
-        handleScroll={handleScroll}
-        wishes={wishes}
-        handleRsvpSubmit={handleRsvpSubmit}
-        rsvpName={rsvpName}
-        setRsvpName={setRsvpName}
-        rsvpWish={rsvpWish}
-        setRsvpWish={setRsvpWish}
-        rsvpStatus={rsvpStatus}
-        setRsvpStatus={setRsvpStatus}
-        rsvpSent={rsvpSent}
-        copied={copied}
-        copyAccount={copyAccount}
-        showGifts={showGifts}
-        setShowGifts={setShowGifts}
-        bgUrl={bgUrl}
-        ornamentUrl={ornamentUrl}
-        avatarClass={avatarClass}
-        handleNavClick={handleNavClick}
-        primaryEvent={primaryEvent}
-        audioRef={audioRef}
-        layout={layout}
-      />
+      {/* Render dynamically selected theme subcomponent with Suspense fallback */}
+      <Suspense fallback={
+        <div className="flex flex-col items-center justify-center min-h-screen" style={{ backgroundColor: bgColor }}>
+          <div className="w-8 h-8 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin" />
+        </div>
+      }>
+        <ThemeComponent
+          data={data}
+          primaryColor={primaryColor}
+          accentColor={accentColor}
+          bgColor={bgColor}
+          guestName={guestName}
+          countdown={countdown}
+          opened={opened}
+          setOpened={setOpened}
+          animateClose={animateClose}
+          setAnimateClose={setAnimateClose}
+          musicPlaying={musicPlaying}
+          setMusicPlaying={setMusicPlaying}
+          scrolled={scrolled}
+          handleScroll={handleScroll}
+          wishes={wishes}
+          handleRsvpSubmit={handleRsvpSubmit}
+          rsvpName={rsvpName}
+          setRsvpName={setRsvpName}
+          rsvpWish={rsvpWish}
+          setRsvpWish={setRsvpWish}
+          rsvpStatus={rsvpStatus}
+          setRsvpStatus={setRsvpStatus}
+          rsvpSent={rsvpSent}
+          copied={copied}
+          copyAccount={copyAccount}
+          showGifts={showGifts}
+          setShowGifts={setShowGifts}
+          bgUrl={bgUrl}
+          ornamentUrl={ornamentUrl}
+          avatarClass={avatarClass}
+          handleNavClick={handleNavClick}
+          primaryEvent={primaryEvent}
+          audioRef={audioRef}
+          layout={layout}
+        />
+      </Suspense>
     </div>
   )
 }
