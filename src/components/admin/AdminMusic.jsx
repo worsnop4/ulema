@@ -1,11 +1,37 @@
-import React, { useState, useEffect } from 'react'
-import { Plus, Trash2, Music, Save, AlertCircle } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Plus, Trash2, Music, Save, AlertCircle, Play, Pause } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
 export default function AdminMusic() {
   const [musics, setMusics] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  
+  const [playingId, setPlayingId] = useState(null)
+  const audioRef = useRef(new Audio())
+
+  // Handle audio end
+  useEffect(() => {
+    const audio = audioRef.current
+    const handleEnded = () => setPlayingId(null)
+    audio.addEventListener('ended', handleEnded)
+    return () => {
+      audio.removeEventListener('ended', handleEnded)
+      audio.pause()
+    }
+  }, [])
+
+  const togglePlay = (id, url) => {
+    const audio = audioRef.current
+    if (playingId === id) {
+      audio.pause()
+      setPlayingId(null)
+    } else {
+      audio.src = url
+      audio.play().catch(e => alert('Gagal memutar audio: ' + e.message))
+      setPlayingId(id)
+    }
+  }
   
   const [isAdding, setIsAdding] = useState(false)
   const [file, setFile] = useState(null)
@@ -223,8 +249,14 @@ export default function AdminMusic() {
                 <tr key={track.id} className="hover:bg-slate-50/50 transition-colors group">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-lg shadow-sm">
-                        {track.emoji || '🎵'}
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-lg shadow-sm relative overflow-hidden">
+                        {playingId === track.id ? (
+                          <div className="absolute inset-0 bg-brand-600/10 flex items-center justify-center">
+                            <Music size={18} className="text-brand-600 animate-pulse" />
+                          </div>
+                        ) : (
+                          track.emoji || '🎵'
+                        )}
                       </div>
                       <div>
                         <p className="font-semibold text-sm text-slate-800">{track.title}</p>
@@ -235,10 +267,18 @@ export default function AdminMusic() {
                   <td className="p-4 text-sm text-slate-600">{track.genre || '-'}</td>
                   <td className="p-4 text-sm text-slate-600">{track.duration || '-'}</td>
                   <td className="p-4 text-right">
-                    <button onClick={() => handleDelete(track.id, track.url)}
-                      className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors">
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => togglePlay(track.id, track.url)}
+                        className={`p-2 rounded-xl transition-colors ${playingId === track.id ? 'text-brand-600 bg-brand-50' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                        title={playingId === track.id ? "Jeda" : "Putar"}>
+                        {playingId === track.id ? <Pause size={16} /> : <Play size={16} />}
+                      </button>
+                      <button onClick={() => handleDelete(track.id, track.url)}
+                        className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors"
+                        title="Hapus">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

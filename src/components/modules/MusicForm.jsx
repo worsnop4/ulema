@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Check, Music } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Check, Music, Play, Pause } from 'lucide-react'
 import { useSharedInvitation } from '../../hooks/useSharedInvitation'
 import { supabase } from '../../lib/supabase'
 
@@ -18,6 +18,33 @@ export default function MusicForm() {
     }
     fetchMusic()
   }, [])
+
+  const [playingId, setPlayingId] = useState(null)
+  const audioRef = useRef(new Audio())
+
+  // Handle audio end
+  useEffect(() => {
+    const audio = audioRef.current
+    const handleEnded = () => setPlayingId(null)
+    audio.addEventListener('ended', handleEnded)
+    return () => {
+      audio.removeEventListener('ended', handleEnded)
+      audio.pause()
+    }
+  }, [])
+
+  const togglePlay = (e, id, url) => {
+    e.stopPropagation() // Prevent row click
+    const audio = audioRef.current
+    if (playingId === id) {
+      audio.pause()
+      setPlayingId(null)
+    } else {
+      audio.src = url
+      audio.play().catch(err => alert('Gagal memutar audio: ' + err.message))
+      setPlayingId(id)
+    }
+  }
 
   const selectedId = data.musicId || 1
   const customMusic = data.customMusic || false
@@ -49,7 +76,12 @@ export default function MusicForm() {
                 <p className="text-sm font-semibold text-slate-800 truncate">{track.title}</p>
                 <p className="text-[11px] text-slate-500">{track.genre} · {track.duration}</p>
               </div>
-              {selectedId === track.id && <Check size={14} className="text-brand-600 flex-shrink-0" />}
+              <button onClick={(e) => togglePlay(e, track.id, track.url)}
+                className={`p-2 rounded-full transition-colors flex-shrink-0 ${playingId === track.id ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
+                title={playingId === track.id ? "Jeda" : "Putar"}>
+                {playingId === track.id ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />}
+              </button>
+              {selectedId === track.id && <Check size={16} className="text-brand-600 flex-shrink-0 ml-1" />}
             </button>
           ))}
         </div>
