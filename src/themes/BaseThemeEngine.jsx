@@ -700,6 +700,32 @@ export default function BaseThemeEngine({
               </section>
             )}
 
+            {/* ══════════  TURUT MENGUNDANG  ══════════ */}
+            {data.turutMengundangEnabled && data.families && data.families.some(f => f.members.some(m => m.trim() !== '')) && (
+              <section id="turut-mengundang" className={`py-20 px-6 border-t ${config.global.borderClass} ${config.global.sectionAltBg}`}>
+                <Reveal className="max-w-xl mx-auto text-center">
+                  <span className={config.global.labelClass}>TURUT MENGUNDANG</span>
+                  <h2 className={`${config.global.headingClass} mb-12`}>Keluarga Besar</h2>
+                  <div className="grid sm:grid-cols-2 gap-8">
+                    {data.families.map((fam, i) => {
+                      const validMembers = fam.members.filter(m => m.trim() !== '');
+                      if (validMembers.length === 0) return null;
+                      return (
+                        <div key={i} className="space-y-3">
+                          <h3 className={`font-serif text-lg ${config.global.textPrimary}`}>{fam.side}</h3>
+                          <div className={`space-y-1.5 ${config.global.textSecondary} text-sm font-light leading-relaxed`}>
+                            {validMembers.map((member, idx) => (
+                              <p key={idx}>{member}</p>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Reveal>
+              </section>
+            )}
+
             {/* ══════════  FOOTER  ══════════ */}
             <footer className={`relative py-20 px-6 text-center border-t ${config.global.borderClass} ${config.global.sectionBg}`}>
               {config.ornaments?.leaves && (

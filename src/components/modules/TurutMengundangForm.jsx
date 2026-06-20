@@ -1,6 +1,7 @@
 import React from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useSharedInvitation } from '../../hooks/useSharedInvitation'
+import { ToggleSwitch } from '../common/FormHelpers'
 
 export default function TurutMengundangForm() {
   const [data, updateData] = useSharedInvitation()
@@ -17,7 +18,19 @@ export default function TurutMengundangForm() {
 
   return (
     <div className="space-y-4">
-      {families.map(fam => (
+      {/* Toggle Section */}
+      <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+        <div>
+          <h3 className="font-semibold text-slate-800 text-sm">Aktifkan Turut Mengundang</h3>
+          <p className="text-[10px] text-slate-500 mt-0.5">Tampilkan daftar keluarga yang turut mengundang di undangan</p>
+        </div>
+        <ToggleSwitch
+          checked={data.turutMengundangEnabled ?? false}
+          onChange={(val) => updateData({ turutMengundangEnabled: val })}
+        />
+      </div>
+
+      {data.turutMengundangEnabled && families.map(fam => (
         <div key={fam.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
           <div className="mb-3">
             <label className="form-label">Nama Pihak</label>

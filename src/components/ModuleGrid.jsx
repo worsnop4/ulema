@@ -173,7 +173,7 @@ export default function ModuleGrid({ onSelectModule }) {
       case 'dresscode': return data.dresscode?.name ? 'done' : 'empty';
       case 'livestream': return data.livestreamEnabled ? 'done' : 'empty';
       case 'love_story': return data.loveStory?.some(s => s.title) ? 'done' : 'empty';
-      case 'turut_mengundang': return data.families?.some(f => f.members.some(m => m.trim() !== '')) ? 'done' : 'empty';
+      case 'turut_mengundang': return data.turutMengundangEnabled ? 'done' : 'empty';
       case 'musik': return (data.musicUrl || data.musicId) ? 'done' : 'empty';
       case 'ganti_tema': return data.themeId ? 'done' : 'empty';
       case 'ucapan_rsvp': return (data.rsvps?.length > 0 || data.wishes?.length > 0) ? 'done' : 'empty';
