@@ -71,26 +71,36 @@ export default function TransactionPage() {
   }
   const finalPrice = Math.max(0, basePrice - discountAmount)
 
-  // Apply Voucher
-  const handleApplyVoucher = () => {
+  // Apply Voucher or Referral Code
+  const handleApplyVoucher = async () => {
     setVoucherError('')
     setAppliedVoucher(null)
     const code = voucherCode.trim().toUpperCase()
     
     if (!code) return
 
+    // Cek di master voucher lokal
     const v = vouchers.find(x => x.code === code)
-    if (!v) {
-      setVoucherError('Kode voucher tidak valid.')
+    if (v) {
+      if (v.used >= v.maxUse) {
+        setVoucherError('Kode voucher sudah habis digunakan.')
+      } else {
+        setAppliedVoucher(v)
+      }
       return
     }
 
-    if (v.used >= v.maxUse) {
-      setVoucherError('Kode voucher sudah habis digunakan.')
-      return
+    // Cek apakah kode referral valid di database
+    const { data: referrer, error } = await supabase.from('profiles').select('id, referral_code').eq('referral_code', code).single()
+    if (referrer) {
+      if (referrer.id === user.id) {
+        setVoucherError('Anda tidak bisa menggunakan kode referral milik sendiri.')
+      } else {
+        setAppliedVoucher({ type: 'referral', code: code, discount: 10000, referrer_id: referrer.id })
+      }
+    } else {
+      setVoucherError('Kode promo atau referral tidak ditemukan.')
     }
-
-    setAppliedVoucher(v)
   }
 
   // Handle Payment Submission
@@ -108,6 +118,18 @@ export default function TransactionPage() {
     if (error) {
       alert('Gagal mengirim transaksi: ' + error.message)
       return
+    }
+
+    // Jika menggunakan referral, catat ke referral_history
+    if (appliedVoucher && appliedVoucher.type === 'referral' && newTxRow) {
+      const commissionAmount = Math.round(finalPrice * 0.20) // Komisi 20%
+      await supabase.from('referral_history').insert({
+        referrer_id: appliedVoucher.referrer_id,
+        referred_user_id: user.id,
+        transaction_id: newTxRow.id,
+        commission_amount: commissionAmount,
+        status: 'pending'
+      })
     }
 
     if (newTxRow) {

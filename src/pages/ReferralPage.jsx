@@ -1,23 +1,111 @@
-import { useState } from 'react'
-import { Share2, Copy, Check, Users, TrendingUp } from 'lucide-react'
-
-const REFERRAL_CODE = 'DONI-RIZKA'
-const REFERRAL_LINK = `https://ulema.id/r/${REFERRAL_CODE}`
-
-const REFERRAL_ORDERS = [
-  { name: 'Budi S.', email: 'b***i@gmail.com', pkg: 'Special', commission: 'Rp 15.000', date: '20 Mei 2025', status: 'paid' },
-  { name: 'Maya P.', email: 'm***a@gmail.com', pkg: 'Luxury', commission: 'Rp 35.000', date: '12 Mei 2025', status: 'paid' },
-  { name: 'Ahmad F.', email: 'a***d@gmail.com', pkg: 'Special', commission: 'Rp 15.000', date: '5 Apr 2025', status: 'pending' },
-]
+import { useState, useEffect } from 'react'
+import { Share2, Copy, Check, Users, TrendingUp, AlertCircle } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../App'
 
 export default function ReferralPage() {
+  const { user } = useAuth()
   const [copied, setCopied] = useState(false)
+  const [referralCode, setReferralCode] = useState('')
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const [showWithdraw, setShowWithdraw] = useState(false)
+  const [withdrawForm, setWithdrawForm] = useState({ method: 'BCA', accNumber: '', accName: '' })
+  const [withdrawing, setWithdrawing] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      fetchReferralData()
+    }
+  }, [user])
+
+  const fetchReferralData = async () => {
+    setLoading(true)
+    
+    // 1. Dapatkan kode referral dan saldo dari profile
+    const { data: profile } = await supabase.from('profiles').select('referral_code, wallet_balance, name').eq('id', user.id).single()
+    
+    let currentCode = profile?.referral_code
+    if (!currentCode) {
+      // Jika user lama belum punya kode, buatkan
+      const baseName = (profile?.name || 'USER').split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '')
+      currentCode = `${baseName}${Math.floor(100 + Math.random() * 900)}`
+      await supabase.from('profiles').update({ referral_code: currentCode }).eq('id', user.id)
+    }
+    
+    setReferralCode(currentCode)
+    setWalletBalance(profile?.wallet_balance || 0)
+
+    // 2. Dapatkan riwayat referral
+    const { data: history } = await supabase.from('referral_history')
+      .select(`
+        commission_amount, status, created_at,
+        referred_user:referred_user_id (name, email)
+      `)
+      .eq('referrer_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (history) {
+      const mapped = history.map(h => ({
+        name: h.referred_user?.name || 'User Baru',
+        email: h.referred_user?.email || 'N/A',
+        commission: h.commission_amount,
+        date: new Date(h.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status: h.status
+      }))
+      setOrders(mapped)
+    }
+
+    setLoading(false)
+  }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(REFERRAL_LINK)
+    const link = `https://ulema.id/r/${referralCode}`
+    navigator.clipboard.writeText(link)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const handleWithdraw = async (e) => {
+    e.preventDefault()
+    if (walletBalance < 50000) {
+      alert('Minimal penarikan adalah Rp 50.000')
+      return
+    }
+    
+    setWithdrawing(true)
+    const { data, error } = await supabase.from('withdrawals').insert([{
+      user_id: user.id,
+      amount: walletBalance,
+      payment_method: withdrawForm.method,
+      account_number: withdrawForm.accNumber,
+      account_name: withdrawForm.accName
+    }])
+
+    if (!error) {
+      // Kurangi saldo
+      await supabase.from('profiles').update({ wallet_balance: 0 }).eq('id', user.id)
+      setWalletBalance(0)
+      
+      // Arahkan ke WA admin
+      const message = `Halo Admin Ulema! Saya ingin menarik komisi referral saya sebesar Rp ${walletBalance.toLocaleString('id-ID')} ke rekening ${withdrawForm.method} - ${withdrawForm.accNumber} a.n. ${withdrawForm.accName}. Mohon diproses ya.`
+      window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(message)}`, '_blank')
+      
+      setShowWithdraw(false)
+      alert('Permintaan penarikan berhasil! Admin akan memproses segera.')
+    } else {
+      alert('Gagal memproses penarikan: ' + error.message)
+    }
+    setWithdrawing(false)
+  }
+
+  const referralLink = `https://ulema.id/r/${referralCode}`
+  const totalCommission = orders.filter(o => o.status !== 'pending').reduce((sum, o) => sum + o.commission, 0)
+  const pendingCommission = orders.filter(o => o.status === 'pending').reduce((sum, o) => sum + o.commission, 0)
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Memuat data referral...</div>
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -28,11 +116,11 @@ export default function ReferralPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Referral', value: '3', icon: Users, color: 'text-brand-600 bg-brand-50' },
-          { label: 'Total Komisi', value: 'Rp 65rb', icon: TrendingUp, color: 'text-green-600 bg-green-50' },
-          { label: 'Menunggu', value: 'Rp 15rb', icon: Share2, color: 'text-amber-600 bg-amber-50' },
+          { label: 'Total Referral', value: orders.length.toString(), icon: Users, color: 'text-brand-600 bg-brand-50' },
+          { label: 'Total Komisi', value: `Rp ${totalCommission.toLocaleString('id-ID')}`, icon: TrendingUp, color: 'text-green-600 bg-green-50' },
+          { label: 'Saldo Aktif', value: `Rp ${walletBalance.toLocaleString('id-ID')}`, icon: Share2, color: 'text-amber-600 bg-amber-50' },
         ].map(s => (
           <div key={s.label} className="stat-card text-center items-center">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${s.color}`}>
@@ -44,20 +132,64 @@ export default function ReferralPage() {
         ))}
       </div>
 
+      {walletBalance >= 50000 && !showWithdraw && (
+        <button onClick={() => setShowWithdraw(true)} className="w-full btn-primary py-3 flex justify-center shadow-md shadow-brand-500/20 animate-fade-in">
+          Tarik Saldo Komisi (Rp {walletBalance.toLocaleString('id-ID')})
+        </button>
+      )}
+
+      {showWithdraw && (
+        <form onSubmit={handleWithdraw} className="bg-white rounded-2xl border border-surface-border shadow-card p-6 animate-fade-in space-y-4">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="font-semibold text-slate-800">Tarik Saldo Komisi</h2>
+            <button type="button" onClick={() => setShowWithdraw(false)} className="text-slate-400 hover:text-slate-600">Batal</button>
+          </div>
+          <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-xs flex gap-2">
+            <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+            <p>Setelah menekan tombol konfirmasi, Anda akan diarahkan ke WhatsApp Admin untuk validasi penarikan secara manual.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Metode</label>
+              <select value={withdrawForm.method} onChange={e => setWithdrawForm({...withdrawForm, method: e.target.value})} className="w-full input-field py-2 text-sm">
+                <option>BCA</option>
+                <option>Mandiri</option>
+                <option>BRI</option>
+                <option>BNI</option>
+                <option>GoPay</option>
+                <option>OVO</option>
+                <option>Dana</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Nomor Rekening / HP</label>
+              <input required value={withdrawForm.accNumber} onChange={e => setWithdrawForm({...withdrawForm, accNumber: e.target.value})} type="text" className="w-full input-field py-2 text-sm" placeholder="Contoh: 1234567890" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">Nama Pemilik Rekening</label>
+            <input required value={withdrawForm.accName} onChange={e => setWithdrawForm({...withdrawForm, accName: e.target.value})} type="text" className="w-full input-field py-2 text-sm" placeholder="Sesuai buku tabungan" />
+          </div>
+          <button type="submit" disabled={withdrawing} className="w-full btn-primary py-2.5 flex justify-center shadow-md mt-2 disabled:opacity-50">
+            {withdrawing ? 'Memproses...' : 'Lanjut ke WhatsApp Admin'}
+          </button>
+        </form>
+      )}
+
       {/* Referral Code */}
       <div className="bg-white rounded-2xl border border-surface-border shadow-card p-6">
         <h2 className="font-semibold text-slate-800 text-sm mb-1">Kode Referralmu</h2>
         <p className="text-xs text-slate-500 mb-4">Bagikan kode atau link di bawah ini kepada temanmu.</p>
         <div className="flex items-center gap-3 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-3">
-          <span className="font-mono font-bold text-brand-700 text-lg flex-1">{REFERRAL_CODE}</span>
+          <span className="font-mono font-bold text-brand-700 text-lg flex-1">{referralCode}</span>
           <button onClick={handleCopy} className="btn-primary py-1.5 text-xs">
             {copied ? <><Check size={12} /> Disalin!</> : <><Copy size={12} /> Salin Link</>}
           </button>
         </div>
-        <p className="text-[11px] text-slate-400 font-mono break-all">{REFERRAL_LINK}</p>
+        <p className="text-[11px] text-slate-400 font-mono break-all">{referralLink}</p>
         <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
           <p className="text-xs font-semibold text-amber-700">💰 Komisi: 20% untuk setiap pembelian</p>
-          <p className="text-[11px] text-amber-600 mt-0.5">Komisi langsung masuk ke saldo akunmu setelah order dikonfirmasi.</p>
+          <p className="text-[11px] text-amber-600 mt-0.5">Komisi langsung masuk ke saldo akunmu setelah pesanan temanmu disetujui (lunas). Temanmu juga mendapat diskon Rp 10.000!</p>
         </div>
       </div>
 
@@ -67,19 +199,21 @@ export default function ReferralPage() {
           <h2 className="font-semibold text-slate-800 text-sm">Riwayat Referral Order</h2>
         </div>
         <div className="divide-y divide-slate-100">
-          {REFERRAL_ORDERS.map((r, i) => (
-            <div key={i} className="px-5 py-4 flex items-center gap-3">
+          {orders.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-sm">Belum ada riwayat referral. Ajak temanmu sekarang!</div>
+          ) : orders.map((r, i) => (
+            <div key={i} className="px-5 py-4 flex items-center gap-3 hover:bg-slate-50 transition-colors">
               <div className="w-8 h-8 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
                 {r.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-800 text-sm">{r.name}</p>
-                <p className="text-[11px] text-slate-400">{r.email} · {r.pkg} · {r.date}</p>
+                <p className="text-[11px] text-slate-400">{r.email} · {r.date}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="font-bold text-sm text-brand-700">{r.commission}</p>
-                <span className={`badge text-[10px] ${r.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {r.status === 'paid' ? 'Dibayar' : 'Menunggu'}
+                <p className="font-bold text-sm text-brand-700">Rp {r.commission.toLocaleString('id-ID')}</p>
+                <span className={`badge text-[10px] ${r.status !== 'pending' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {r.status !== 'pending' ? 'Selesai' : 'Menunggu'}
                 </span>
               </div>
             </div>

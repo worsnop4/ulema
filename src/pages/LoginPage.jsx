@@ -87,12 +87,16 @@ export default function LoginPage() {
 
       if (authData.user) {
         // Ensure user profile exists (fallback if trigger fails)
+        const baseName = name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '')
+        const referralCode = `${baseName}${Math.floor(100 + Math.random() * 900)}`
+
         await supabase.from('profiles').upsert({
           id: authData.user.id,
           email: authData.user.email,
           name: name.trim(),
           role: 'user',
-          package_type: 'none'
+          package_type: 'none',
+          referral_code: referralCode
         })
 
         // Create initial invitation data

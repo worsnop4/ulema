@@ -60,6 +60,39 @@ export default function AdminTransactions() {
       return
     }
 
+    // --- LOGIKA REFERRAL KOMISI ---
+    try {
+      const { data: refHistory } = await supabase.from('referral_history')
+        .select('*')
+        .eq('transaction_id', txId)
+        .eq('status', 'pending')
+        .single()
+        
+      if (refHistory) {
+        // Update status referral menjadi available
+        await supabase.from('referral_history')
+          .update({ status: 'available' })
+          .eq('id', refHistory.id)
+        
+        // Ambil saldo referrer saat ini
+        const { data: referrerProfile } = await supabase.from('profiles')
+          .select('wallet_balance')
+          .eq('id', refHistory.referrer_id)
+          .single()
+          
+        if (referrerProfile) {
+          const newBalance = (referrerProfile.wallet_balance || 0) + refHistory.commission_amount
+          await supabase.from('profiles')
+            .update({ wallet_balance: newBalance })
+            .eq('id', refHistory.referrer_id)
+        }
+      }
+    } catch (err) {
+      console.error('Error memproses komisi referral:', err)
+      // Jangan return error, biarkan transaksi tetap disetujui
+    }
+    // ------------------------------
+
     fetchData() // Refresh
 
     setMessage(`🎉 Pembayaran disetujui! Kategori ${packageName} berhasil diaktifkan untuk ${userEmail}.`)
