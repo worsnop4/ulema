@@ -8,6 +8,7 @@ export default function AdminMusic() {
   const [error, setError] = useState(null)
   
   const [isAdding, setIsAdding] = useState(false)
+  const [file, setFile] = useState(null)
   const [newTrack, setNewTrack] = useState({
     title: '',
     genre: '',
@@ -39,36 +40,78 @@ export default function AdminMusic() {
 
   const handleAdd = async (e) => {
     e.preventDefault()
-    if (!newTrack.title || !newTrack.url) return
+    if (!newTrack.title || !file) {
+      alert('Judul dan file musik harus diisi!')
+      return
+    }
+
+    // Validasi ukuran (Maks 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Ukuran file maksimal 10MB!')
+      return
+    }
     
     setSaving(true)
-    const { data, error } = await supabase
-      .from('musics')
-      .insert([newTrack])
-      .select()
+
+    try {
+      // 1. Upload ke Storage
+      const fileExt = file.name.split('.').pop()
+      const fileName = `admin-music/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
       
-    setSaving(false)
-    if (error) {
-      alert('Gagal menambah musik: ' + error.message)
-    } else {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('invitation-media')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false })
+
+      if (uploadError) throw uploadError
+
+      // 2. Dapatkan URL Publik
+      const { data: publicUrlData } = supabase.storage
+        .from('invitation-media')
+        .getPublicUrl(fileName)
+
+      const trackToSave = { ...newTrack, url: publicUrlData.publicUrl }
+
+      // 3. Simpan ke database
+      const { data, error } = await supabase
+        .from('musics')
+        .insert([trackToSave])
+        .select()
+        
+      if (error) throw error
+
       setMusics([...musics, data[0]])
       setNewTrack({ title: '', genre: '', duration: '', emoji: '🎵', url: '' })
+      setFile(null)
       setIsAdding(false)
+    } catch (err) {
+      alert('Gagal menambah musik: ' + err.message)
+    } finally {
+      setSaving(false)
     }
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Hapus trek musik ini?')) return
+  const handleDelete = async (id, url) => {
+    if (!confirm('Hapus trek musik ini? File juga akan dihapus permanen dari storage.')) return
     
-    const { error } = await supabase
-      .from('musics')
-      .delete()
-      .eq('id', id)
-      
-    if (error) {
-      alert('Gagal menghapus musik: ' + error.message)
-    } else {
+    try {
+      // Hapus dari tabel
+      const { error } = await supabase
+        .from('musics')
+        .delete()
+        .eq('id', id)
+        
+      if (error) throw error
+
+      // Hapus file dari storage jika ada path-nya
+      if (url && url.includes('/invitation-media/')) {
+        const path = url.split('/invitation-media/')[1]
+        // Jika path tidak mengandung admin-music/, mungkin ini file lain, tapi ini fitur admin jadi aman.
+        await supabase.storage.from('invitation-media').remove([path])
+      }
+
       setMusics(musics.filter(m => m.id !== id))
+    } catch (err) {
+      alert('Gagal menghapus musik: ' + err.message)
     }
   }
 
@@ -115,10 +158,12 @@ export default function AdminMusic() {
                 placeholder="Contoh: Perfect - Ed Sheeran" required />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">URL / Link File MP3</label>
-              <input type="url" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-brand-500 outline-none"
-                value={newTrack.url} onChange={e => setNewTrack({...newTrack, url: e.target.value})}
-                placeholder="https://.../lagu.mp3 atau /music/lagu.mp3" required />
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">File Audio (MP3/WAV)</label>
+              <input type="file" accept="audio/mp3,audio/mpeg,audio/wav"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-brand-500 outline-none file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-brand-50 file:text-brand-600 hover:file:bg-brand-100"
+                onChange={e => setFile(e.target.files[0])}
+                required />
+              <p className="text-[10px] text-slate-400 mt-1">Maksimal 10MB.</p>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-1">
@@ -190,7 +235,7 @@ export default function AdminMusic() {
                   <td className="p-4 text-sm text-slate-600">{track.genre || '-'}</td>
                   <td className="p-4 text-sm text-slate-600">{track.duration || '-'}</td>
                   <td className="p-4 text-right">
-                    <button onClick={() => handleDelete(track.id)}
+                    <button onClick={() => handleDelete(track.id, track.url)}
                       className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors">
                       <Trash2 size={16} />
                     </button>
