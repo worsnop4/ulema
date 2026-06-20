@@ -1,18 +1,24 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Check, Music } from 'lucide-react'
 import { useSharedInvitation } from '../../hooks/useSharedInvitation'
-
-const MUSIC_LIBRARY = [
-  { id: 1, title: 'Perfect - Ed Sheeran', genre: 'Pop', duration: '4:23', emoji: '🎵' },
-  { id: 2, title: 'A Thousand Years - Christina Perri', genre: 'Ballad', duration: '4:45', emoji: '🎶' },
-  { id: 3, title: "Can't Help Falling in Love - Elvis", genre: 'Classic', duration: '3:00', emoji: '🎸' },
-  { id: 4, title: 'Thinking Out Loud - Ed Sheeran', genre: 'Pop', duration: '4:41', emoji: '🎹' },
-  { id: 5, title: "Aku Milikmu - D'masiv", genre: 'Pop Indonesia', duration: '3:55', emoji: '🎤' },
-  { id: 6, title: 'Sempurna - Andra & The Backbone', genre: 'Rock Indonesia', duration: '4:02', emoji: '🎸' },
-]
+import { supabase } from '../../lib/supabase'
 
 export default function MusicForm() {
   const [data, updateData] = useSharedInvitation()
+  const [musicLibrary, setMusicLibrary] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchMusic = async () => {
+      const { data, error } = await supabase.from('musics').select('*').order('id', { ascending: true })
+      if (!error && data) {
+        setMusicLibrary(data)
+      }
+      setLoading(false)
+    }
+    fetchMusic()
+  }, [])
+
   const selectedId = data.musicId || 1
   const customMusic = data.customMusic || false
 
@@ -31,8 +37,10 @@ export default function MusicForm() {
 
       {!customMusic ? (
         <div className="space-y-2">
-          {MUSIC_LIBRARY.map(track => (
-            <button key={track.id} onClick={() => updateData({ musicId: track.id })}
+          {loading ? (
+            <div className="text-center text-xs text-slate-500 py-4">Memuat daftar musik...</div>
+          ) : musicLibrary.map(track => (
+            <button key={track.id} onClick={() => updateData({ musicId: track.id, musicUrl: track.url })}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selectedId === track.id ? 'border-brand-400 bg-brand-50' : 'border-slate-200 bg-slate-50 hover:border-brand-200'}`}>
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${selectedId === track.id ? 'bg-brand-500 text-white' : 'bg-white border border-slate-200'}`}>
                 {selectedId === track.id ? <Music size={14} /> : <span className="text-base">{track.emoji}</span>}

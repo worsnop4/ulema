@@ -8,8 +8,9 @@ import AdminThemes from '../components/admin/AdminThemes'
 import AdminIllustrations from '../components/admin/AdminIllustrations'
 import AdminFinance from '../components/admin/AdminFinance'
 import AdminUsers from '../components/admin/AdminUsers'
+import AdminMusic from '../components/admin/AdminMusic'
 import { storageService } from '../services/storageService'
-import { Users as UsersIcon } from 'lucide-react'
+import { Users as UsersIcon, Music } from 'lucide-react'
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate()
@@ -37,6 +38,7 @@ export default function AdminDashboardPage() {
             { id: 'users', label: 'Kelola Pengguna', icon: UsersIcon },
             { id: 'themes', label: 'Daftar Tema', icon: Palette },
             { id: 'illustrations', label: 'Kelola Ilustrasi', icon: ImageIcon },
+            { id: 'music', label: 'Kelola Musik', icon: Music },
             { id: 'finance', label: 'Keuangan & Kupon', icon: Settings }
           ].map(tab => {
             const Icon = tab.icon
@@ -61,6 +63,7 @@ export default function AdminDashboardPage() {
       {activeTab === 'users' && <AdminUsers />}
       {activeTab === 'themes' && <AdminThemes />}
       {activeTab === 'illustrations' && <AdminIllustrations />}
+      {activeTab === 'music' && <AdminMusic />}
       {activeTab === 'finance' && <AdminFinance />}
     </div>
   )

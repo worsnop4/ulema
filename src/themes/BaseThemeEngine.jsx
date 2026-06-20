@@ -76,7 +76,7 @@ export default function BaseThemeEngine({
         {data.music !== false && (
           <audio
             ref={audioRef}
-            src={MUSIC_URLS[data.musicId || 1] || MUSIC_URLS[1]}
+            src={data.musicUrl || MUSIC_URLS[data.musicId || 1] || MUSIC_URLS[1]}
             loop
           />
         )}
