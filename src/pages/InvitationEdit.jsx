@@ -7,7 +7,7 @@ import {
 import ModuleGrid from '../components/ModuleGrid'
 import EditModal from '../components/EditModal'
 import { storageService } from '../services/storageService'
-import { useSharedInvitation } from '../hooks/useSharedInvitation'
+import { useSharedInvitation, getThemes } from '../hooks/useSharedInvitation'
 
 export default function InvitationEdit() {
   const { user } = useAuth()
@@ -15,9 +15,18 @@ export default function InvitationEdit() {
   
   let BASE_URL = '/invite/doni-rizka'
   const adminDemo = storageService.getItem('inviter_admin_demo_mode')
+  let activeThemeName = null
+  let activeThemeEmoji = '🌿'
+
   if (adminDemo) {
     // Dynamically use the active themeId from data, fallback to adminDemo
     BASE_URL = `/invite/demo?theme=${data?.themeId || adminDemo}`
+    const themes = getThemes()
+    const found = themes.find(t => t.id.toString() === adminDemo.toString())
+    if (found) {
+      activeThemeName = found.name
+      activeThemeEmoji = found.emoji || '🌿'
+    }
   } else if (data?.slug) {
     BASE_URL = `/invite/${data.slug}`
   } else if (user?.slug) {
@@ -65,13 +74,22 @@ export default function InvitationEdit() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-brand-600 uppercase tracking-widest mb-1">Dashboard</p>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">Edit Undangan</h1>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
+            {adminDemo ? 'Edit Konten Tema' : 'Edit Undangan'}
+          </h1>
         </div>
         <div className="hidden sm:flex items-center gap-2">
-          <span className="badge bg-[#F4E8CD] text-[#1C232E]">
-            <span className="w-1.5 h-1.5 bg-[#DDC497] rounded-full inline-block" />
-            Aktif
-          </span>
+          {adminDemo ? (
+            <span className="badge bg-indigo-100 text-indigo-700 font-bold tracking-wide uppercase shadow-sm">
+              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full inline-block animate-pulse" />
+              Mode Admin Demo
+            </span>
+          ) : (
+            <span className="badge bg-[#F4E8CD] text-[#1C232E]">
+              <span className="w-1.5 h-1.5 bg-[#DDC497] rounded-full inline-block" />
+              Aktif
+            </span>
+          )}
         </div>
       </div>
 
@@ -80,18 +98,22 @@ export default function InvitationEdit() {
         <div className="p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-5">
             {/* Thumbnail */}
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0 overflow-hidden border-2 border-brand-100"
-                 style={{ background: 'linear-gradient(135deg, #00152f, #002147)' }}>
-              <div className="w-full h-full flex flex-col items-center justify-center text-white">
-                <span className="text-2xl">💍</span>
-                <span className="font-serif text-[10px] font-semibold mt-1 opacity-80">Ulema</span>
+            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0 overflow-hidden border-2 border-brand-100 ${adminDemo ? 'shadow-inner' : ''}`}
+                 style={adminDemo ? { background: 'linear-gradient(135deg, #eef2ff, #e0e7ff)' } : { background: 'linear-gradient(135deg, #00152f, #002147)' }}>
+              <div className={`w-full h-full flex flex-col items-center justify-center ${adminDemo ? 'text-indigo-600' : 'text-white'}`}>
+                <span className="text-3xl">{adminDemo ? activeThemeEmoji : '💍'}</span>
+                {!adminDemo && <span className="font-serif text-[10px] font-semibold mt-1 opacity-80">Ulema</span>}
               </div>
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h2 className="font-serif text-xl font-bold text-slate-900 truncate">
-                {user?.name || 'Doni & Rizka'}
+              <h2 className="font-serif text-xl font-bold text-slate-900 truncate flex items-center gap-2">
+                {adminDemo ? (
+                  <>Tema: {activeThemeName || `Theme ${adminDemo}`}</>
+                ) : (
+                  user?.name || 'Doni & Rizka'
+                )}
               </h2>
               <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
