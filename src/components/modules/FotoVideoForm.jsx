@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { HelpCircle, X, Plus } from 'lucide-react'
 import { useSharedInvitation } from '../../hooks/useSharedInvitation'
-import { AccordionItem, PremiumPhotoUploadBox, compressImage } from '../common/FormHelpers'
+import { AccordionItem, PremiumPhotoUploadBox, compressImage, uploadMedia } from '../common/FormHelpers'
 
 export default function FotoVideoForm() {
   const [data, updateData] = useSharedInvitation()
@@ -37,8 +37,16 @@ export default function FotoVideoForm() {
     const results = []
     for (const file of files) {
       try {
-        const compressed = await compressImage(file, 550, 0.5)
-        results.push({ id: Date.now() + Math.random(), src: compressed, name: file.name })
+        const compressedBase64 = await compressImage(file, 550, 0.5)
+        
+        // Convert compressed base64 back to Blob
+        const res = await fetch(compressedBase64)
+        const blob = await res.blob()
+        
+        // Upload to Supabase Storage
+        const publicUrl = await uploadMedia(blob, 'gallery')
+        
+        results.push({ id: Date.now() + Math.random(), src: publicUrl, name: file.name })
       } catch (err) {
         setError(`Gagal memproses "${file.name}": ${err.message}`)
       }
@@ -50,9 +58,10 @@ export default function FotoVideoForm() {
 
     updateData(
       { gallery: [...gallery, ...results] },
-      () => setError('Penyimpanan browser penuh. Hapus beberapa foto atau gunakan foto yang lebih kecil.')
+      (err) => setError('Gagal menyimpan foto ke database: ' + (err?.message || 'Error tidak diketahui'))
     )
   }
+
 
   const removePhoto = (id) => {
     setError(null)
