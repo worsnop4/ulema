@@ -57,15 +57,51 @@ export default function EditModal({ moduleId, onClose }) {
   const mod = MODULES.find(m => m.id === moduleId)
   const FormComponent = FORM_MAP[moduleId]?.component
 
+  // EditModal-level hook: digunakan untuk track loading state
+  // Saat data belum siap (loading=true), tampilkan spinner agar user tidak bisa
+  // berinteraksi sebelum data.id tersedia — mencegah race condition upload foto
+  const [sharedData, , isLoading] = useSharedInvitation()
+
+  // Save status: 'idle' | 'saving' | 'saved' | 'error'
+  const [saveStatus, setSaveStatus] = useState('idle')
+
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
+  // Listen for save events from child form components
+  useEffect(() => {
+    const handleSaving = () => setSaveStatus('saving')
+    const handleSaved = () => {
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2500)
+    }
+    const handleSaveError = () => {
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus('idle'), 4000)
+    }
+    window.addEventListener('INVITATION_SAVING', handleSaving)
+    window.addEventListener('INVITATION_SAVED', handleSaved)
+    window.addEventListener('INVITATION_SAVE_ERROR', handleSaveError)
+    return () => {
+      window.removeEventListener('INVITATION_SAVING', handleSaving)
+      window.removeEventListener('INVITATION_SAVED', handleSaved)
+      window.removeEventListener('INVITATION_SAVE_ERROR', handleSaveError)
+    }
+  }, [])
+
   if (!mod || !FormComponent) return null
 
   const Icon = mod.icon
+
+  const saveIndicator = {
+    idle: { color: 'text-green-600 bg-green-50 border-green-100', dot: 'bg-green-500', text: 'Perubahan tersimpan otomatis ke undangan' },
+    saving: { color: 'text-blue-600 bg-blue-50 border-blue-100', dot: 'bg-blue-500', text: 'Menyimpan...' },
+    saved: { color: 'text-green-600 bg-green-50 border-green-100', dot: 'bg-green-500', text: '✓ Tersimpan!' },
+    error: { color: 'text-red-600 bg-red-50 border-red-100', dot: 'bg-red-500', text: '✗ Gagal menyimpan. Coba lagi.' },
+  }[saveStatus]
 
   return (
     <div className="modal-overlay">
@@ -86,17 +122,25 @@ export default function EditModal({ moduleId, onClose }) {
           </button>
         </div>
 
-        {/* Live indicator */}
+        {/* Save indicator */}
         <div className="px-5 pt-3 pb-0">
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-green-600 bg-green-50 border border-green-100 rounded-xl px-3 py-1.5 w-fit">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Perubahan tersimpan otomatis ke undangan
+          <div className={`flex items-center gap-1.5 text-[11px] font-semibold border rounded-xl px-3 py-1.5 w-fit transition-all ${saveIndicator.color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${saveIndicator.dot} ${saveStatus === 'saving' ? 'animate-pulse' : ''}`} />
+            {saveIndicator.text}
           </div>
         </div>
 
         {/* Modal Body */}
         <div className="px-5 py-5">
-          <FormComponent />
+          {isLoading ? (
+            /* Tampilkan loading agar user tidak upload foto sebelum data.id siap */
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-slate-500">Memuat data...</p>
+            </div>
+          ) : (
+            <FormComponent />
+          )}
         </div>
 
         {/* Modal Footer */}
@@ -108,3 +152,4 @@ export default function EditModal({ moduleId, onClose }) {
     </div>
   )
 }
+

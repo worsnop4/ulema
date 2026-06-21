@@ -20,7 +20,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     // Always clear admin demo mode when returning to admin dashboard
     storageService.removeItem('inviter_admin_demo_mode')
-    window.dispatchEvent(new Event('storage'))
+    window.dispatchEvent(new Event('admin-demo-changed'))
   }, [])
 
   return (

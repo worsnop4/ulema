@@ -118,8 +118,8 @@ export default function AdminThemes() {
   }
 
   const handleEditDemoClick = (themeId) => {
-    storageService.setItem('inviter_admin_demo_mode', themeId)
-    window.dispatchEvent(new Event('storage'))
+    storageService.setItem('inviter_admin_demo_mode', themeId, false)
+    window.dispatchEvent(new Event('admin-demo-changed'))
     navigate('/dashboard/invitation/edit')
   }
 
