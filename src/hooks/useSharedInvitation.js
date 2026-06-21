@@ -146,7 +146,7 @@ export function useSharedInvitation() {
 
       let fetchedData = null
 
-      if (isPublicInvite && publicSlug !== 'demo') {
+      if (isPublicInvite && publicSlug && publicSlug !== 'demo') {
         // ── Undangan publik milik pengguna ──────────────────────────
         const { data: inviteRow } = await supabase
           .from('invitations').select('*')
@@ -154,33 +154,6 @@ export function useSharedInvitation() {
           .maybeSingle()
         if (inviteRow) {
           fetchedData = { ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id }
-        }
-
-      } else if (adminDemo) {
-        // ── Admin edit konten demo tema ──────────────────────────────
-        const targetSlug = `demo-theme-${adminDemo}`
-        const { data: inviteRow } = await supabase
-          .from('invitations').select('*')
-          .eq('data->>slug', targetSlug)
-          .maybeSingle()
-
-        if (inviteRow) {
-          fetchedData = { ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id }
-        } else {
-          // Fallback: buat row jika belum ada (seharusnya sudah di-seed)
-          const payload = {
-            theme_id: parseInt(adminDemo, 10),
-            groom_name: 'Groom',
-            bride_name: 'Bride',
-            user_id: null,
-            data: { ...defaultInvitationData, themeId: parseInt(adminDemo, 10), slug: targetSlug },
-          }
-          const { data: newRow, error } = await supabase
-            .from('invitations').insert(payload).select().single()
-          if (error) console.error('[useSharedInvitation] Gagal membuat row demo:', error)
-          fetchedData = newRow
-            ? { ...defaultInvitationData, ...newRow.data, id: newRow.id }
-            : { ...defaultInvitationData, themeId: parseInt(adminDemo, 10), slug: targetSlug }
         }
 
       } else if (publicSlug === 'demo') {
@@ -195,12 +168,16 @@ export function useSharedInvitation() {
           ? { ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id }
           : { ...defaultInvitationData, themeId: parseInt(queryThemeId, 10), slug: targetSlug }
 
-      } else if (user && user.role !== 'admin') {
-        // ── Pengguna biasa yang sudah login ─────────────────────────
-        const { data: inviteRow } = await supabase
-          .from('invitations').select('*')
-          .eq('user_id', user.id)
-          .maybeSingle()
+      } else if (user) {
+        // ── Pengguna yang login (User biasa / Admin) ─────────────────
+        let query = supabase.from('invitations').select('*').eq('user_id', user.id)
+
+        // Jika Admin sedang mode edit tema demo, spesifikkan berdasarkan slug demo-nya
+        if (user.role === 'admin' && adminDemo) {
+          query = query.eq('data->>slug', `demo-theme-${adminDemo}`)
+        }
+
+        const { data: inviteRow } = await query.maybeSingle()
         if (inviteRow) {
           fetchedData = { ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id }
         }
@@ -295,63 +272,8 @@ export function useSharedInvitation() {
     // 5. Simpan ke Supabase secara async, DI LUAR setState
     if (!skipSave) {
       window.dispatchEvent(new Event('INVITATION_SAVING'))
-      if (adminDemo) {
-        let saveError = null
-
-        if (next.id) {
-          // Row sudah punya ID — langsung update
-          const { error } = await supabase.from('invitations').update({
-            theme_id: parseInt(adminDemo, 10),
-            groom_name: next.groom?.nickname || 'Groom',
-            bride_name: next.bride?.nickname || 'Bride',
-            data: next,
-            user_id: null,
-          }).eq('id', next.id)
-          saveError = error || null
-        } else {
-          // Fallback: cari row by slug, lalu update atau insert
-          const targetSlug = `demo-theme-${adminDemo}`
-          const { data: existing } = await supabase
-            .from('invitations').select('id').eq('data->>slug', targetSlug).maybeSingle()
-
-          const payload = {
-            theme_id: parseInt(adminDemo, 10),
-            groom_name: next.groom?.nickname || 'Groom',
-            bride_name: next.bride?.nickname || 'Bride',
-            data: next,
-            user_id: null,
-          }
-
-          if (existing?.id) {
-            const { error } = await supabase.from('invitations').update(payload).eq('id', existing.id)
-            if (!error) {
-              const withId = { ...next, id: existing.id }
-              dataRef.current = withId
-              setData(withId)
-            }
-            saveError = error || null
-          } else {
-            const { data: newRow, error } = await supabase
-              .from('invitations').insert(payload).select().single()
-            if (!error && newRow) {
-              const withId = { ...next, id: newRow.id }
-              dataRef.current = withId
-              setData(withId)
-            }
-            saveError = error || null
-          }
-        }
-
-        if (saveError) {
-          console.error('[updateData] Gagal simpan demo row:', saveError)
-          window.dispatchEvent(new Event('INVITATION_SAVE_ERROR'))
-          if (onError) onError(saveError)
-        } else {
-          window.dispatchEvent(new Event('INVITATION_SAVED'))
-        }
-
-      } else if (next.id && (!isPublicInvite || publicSlug !== 'demo')) {
-        // ── Pengguna biasa ────────────────────────────────────────────
+      
+      if (next.id && (!isPublicInvite || publicSlug !== 'demo')) {
         const { error } = await supabase.from('invitations').update({
           data: next,
           groom_name: next.groom?.nickname,
@@ -360,14 +282,13 @@ export function useSharedInvitation() {
         }).eq('id', next.id)
 
         if (error) {
-          console.error('[updateData] Gagal update undangan user:', error)
+          console.error('[updateData] Gagal menyimpan:', error)
           window.dispatchEvent(new Event('INVITATION_SAVE_ERROR'))
           if (onError) onError(error)
         } else {
           window.dispatchEvent(new Event('INVITATION_SAVED'))
         }
       } else {
-        // Tidak ada kondisi yang match (misalnya: user tidak login dan bukan adminDemo)
         window.dispatchEvent(new Event('INVITATION_SAVED'))
       }
     }
