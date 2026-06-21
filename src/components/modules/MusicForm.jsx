@@ -47,10 +47,10 @@ export default function MusicForm() {
   }
 
   const selectedId = data.musicId || 1
-  const customMusic = data.customMusic || false
 
   return (
     <div className="space-y-4">
+      {/* Fitur Upload Custom dinonaktifkan sementara untuk menghemat storage
       <div className="flex gap-2">
         <button onClick={() => updateData({ customMusic: false })}
                 className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all ${!customMusic ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-slate-600 border-slate-200 hover:border-brand-300'}`}>
@@ -61,42 +61,30 @@ export default function MusicForm() {
           Upload Custom
         </button>
       </div>
+      */}
 
-      {!customMusic ? (
-        <div className="space-y-2">
-          {loading ? (
-            <div className="text-center text-xs text-slate-500 py-4">Memuat daftar musik...</div>
-          ) : musicLibrary.map(track => (
-            <button key={track.id} onClick={() => updateData({ musicId: track.id, musicUrl: track.url })}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selectedId === track.id ? 'border-brand-400 bg-brand-50' : 'border-slate-200 bg-slate-50 hover:border-brand-200'}`}>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${selectedId === track.id ? 'bg-brand-500 text-white' : 'bg-white border border-slate-200'}`}>
-                {selectedId === track.id ? <Music size={14} /> : <span className="text-base">{track.emoji}</span>}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 truncate">{track.title}</p>
-                <p className="text-[11px] text-slate-500">{track.genre} · {track.duration}</p>
-              </div>
-              <button onClick={(e) => togglePlay(e, track.id, track.url)}
-                className={`p-2 rounded-full transition-colors flex-shrink-0 ${playingId === track.id ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
-                title={playingId === track.id ? "Jeda" : "Putar"}>
-                {playingId === track.id ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />}
-              </button>
-              {selectedId === track.id && <Check size={16} className="text-brand-600 flex-shrink-0 ml-1" />}
+      <div className="space-y-2">
+        {loading ? (
+          <div className="text-center text-xs text-slate-500 py-4">Memuat daftar musik...</div>
+        ) : musicLibrary.map(track => (
+          <button key={track.id} onClick={() => updateData({ musicId: track.id, musicUrl: track.url })}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selectedId === track.id ? 'border-brand-400 bg-brand-50' : 'border-slate-200 bg-slate-50 hover:border-brand-200'}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${selectedId === track.id ? 'bg-brand-500 text-white' : 'bg-white border border-slate-200'}`}>
+              {selectedId === track.id ? <Music size={14} /> : <span className="text-base">{track.emoji}</span>}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-800 truncate">{track.title}</p>
+              <p className="text-[11px] text-slate-500">{track.genre} · {track.duration}</p>
+            </div>
+            <button onClick={(e) => togglePlay(e, track.id, track.url)}
+              className={`p-2 rounded-full transition-colors flex-shrink-0 ${playingId === track.id ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
+              title={playingId === track.id ? "Jeda" : "Putar"}>
+              {playingId === track.id ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />}
             </button>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-xs text-slate-500 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-            💡 Upload file MP3 maksimal 2MB. File disimpan sementara di browser.
-          </p>
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-brand-400 transition-all text-center">
-            <Music size={22} className="text-slate-400" />
-            <p className="text-sm text-slate-500 font-medium">Klik untuk upload MP3</p>
-            <p className="text-xs text-slate-400">Format: MP3 · Maks. 2MB</p>
-          </div>
-        </div>
-      )}
+            {selectedId === track.id && <Check size={16} className="text-brand-600 flex-shrink-0 ml-1" />}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

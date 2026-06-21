@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { getPricing } from '../../hooks/useSharedInvitation'
 import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare, Image as ImageIcon, X, Loader2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { PACKAGE_NAMES } from '../../constants/config'
 
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [pricing, setPricing] = useState(() => getPricing())
   const [users, setUsers] = useState([])
   const [message, setMessage] = useState('')
   const [viewProofImage, setViewProofImage] = useState(null)
@@ -18,8 +17,8 @@ export default function AdminTransactions() {
   async function fetchData() {
     setIsLoading(true)
     const [txRes, usersRes] = await Promise.all([
-      supabase.from('transactions').select('*, profiles(email)').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('*')
+      supabase.from('transactions').select('*, profiles(email, name)').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('id, name, email, package_type, created_at')
     ])
     
     if (txRes.data) {
@@ -41,10 +40,8 @@ export default function AdminTransactions() {
   }
 
   const handleApprovePayment = async (txId, userId, packageDesc, userEmail) => {
-    let packageName = 'Special'
-    if (packageDesc.includes('Luxury')) packageName = 'Luxury'
-    else if (packageDesc.includes('Motion')) packageName = 'Motion'
-    else if (packageDesc.includes('Adat')) packageName = 'Adat'
+    // Derive package name from the transaction's package_name field directly
+    const packageName = PACKAGE_NAMES.find(p => packageDesc.includes(p)) || 'Special'
 
     // Update Transaction
     const { error: txError } = await supabase.from('transactions').update({ status: 'approved' }).eq('id', txId)
@@ -60,10 +57,10 @@ export default function AdminTransactions() {
       return
     }
 
-    // --- LOGIKA REFERRAL KOMISI ---
+    // --- LOGIKA REFERRAL KOMISI (Atomic) ---
     try {
       const { data: refHistory } = await supabase.from('referral_history')
-        .select('*')
+        .select('id, referrer_id, commission_amount')
         .eq('transaction_id', txId)
         .eq('status', 'pending')
         .single()
@@ -74,24 +71,16 @@ export default function AdminTransactions() {
           .update({ status: 'available' })
           .eq('id', refHistory.id)
         
-        // Ambil saldo referrer saat ini
-        const { data: referrerProfile } = await supabase.from('profiles')
-          .select('wallet_balance')
-          .eq('id', refHistory.referrer_id)
-          .single()
-          
-        if (referrerProfile) {
-          const newBalance = (referrerProfile.wallet_balance || 0) + refHistory.commission_amount
-          await supabase.from('profiles')
-            .update({ wallet_balance: newBalance })
-            .eq('id', refHistory.referrer_id)
-        }
+        // Gunakan RPC atomik agar tidak ada race condition jika 2 transaksi disetujui bersamaan
+        await supabase.rpc('increment_wallet_balance', {
+          user_id_input: refHistory.referrer_id,
+          amount_input: refHistory.commission_amount
+        })
       }
     } catch (err) {
       console.error('Error memproses komisi referral:', err)
-      // Jangan return error, biarkan transaksi tetap disetujui
     }
-    // ------------------------------
+    // ----------------------------------------
 
     fetchData() // Refresh
 
@@ -111,13 +100,10 @@ export default function AdminTransactions() {
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const totalRevenue = users.reduce((sum, user) => {
-    const pkg = (user.package_type === 'free' ? 'none' : user.package_type) || 'none'
-    if (pkg && pkg !== 'none') {
-      return sum + (pricing[pkg] || 0)
-    }
-    return sum
-  }, 0)
+  // Pendapatan dihitung dari transaksi yang benar-benar approved (bukan estimasi)
+  const totalRevenue = transactions
+    .filter(t => t.status === 'approved')
+    .reduce((sum, t) => sum + (t.amount || 0), 0)
 
   const pendingPayments = transactions.filter(t => t.status === 'pending')
 

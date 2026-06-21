@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { storageService } from '../services/storageService'
 import { defaultInvitationData, DEFAULT_THEMES, DEFAULT_ILLUSTRATIONS } from '../data/defaultData'
 import { supabase } from '../lib/supabase'
@@ -98,6 +98,8 @@ export function useSharedInvitation() {
   const { user } = useAuth() || {}
   const [data, setData] = useState(defaultInvitationData)
   const [loading, setLoading] = useState(true)
+  // Single persistent BroadcastChannel — avoids memory leak on every update
+  const broadcastChannelRef = useRef(null)
 
   const pathParts = window.location.pathname.split('/')
   const inviteIdx = pathParts.indexOf('invite')
@@ -136,7 +138,9 @@ export function useSharedInvitation() {
 
   // Handle cross-component and cross-tab sync
   useEffect(() => {
+    // Create a single channel and store in ref
     const channel = new BroadcastChannel('inviter_sync')
+    broadcastChannelRef.current = channel
     channel.onmessage = (e) => {
       if (e.data) setData(e.data)
     }
@@ -147,6 +151,7 @@ export function useSharedInvitation() {
     
     return () => {
       channel.close()
+      broadcastChannelRef.current = null
       window.removeEventListener('INVITATION_DATA_SYNC', handleLocalSync)
     }
   }, [])
@@ -180,7 +185,10 @@ export function useSharedInvitation() {
       // Small timeout to allow React to flush the synchronous state update
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('INVITATION_DATA_SYNC', { detail: nextState }))
-        new BroadcastChannel('inviter_sync').postMessage(nextState)
+        // Reuse existing channel ref instead of creating a new one every time
+        if (broadcastChannelRef.current) {
+          broadcastChannelRef.current.postMessage(nextState)
+        }
       }, 0)
     }
   }, [adminDemo, isPublicInvite, publicSlug])

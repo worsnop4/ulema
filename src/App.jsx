@@ -18,11 +18,12 @@ const GuestsPage = lazy(() => import('./pages/GuestsPage'))
 
 
 // Simple auth context
-import { createContext, useContext, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import { AuthContext, useAuth } from './hooks/useAuth'
 
-export const AuthContext = createContext(null)
-export const useAuth = () => useContext(AuthContext)
+// Re-export useAuth so legacy imports from App.jsx still work
+export { useAuth }
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()

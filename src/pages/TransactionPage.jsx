@@ -5,6 +5,7 @@ import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
 import { uploadMedia } from '../components/common/FormHelpers'
 import { supabase } from '../lib/supabase'
+import { ADMIN_WHATSAPP, REFERRAL_DISCOUNT_AMOUNT } from '../constants/config'
 
 export default function TransactionPage() {
   const { user, logout } = useAuth()
@@ -96,7 +97,7 @@ export default function TransactionPage() {
       if (referrer.id === user.id) {
         setVoucherError('Anda tidak bisa menggunakan kode referral milik sendiri.')
       } else {
-        setAppliedVoucher({ type: 'referral', code: code, discount: 10000, referrer_id: referrer.id })
+        setAppliedVoucher({ type: 'referral', code: code, discount: REFERRAL_DISCOUNT_AMOUNT, referrer_id: referrer.id })
       }
     } else {
       setVoucherError('Kode promo atau referral tidak ditemukan.')
@@ -214,7 +215,7 @@ export default function TransactionPage() {
           </div>
           <div className="pt-4 flex flex-col gap-3">
              <a 
-                href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
+                  href={`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm bg-green-500 text-white hover:bg-green-600 hover:shadow-md"
@@ -608,7 +609,7 @@ export default function TransactionPage() {
 
               {hasPendingTransaction && (
                 <a 
-                  href={`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
+                    href={`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm bg-green-500 text-white hover:bg-green-600 hover:shadow-md mt-3"

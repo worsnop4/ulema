@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Share2, Copy, Check, Users, TrendingUp, AlertCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../App'
+import { ADMIN_WHATSAPP, REFERRAL_MIN_WITHDRAWAL } from '../constants/config'
 
 export default function ReferralPage() {
   const { user } = useAuth()
@@ -70,8 +71,8 @@ export default function ReferralPage() {
 
   const handleWithdraw = async (e) => {
     e.preventDefault()
-    if (walletBalance < 50000) {
-      alert('Minimal penarikan adalah Rp 50.000')
+    if (walletBalance < REFERRAL_MIN_WITHDRAWAL) {
+      alert(`Minimal penarikan adalah Rp ${REFERRAL_MIN_WITHDRAWAL.toLocaleString('id-ID')}`)
       return
     }
     
@@ -91,7 +92,7 @@ export default function ReferralPage() {
       
       // Arahkan ke WA admin
       const message = `Halo Admin Ulema! Saya ingin menarik komisi referral saya sebesar Rp ${walletBalance.toLocaleString('id-ID')} ke rekening ${withdrawForm.method} - ${withdrawForm.accNumber} a.n. ${withdrawForm.accName}. Mohon diproses ya.`
-      window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(message)}`, '_blank')
+      window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank')
       
       setShowWithdraw(false)
       alert('Permintaan penarikan berhasil! Admin akan memproses segera.')
