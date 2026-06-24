@@ -190,17 +190,10 @@ export default function AdminUsers() {
                 </div>
               )}
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
-                  <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
-                         value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Doni Firmansyah" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Slug URL</label>
-                  <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
-                         value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} placeholder="Otomatis jika kosong" />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
+                <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
+                       value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Doni Firmansyah" required />
               </div>
 
               <div>
