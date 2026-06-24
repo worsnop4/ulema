@@ -180,6 +180,25 @@ export function useSharedInvitation() {
         const { data: inviteRow } = await query.maybeSingle()
         if (inviteRow) {
           fetchedData = { ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id }
+        } else {
+          // Buat row jika belum ada
+          const payload = {
+            user_id: user.id,
+            theme_id: 1,
+            data: { ...defaultInvitationData }
+          }
+          if (user.role === 'admin' && adminDemo) {
+            payload.theme_id = parseInt(adminDemo, 10)
+            payload.data.themeId = payload.theme_id
+            payload.data.slug = `demo-theme-${adminDemo}`
+          }
+          
+          const { data: newRow, error } = await supabase
+            .from('invitations').insert(payload).select().single()
+            
+          if (!error && newRow) {
+            fetchedData = { ...defaultInvitationData, ...newRow.data, id: newRow.id }
+          }
         }
       }
 
