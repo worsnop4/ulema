@@ -113,7 +113,6 @@ export default function AdminUsers() {
                 <th className="p-4 font-semibold rounded-tl-3xl">Pengguna</th>
                 <th className="p-4 font-semibold">Kontak</th>
                 <th className="p-4 font-semibold">Role & Paket</th>
-                <th className="p-4 font-semibold">Slug URL</th>
                 <th className="p-4 font-semibold text-right rounded-tr-3xl">Aksi</th>
               </tr>
             </thead>
@@ -132,7 +131,10 @@ export default function AdminUsers() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <p className="text-sm text-slate-600">{user.email}</p>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm text-slate-600 font-medium">{user.email}</p>
+                      <p className="text-[11px] text-slate-500 font-mono">{user.phone || user.whatsapp || 'No WA belum diatur'}</p>
+                    </div>
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col items-start gap-1">
@@ -143,15 +145,6 @@ export default function AdminUsers() {
                         {user.package_type === 'none' || user.package_type === 'free' || !user.package_type ? 'Belum Bayar' : user.package_type}
                       </span>
                     </div>
-                  </td>
-                  <td className="p-4">
-                    {user.slug ? (
-                      <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-1 rounded font-mono">
-                        /{user.slug}
-                      </span>
-                    ) : (
-                      <span className="text-slate-300">-</span>
-                    )}
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -216,11 +209,13 @@ export default function AdminUsers() {
                        value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="user@email.com" required />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Password</label>
-                  <input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
-                         value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="Katasandi" />
-              </div>
+              {modalMode === 'add' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Password</label>
+                    <input type="password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
+                           value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="Katasandi" />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

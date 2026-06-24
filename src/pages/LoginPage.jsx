@@ -94,6 +94,7 @@ export default function LoginPage() {
           id: authData.user.id,
           email: authData.user.email,
           name: name.trim(),
+          phone: phone.trim(),
           role: 'user',
           package_type: 'none',
           referral_code: referralCode
