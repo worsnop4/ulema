@@ -105,13 +105,13 @@ export default function FotoVideoForm() {
             {isVideoTheme ? (
               <VideoUploadBox
                 value={meta.coverVideo || null}
-                onChange={val => updateData(prev => ({ meta: { ...(prev.meta || {}), coverVideo: val } }))}
+                onChange={val => updateData(prev => ({ ...prev, meta: { ...(prev.meta || {}), coverVideo: val } }))}
                 helperText="Unggah video MP4 (maks 5MB) untuk cover sinematik Anda."
               />
             ) : (
               <PremiumPhotoUploadBox
                 value={meta.coverPhoto || null}
-                onChange={val => updateData(prev => ({ meta: { ...(prev.meta || {}), coverPhoto: val } }))}
+                onChange={val => updateData(prev => ({ ...prev, meta: { ...(prev.meta || {}), coverPhoto: val } }))}
                 helperText="Foto yang akan muncul di halaman pembuka (cover) undangan."
               />
             )}
@@ -120,7 +120,7 @@ export default function FotoVideoForm() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => updateData(prev => ({ meta: { ...(prev.meta || {}), coverStyle: 'circle' } }))}
+                  onClick={() => updateData(prev => ({ ...prev, meta: { ...(prev.meta || {}), coverStyle: 'circle' } }))}
                   className={`py-2.5 px-4 rounded-xl text-xs font-semibold border-2 transition-all ${
                     (meta.coverStyle || 'circle') === 'circle'
                       ? 'bg-teal-50 border-teal-500 text-teal-700'
@@ -131,7 +131,7 @@ export default function FotoVideoForm() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => updateData(prev => ({ meta: { ...(prev.meta || {}), coverStyle: 'fade' } }))}
+                  onClick={() => updateData(prev => ({ ...prev, meta: { ...(prev.meta || {}), coverStyle: 'fade' } }))}
                   className={`py-2.5 px-4 rounded-xl text-xs font-semibold border-2 transition-all ${
                     meta.coverStyle === 'fade'
                       ? 'bg-teal-50 border-teal-500 text-teal-700'
@@ -229,7 +229,7 @@ export default function FotoVideoForm() {
         >
           <PremiumPhotoUploadBox
             value={meta.footerPhoto || null}
-            onChange={val => updateData(prev => ({ meta: { ...(prev.meta || {}), footerPhoto: val } }))}
+            onChange={val => updateData(prev => ({ ...prev, meta: { ...(prev.meta || {}), footerPhoto: val } }))}
             helperText="Foto pasangan yang akan muncul di bagian penutup (footer) undangan."
           />
         </AccordionItem>

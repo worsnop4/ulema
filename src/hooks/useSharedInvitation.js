@@ -196,6 +196,10 @@ export function useSharedInvitation() {
           const { data: newRow, error } = await supabase
             .from('invitations').insert(payload).select().single()
             
+          if (error) {
+            console.error('[fetchData] Gagal membuat row baru:', error)
+          }
+            
           if (!error && newRow) {
             fetchedData = { ...defaultInvitationData, ...newRow.data, id: newRow.id }
           }
