@@ -43,7 +43,7 @@ export default function AdminUsers() {
 
   const openAddModal = () => {
     setModalMode('add')
-    setFormData({ name: '', email: '', password: '', role: 'user', package: 'free', slug: '' })
+    setFormData({ name: '', email: '', phone: '', password: '', role: 'user', package: 'free', slug: '' })
     setError('')
     setIsModalOpen(true)
   }
@@ -54,6 +54,7 @@ export default function AdminUsers() {
     setFormData({
       name: user.name || '',
       email: user.email || '',
+      phone: user.phone || '',
       password: user.password || '',
       role: user.role || 'user',
       package: user.package_type || 'free',
@@ -79,6 +80,7 @@ export default function AdminUsers() {
       // Edit mode
       const { error } = await supabase.from('profiles').update({
         name: formData.name,
+        phone: formData.phone,
         role: formData.role,
         package_type: formData.package
       }).eq('email', editingEmail)
@@ -196,10 +198,17 @@ export default function AdminUsers() {
                        value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Doni Firmansyah" required />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Email Akses</label>
-                <input type="email" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
-                       value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="user@email.com" required />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Email Akses</label>
+                  <input type="email" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
+                         value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="user@email.com" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">No WhatsApp</label>
+                  <input type="text" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
+                         value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="08..." />
+                </div>
               </div>
 
               {modalMode === 'add' && (
