@@ -90,15 +90,13 @@ export default function LoginPage() {
         const baseName = name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '')
         const referralCode = `${baseName}${Math.floor(100 + Math.random() * 900)}`
 
-        await supabase.from('profiles').upsert({
-          id: authData.user.id,
-          email: authData.user.email,
+        const { error: profileError } = await supabase.from('profiles').update({
           name: name.trim(),
           phone: phone.trim(),
-          role: 'user',
-          package_type: 'none',
           referral_code: referralCode
-        })
+        }).eq('id', authData.user.id)
+        
+        if (profileError) console.error("Profile update error:", profileError)
 
         // Create initial invitation data
         const category = selectedCategory || 'Special'

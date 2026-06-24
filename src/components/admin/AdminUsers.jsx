@@ -43,7 +43,7 @@ export default function AdminUsers() {
 
   const openAddModal = () => {
     setModalMode('add')
-    setFormData({ name: '', email: '', password: '', role: 'user', package: 'none', slug: '' })
+    setFormData({ name: '', email: '', password: '', role: 'user', package: 'free', slug: '' })
     setError('')
     setIsModalOpen(true)
   }
@@ -56,7 +56,7 @@ export default function AdminUsers() {
       email: user.email || '',
       password: user.password || '',
       role: user.role || 'user',
-      package: (user.package_type === 'free' ? 'none' : user.package_type) || 'none',
+      package: user.package_type || 'free',
       slug: user.slug || ''
     })
     setError('')
@@ -223,7 +223,7 @@ export default function AdminUsers() {
                   <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Paket (Package)</label>
                   <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 outline-none transition-colors"
                           value={formData.package} onChange={e => setFormData({...formData, package: e.target.value})}>
-                    <option value="none">Belum Bayar (none)</option>
+                    <option value="free">Belum Bayar (free)</option>
                     <option value="Special">Special</option>
                     <option value="Luxury">Luxury</option>
                     <option value="Motion">Motion</option>
