@@ -30,6 +30,7 @@ export const defaultInvitationData = {
     desc: '',
     photo: null,
     coverPhoto: null,
+    coverVideo: null,
     footerPhoto: null,
     coverStyle: 'circle',
   },
@@ -49,6 +50,8 @@ export const DEFAULT_THEMES = [
   { id: 7, name: 'Autumn Florals', code: 'SPL-001', emoji: '🍃', thumbnail: '/images/themes/autumn.png', layout: 'special-001', colors: ['#6b705c', '#d4a373', '#fefae0'], desc: 'Tema estetik elegan dengan ornamen daun lembut', category: 'Special' },
   { id: 8, name: 'Aestetic Grey', code: 'SPL-002', emoji: '🩶', thumbnail: '/images/themes/autumn.png', layout: 'special-002', colors: ['#4b5563', '#9ca3af', '#f3f4f6'], desc: 'Tema estetik abu-abu minimalis elegan', category: 'Special' },
   { id: 9, name: 'Elegant Person', code: 'SPL-003', emoji: '🌸', thumbnail: '/images/themes/autumn.png', layout: 'special-003', colors: ['#6b705c', '#d4a373', '#fefae0'], desc: 'Tema elegan dengan bingkai foto khusus', category: 'Special' },
+  { id: 10, name: 'Cinematic Luxury (Photo)', code: 'LUX-001', emoji: '🎞️', thumbnail: '/images/themes/darkluxury.png', layout: 'cinematic-luxury', colors: ['#0c0c0c', '#ddc497', '#ffffff'], desc: 'Tema cinematic mewah dengan background foto', category: 'Luxury', themeType: 'photo' },
+  { id: 11, name: 'Cinematic Luxury (Video)', code: 'LUX-002', emoji: '🎥', thumbnail: '/images/themes/darkluxury.png', layout: 'cinematic-luxury', colors: ['#0c0c0c', '#ddc497', '#ffffff'], desc: 'Tema cinematic mewah dengan background video animasi', category: 'Luxury', themeType: 'video' },
 ]
 
 export const DEFAULT_ILLUSTRATIONS = [

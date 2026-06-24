@@ -13,6 +13,7 @@ const TraditionalAdatTheme = lazy(() => import('../themes/TraditionalAdatTheme')
 const Special001Theme = lazy(() => import('../themes/Special001Theme'))
 const Special002Theme = lazy(() => import('../themes/Special002Theme'))
 const Special003Theme = lazy(() => import('../themes/Special003Theme'))
+const CinematicLuxuryTheme = lazy(() => import('../themes/CinematicLuxuryTheme'))
 
 const THEME_COMPONENTS = {
   'watercolor-floral': WatercolorFloralTheme,
@@ -23,6 +24,7 @@ const THEME_COMPONENTS = {
   'special-001': Special001Theme,
   'special-002': Special002Theme,
   'special-003': Special003Theme,
+  'cinematic-luxury': CinematicLuxuryTheme,
 }
 
 // ── Countdown Hook ─────────────────────────────────────────────

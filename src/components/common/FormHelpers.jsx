@@ -151,7 +151,93 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
   )
 }
 
-export function PremiumPhotoUploadBox({ value, onChange, helperText }) {
+export async function uploadVideo(file, pathPrefix = 'video') {
+  const fileName = `${pathPrefix}_${Date.now()}_${Math.random().toString(36).substring(7)}.mp4`
+  
+  const { error } = await supabase.storage
+    .from('invitation-media')
+    .upload(fileName, file, {
+      contentType: 'video/mp4',
+      upsert: false
+    })
+
+  if (error) throw error
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('invitation-media')
+    .getPublicUrl(fileName)
+
+  return publicUrl
+}
+
+export function VideoUploadBox({ label, value, onChange, helperText }) {
+  const inputRef = useRef()
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Video terlalu besar. Maks. 5MB.')
+      return
+    }
+    setError(null)
+    setLoading(true)
+    
+    try {
+      const publicUrl = await uploadVideo(file)
+      onChange(publicUrl)
+    } catch (err) {
+      setError('Gagal mengunggah video: ' + err.message)
+    } finally {
+      setLoading(false)
+      e.target.value = ''
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {label && <label className="form-label text-slate-700 font-semibold mb-1.5">{label}</label>}
+      {helperText && <p className="text-xs text-slate-500">{helperText}</p>}
+      
+      {value ? (
+        <div className="relative aspect-[9/16] w-32 rounded-2xl overflow-hidden border-2 border-slate-200 group bg-slate-900 mx-auto sm:mx-0">
+          <video src={value} autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80" />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+            <button
+              onClick={() => onChange('')}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold tracking-wider uppercase rounded-xl transition-transform hover:scale-105"
+            >
+              Hapus
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={() => !loading && inputRef.current.click()}
+          className="aspect-[9/16] w-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand-400 hover:bg-brand-50/50 transition-all mx-auto sm:mx-0 group"
+        >
+          {loading ? (
+            <div className="w-8 h-8 border-3 border-brand-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <Upload size={18} className="text-brand-500" />
+              </div>
+              <span className="text-xs font-semibold text-slate-600">Pilih Video</span>
+              <span className="text-[10px] text-slate-400 mt-1">MP4 (Maks 5MB)</span>
+            </>
+          )}
+        </div>
+      )}
+      {error && <p className="text-[11px] text-red-500 bg-red-50 p-2 rounded-lg">{error}</p>}
+      <input ref={inputRef} type="file" accept="video/mp4" className="hidden" onChange={handleFile} />
+    </div>
+  )
+}
+
+export function PremiumPhotoUploadBox({ label, value, onChange, helperText }) {
   const inputRef = useRef()
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)

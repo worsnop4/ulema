@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { HelpCircle, X, Plus } from 'lucide-react'
-import { useSharedInvitation } from '../../hooks/useSharedInvitation'
-import { AccordionItem, PremiumPhotoUploadBox, compressImage, uploadMedia } from '../common/FormHelpers'
+import { useSharedInvitation, getThemes } from '../../hooks/useSharedInvitation'
+import { AccordionItem, PremiumPhotoUploadBox, VideoUploadBox, compressImage, uploadMedia } from '../common/FormHelpers'
 
 export default function FotoVideoForm() {
   const [data, updateData] = useSharedInvitation()
@@ -11,6 +11,11 @@ export default function FotoVideoForm() {
   const groom = data.groom || {}
   const bride = data.bride || {}
   
+  // Ambil data theme untuk cek apakah ini tema video
+  const themes = getThemes()
+  const activeTheme = themes.find(t => t.id === data.themeId)
+  const isVideoTheme = activeTheme?.themeType === 'video'
+
   const [activeSection, setActiveSection] = useState('cover')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -92,16 +97,24 @@ export default function FotoVideoForm() {
       <div className="space-y-3">
         {/* 1. Foto Cover */}
         <AccordionItem
-          title="Foto Cover"
+          title="Cover (Depan)"
           isOpen={activeSection === 'cover'}
           onToggle={() => toggleSection('cover')}
         >
           <div className="space-y-4">
-            <PremiumPhotoUploadBox
-              value={meta.coverPhoto || null}
-              onChange={val => updateData({ meta: { ...meta, coverPhoto: val } })}
-              helperText="Foto yang akan muncul di halaman pembuka (cover) undangan."
-            />
+            {isVideoTheme ? (
+              <VideoUploadBox
+                value={meta.coverVideo || null}
+                onChange={val => updateData({ meta: { ...meta, coverVideo: val } })}
+                helperText="Unggah video MP4 (maks 5MB) untuk cover sinematik Anda."
+              />
+            ) : (
+              <PremiumPhotoUploadBox
+                value={meta.coverPhoto || null}
+                onChange={val => updateData({ meta: { ...meta, coverPhoto: val } })}
+                helperText="Foto yang akan muncul di halaman pembuka (cover) undangan."
+              />
+            )}
             <div className="border-t border-slate-100 pt-3">
               <label className="form-label mb-2 text-slate-500 font-medium">Gaya Tampilan Foto Cover</label>
               <div className="grid grid-cols-2 gap-3">
