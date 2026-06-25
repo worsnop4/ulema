@@ -726,6 +726,12 @@ export default function MinangElegantTheme({
   wishes,
   onSubmitWish
 }) {
+  const groom = data?.groom?.nickname || 'Groom'
+  const bride = data?.bride?.nickname || 'Bride'
+  const akadEvent = data?.events?.[0]
+  const baralekEvent = data?.events?.[1]
+  const primaryEvent = akadEvent || {}
+
   const handleOpen = () => {
     setAnimateClose(true)
     setTimeout(() => {
