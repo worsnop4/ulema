@@ -4,6 +4,8 @@ import { Calendar, MapPin, Gift, MessageSquare, ExternalLink, Play, Pause, Chevr
 import { MUSIC_URLS, getEmbedUrl } from '../pages/InvitationTemplate'
 import LegacySplitScreen from './components/LegacySplitScreen'
 
+import { getThemes } from '../hooks/useSharedInvitation'
+
 // Generic Reveal Component for smooth scroll animations
 const FadeUp = ({ children, delay = 0, duration = 0.8, className = '' }) => (
   <motion.div
@@ -26,7 +28,12 @@ export default function CinematicLuxuryTheme({
   primaryEvent, audioRef
 }) {
   const meta = data.meta || {}
-  const isVideo = data.themeType === 'video'
+  
+  // Ambil konfigurasi tema aktif
+  const themes = getThemes()
+  const activeTheme = themes.find(t => t.id === data.themeId)
+  const isVideo = activeTheme?.themeType === 'video' || Boolean(meta.coverVideo)
+
   const coverVideo = meta.coverVideo || ''
   const coverPhoto = meta.coverPhoto || data.groom?.photo || data.bride?.photo || '/avatars/placeholder.svg'
   
