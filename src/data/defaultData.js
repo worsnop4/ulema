@@ -52,6 +52,7 @@ export const DEFAULT_THEMES = [
   { id: 9, name: 'Elegant Person', code: 'SPL-003', emoji: '🌸', thumbnail: '/images/themes/autumn.png', layout: 'special-003', colors: ['#6b705c', '#d4a373', '#fefae0'], desc: 'Tema elegan dengan bingkai foto khusus', category: 'Special' },
   { id: 10, name: 'Cinematic Luxury (Photo)', code: 'LUX-001', emoji: '🎞️', thumbnail: '/images/themes/darkluxury.png', layout: 'cinematic-luxury', colors: ['#0c0c0c', '#ddc497', '#ffffff'], desc: 'Tema cinematic mewah dengan background foto', category: 'Luxury', themeType: 'photo' },
   { id: 11, name: 'Cinematic Luxury (Video)', code: 'LUX-002', emoji: '🎥', thumbnail: '/images/themes/darkluxury.png', layout: 'cinematic-luxury', colors: ['#0c0c0c', '#ddc497', '#ffffff'], desc: 'Tema cinematic mewah dengan background video animasi', category: 'Luxury', themeType: 'video' },
+  { id: 12, name: 'Minang Elegant', code: 'ADT-001', emoji: '👑', thumbnail: '/images/themes/adat.png', layout: 'minang-elegant', colors: ['#1a0f0a', '#c0872a', '#8b1a1a'], desc: 'Tema adat Minangkabau premium dengan nuansa gelap elegan', category: 'Adat' },
 ]
 
 export const DEFAULT_ILLUSTRATIONS = [
