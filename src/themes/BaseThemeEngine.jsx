@@ -1,7 +1,7 @@
 import React from 'react'
 import { Home, Heart, Calendar, Camera, Gift, MessageSquare, Volume2, VolumeX, BookOpen } from 'lucide-react'
 import { Reveal, MUSIC_URLS, getEmbedUrl } from '../pages/InvitationTemplate'
-import LegacySplitScreen from './components/LegacySplitScreen'
+import InvitationLayout from './components/InvitationLayout'
 import { THEME_CONFIGS } from './themeConfigs'
 
 export default function BaseThemeEngine({
@@ -60,7 +60,7 @@ export default function BaseThemeEngine({
   }
 
   return (
-    <LegacySplitScreen
+    <InvitationLayout
       layout={layout}
       data={data}
       primaryColor={primaryColor}
@@ -963,6 +963,6 @@ export default function BaseThemeEngine({
           </div>
         )}
       </div>
-    </LegacySplitScreen>
+    </InvitationLayout>
   )
 }

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useSharedInvitation, getCountdownTarget, getThemes } from '../hooks/useSharedInvitation'
 import { useAudioPlayer } from '../hooks/useAudioPlayer'
 import { useRsvp } from '../hooks/useRsvp'
-
+import { ThemeErrorBoundary } from '../components/common/ThemeErrorBoundary'
 // Import Theme Layout Components via Lazy Loading (Code Splitting)
 const WatercolorFloralTheme = lazy(() => import('../themes/WatercolorFloralTheme'))
 const DarkLuxuryTheme = lazy(() => import('../themes/DarkLuxuryTheme'))
@@ -14,6 +14,7 @@ const Special001Theme = lazy(() => import('../themes/Special001Theme'))
 const Special002Theme = lazy(() => import('../themes/Special002Theme'))
 const Special003Theme = lazy(() => import('../themes/Special003Theme'))
 const CinematicLuxuryTheme = lazy(() => import('../themes/CinematicLuxuryTheme'))
+const MinangElegantTheme = lazy(() => import('../themes/MinangElegantTheme'))
 
 const THEME_COMPONENTS = {
   'watercolor-floral': WatercolorFloralTheme,
@@ -25,6 +26,7 @@ const THEME_COMPONENTS = {
   'special-002': Special002Theme,
   'special-003': Special003Theme,
   'cinematic-luxury': CinematicLuxuryTheme,
+  'minang-elegant': MinangElegantTheme,
 }
 
 // ── Countdown Hook ─────────────────────────────────────────────
@@ -293,49 +295,52 @@ export default function InvitationTemplate() {
         }
       `}</style>
 
-      {/* Render dynamically selected theme subcomponent with Suspense fallback */}
-      <Suspense fallback={
-        <div className="flex flex-col items-center justify-center min-h-screen" style={{ backgroundColor: bgColor }}>
-          <div className="w-8 h-8 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin" />
-        </div>
-      }>
-        <ThemeComponent
-          data={data}
-          primaryColor={primaryColor}
-          accentColor={accentColor}
-          bgColor={bgColor}
-          guestName={guestName}
-          countdown={countdown}
-          opened={opened}
-          setOpened={setOpened}
-          animateClose={animateClose}
-          setAnimateClose={setAnimateClose}
-          musicPlaying={musicPlaying}
-          setMusicPlaying={setMusicPlaying}
-          scrolled={scrolled}
-          handleScroll={handleScroll}
-          wishes={wishes}
-          handleRsvpSubmit={handleRsvpSubmit}
-          rsvpName={rsvpName}
-          setRsvpName={setRsvpName}
-          rsvpWish={rsvpWish}
-          setRsvpWish={setRsvpWish}
-          rsvpStatus={rsvpStatus}
-          setRsvpStatus={setRsvpStatus}
-          rsvpSent={rsvpSent}
-          copied={copied}
-          copyAccount={copyAccount}
-          showGifts={showGifts}
-          setShowGifts={setShowGifts}
-          bgUrl={bgUrl}
-          ornamentUrl={ornamentUrl}
-          avatarClass={avatarClass}
-          handleNavClick={handleNavClick}
-          primaryEvent={primaryEvent}
-          audioRef={audioRef}
-          layout={layout}
-        />
-      </Suspense>
+      {/* Render dynamically selected theme subcomponent with ErrorBoundary and Suspense fallback */}
+      <ThemeErrorBoundary>
+        <Suspense fallback={
+          <div className="flex flex-col items-center justify-center min-h-screen" style={{ backgroundColor: bgColor }}>
+            <div className="w-10 h-10 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin mb-4" />
+            <p className="text-xs font-serif tracking-[0.2em] uppercase text-slate-600">Menyiapkan Tema</p>
+          </div>
+        }>
+          <ThemeComponent
+            data={data}
+            primaryColor={primaryColor}
+            accentColor={accentColor}
+            bgColor={bgColor}
+            guestName={guestName}
+            countdown={countdown}
+            opened={opened}
+            setOpened={setOpened}
+            animateClose={animateClose}
+            setAnimateClose={setAnimateClose}
+            musicPlaying={musicPlaying}
+            setMusicPlaying={setMusicPlaying}
+            scrolled={scrolled}
+            handleScroll={handleScroll}
+            wishes={wishes}
+            handleRsvpSubmit={handleRsvpSubmit}
+            rsvpName={rsvpName}
+            setRsvpName={setRsvpName}
+            rsvpWish={rsvpWish}
+            setRsvpWish={setRsvpWish}
+            rsvpStatus={rsvpStatus}
+            setRsvpStatus={setRsvpStatus}
+            rsvpSent={rsvpSent}
+            copied={copied}
+            copyAccount={copyAccount}
+            showGifts={showGifts}
+            setShowGifts={setShowGifts}
+            bgUrl={bgUrl}
+            ornamentUrl={ornamentUrl}
+            avatarClass={avatarClass}
+            handleNavClick={handleNavClick}
+            primaryEvent={primaryEvent}
+            audioRef={audioRef}
+            layout={layout}
+          />
+        </Suspense>
+      </ThemeErrorBoundary>
     </div>
   )
 }

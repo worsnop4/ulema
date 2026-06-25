@@ -2,7 +2,7 @@ import React from 'react'
 import FallingLeaves from './FallingLeaves'
 import { THEME_CONFIGS } from '../themeConfigs'
 
-export default function LegacySplitScreen({ 
+export default function InvitationLayout({ 
   children, 
   layout, 
   primaryColor, 

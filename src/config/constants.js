@@ -1,0 +1,93 @@
+/**
+ * ==========================================
+ * THEMES & LAYOUTS
+ * ==========================================
+ */
+export const THEMES = {
+  WATERCOLOR_FLORAL: 'watercolor-floral',
+  DARK_LUXURY: 'dark-luxury',
+  MODERN_MINIMALIST: 'modern-minimalist',
+  PLAYFUL_ILLUSTRATIVE: 'playful-illustrative',
+  TRADITIONAL_ADAT: 'traditional-adat',
+  SPECIAL_001: 'special-001',
+  SPECIAL_002: 'special-002',
+  SPECIAL_003: 'special-003',
+  CINEMATIC_LUXURY: 'cinematic-luxury',
+  MINANG_ELEGANT: 'minang-elegant',
+}
+
+export const THEME_CATEGORIES = {
+  SPECIAL: 'special',
+  ADAT: 'adat',
+  LUXURY: 'luxury',
+  MOTION_3D: '3d_motion'
+}
+
+export const THEME_CATEGORY_MAP = {
+  [THEMES.WATERCOLOR_FLORAL]: THEME_CATEGORIES.SPECIAL,
+  [THEMES.DARK_LUXURY]: THEME_CATEGORIES.LUXURY,
+  [THEMES.MODERN_MINIMALIST]: THEME_CATEGORIES.SPECIAL,
+  [THEMES.PLAYFUL_ILLUSTRATIVE]: THEME_CATEGORIES.MOTION_3D,
+  [THEMES.TRADITIONAL_ADAT]: THEME_CATEGORIES.ADAT,
+  [THEMES.SPECIAL_001]: THEME_CATEGORIES.SPECIAL,
+  [THEMES.SPECIAL_002]: THEME_CATEGORIES.SPECIAL,
+  [THEMES.SPECIAL_003]: THEME_CATEGORIES.SPECIAL,
+  [THEMES.CINEMATIC_LUXURY]: THEME_CATEGORIES.LUXURY,
+  [THEMES.MINANG_ELEGANT]: THEME_CATEGORIES.ADAT,
+}
+
+/**
+ * ==========================================
+ * USER ROLES & PACKAGES
+ * ==========================================
+ */
+export const ROLES = {
+  ADMIN: 'admin',
+  USER: 'user'
+}
+
+export const PACKAGE_TYPES = {
+  NONE: 'none',
+  FREE: 'free',
+  PREMIUM: 'premium',
+  EXCLUSIVE: 'exclusive'
+}
+
+/**
+ * ==========================================
+ * SYNC & EVENTS
+ * ==========================================
+ */
+export const SYNC_EVENTS = {
+  DATA_SYNC: 'INVITATION_DATA_SYNC',
+  SAVING: 'INVITATION_SAVING',
+  SAVED: 'INVITATION_SAVED',
+  SAVE_ERROR: 'INVITATION_SAVE_ERROR',
+  ADMIN_DEMO_CHANGED: 'admin-demo-changed',
+  BROADCAST_CHANNEL: 'inviter_sync'
+}
+
+/**
+ * ==========================================
+ * STORAGE KEYS
+ * ==========================================
+ */
+export const STORAGE_KEYS = {
+  ADMIN_DEMO_MODE: 'inviter_admin_demo_mode',
+  THEMES: 'inviter_themes',
+  PRICING: 'inviter_pricing',
+  VOUCHERS: 'inviter_vouchers',
+  TRANSACTIONS: 'inviter_transactions',
+  ILLUSTRATIONS: 'inviter_illustrations'
+}
+
+/**
+ * ==========================================
+ * TRANSACTION STATUS
+ * ==========================================
+ */
+export const TX_STATUS = {
+  PENDING: 'pending',
+  PAID: 'paid',
+  FAILED: 'failed'
+}

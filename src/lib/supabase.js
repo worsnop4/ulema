@@ -1,3 +1,8 @@
+// Supabase client initialization.
+// File ini HANYA berisi konfigurasi client.
+// Semua query ada di src/services/
+// Semua type contracts ada di src/types/
+
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'

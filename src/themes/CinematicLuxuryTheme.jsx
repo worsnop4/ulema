@@ -2,7 +2,7 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, MapPin, Gift, MessageSquare, ExternalLink, Play, Pause, ChevronDown, Copy } from 'lucide-react'
 import { MUSIC_URLS, getEmbedUrl } from '../pages/InvitationTemplate'
-import LegacySplitScreen from './components/LegacySplitScreen'
+import InvitationLayout from './components/InvitationLayout'
 
 import { getThemes } from '../hooks/useSharedInvitation'
 
@@ -106,7 +106,7 @@ export default function CinematicLuxuryTheme({
   }
 
   return (
-    <LegacySplitScreen layout="dark-luxury" data={data} primaryColor={primaryColor} accentColor={luxGold} bgColor={luxBg} primaryEvent={primaryEvent}>
+    <InvitationLayout layout="dark-luxury" data={data} primaryColor={primaryColor} accentColor={luxGold} bgColor={luxBg} primaryEvent={primaryEvent}>
       <div 
         className="w-full relative min-h-screen flex flex-col overflow-x-hidden font-sans"
         style={{ backgroundColor: luxBg, color: luxText }}
@@ -367,6 +367,6 @@ export default function CinematicLuxuryTheme({
           </FadeUp>
         </section>
       </div>
-    </LegacySplitScreen>
+    </InvitationLayout>
   )
 }
