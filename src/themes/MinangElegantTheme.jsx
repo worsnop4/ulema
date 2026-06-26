@@ -116,29 +116,50 @@ const FloatOrnament = () => (
 )
 
 // ─── 1. COVER SECTION ────────────────────────────────────────────
-const CoverSection = ({ bride, groom, primaryEvent, handleOpen, animateClose }) => (
-  <motion.div
-    className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
-    style={{ color: c.text }}
-    animate={animateClose ? { y: '-100%', opacity: 0 } : { y: 0, opacity: 1 }}
-    transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }}
-  >
-    <VideoBg src={A.coverVideo} fallback={A.mobileBg} />
+const CoverSection = ({ data, bride, groom, primaryEvent, handleOpen, animateClose }) => {
+  const coverPhoto = data?.meta?.coverPhoto || data?.meta?.photo || data?.bride?.photo || data?.groom?.photo || null
 
-    {/* ornamen pojok */}
-    <motion.img src={A.m1} alt="" className="absolute bottom-0 left-0 w-36 h-36 object-contain z-10 pointer-events-none"
-      initial={{ rotate: -80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
-      transition={{ delay: 0.6, duration: 0.9, ease: 'easeOut' }} />
-    <motion.img src={A.m2} alt="" className="absolute bottom-0 right-0 w-36 h-36 object-contain z-10 pointer-events-none"
-      initial={{ rotate: 80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
-      transition={{ delay: 0.8, duration: 0.9, ease: 'easeOut' }} />
+  return (
+    <motion.div
+      className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+      style={{ color: c.text }}
+      animate={animateClose ? { y: '-100%', opacity: 0 } : { y: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }}
+    >
+      <VideoBg src={A.coverVideo} fallback={A.mobileBg} />
 
-    <div className="relative z-20 flex flex-col items-center text-center px-10 w-full">
-      <motion.p className="text-[10px] tracking-[0.35em] uppercase font-sans mb-6 opacity-80"
-        style={{ fontFamily: 'Nunito Sans, sans-serif', color: c.text }}
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-        Baralek Gadang
-      </motion.p>
+      {/* ornamen pojok */}
+      <motion.img src={A.m1} alt="" className="absolute bottom-0 left-0 w-36 h-36 object-contain z-10 pointer-events-none"
+        initial={{ rotate: -80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.9, ease: 'easeOut' }} />
+      <motion.img src={A.m2} alt="" className="absolute bottom-0 right-0 w-36 h-36 object-contain z-10 pointer-events-none"
+        initial={{ rotate: 80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.9, ease: 'easeOut' }} />
+
+      <div className="relative z-20 flex flex-col items-center text-center px-10 w-full pt-12">
+        <motion.p className="text-[10px] tracking-[0.35em] uppercase font-sans mb-6 opacity-80"
+          style={{ fontFamily: 'Nunito Sans, sans-serif', color: c.text }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          The Wedding Of
+        </motion.p>
+
+        {/* Frame Oval Foto */}
+        {coverPhoto && (
+          <motion.div 
+            className="mb-8 relative p-1.5 rounded-[50%]"
+            style={{ border: `1px solid ${c.gold}80` }}
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            <div className="w-32 h-44 rounded-[50%] overflow-hidden relative shadow-lg"
+                 style={{ border: `2px solid ${c.cream}` }}>
+              <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover" />
+              {/* Efek inner shadow/glass ringan di atas foto */}
+              <div className="absolute inset-0 rounded-[50%]" style={{ boxShadow: 'inset 0 0 15px rgba(0,0,0,0.1)' }} />
+            </div>
+          </motion.div>
+        )}
 
       <motion.h1 className="mb-1 leading-none"
         style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}
@@ -171,58 +192,6 @@ const CoverSection = ({ bride, groom, primaryEvent, handleOpen, animateClose }) 
       </motion.button>
     </div>
   </motion.div>
-)
-
-// ─── 2. HERO SECTION (foto couple pertama kali dibuka) ────────────
-const HeroSection = ({ data, bride, groom }) => {
-  const heroPhoto = data?.meta?.coverPhoto || data?.meta?.photo || data?.bride?.photo || data?.groom?.photo || null
-  return (
-    <section className="relative w-full flex flex-col items-center justify-center overflow-hidden"
-      style={{ minHeight: '85vh' }}>
-      {/* video bg tetap berjalan di belakang */}
-      <div className="absolute inset-0 z-0">
-        {heroPhoto ? (
-          <img src={heroPhoto} alt="couple" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full" style={{ background: `url('${A.mobileBg}') center/cover` }} />
-        )}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(253,246,238,0.1) 0%, rgba(253,246,238,0.7) 100%)' }} />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center text-center px-8 pt-20 pb-16">
-        <motion.p className="text-[9px] tracking-[0.4em] uppercase mb-4 font-sans opacity-70"
-          style={{ color: c.text }}
-          initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          The Wedding Of
-        </motion.p>
-
-        <motion.h2 className="leading-tight mb-1"
-          style={{ fontFamily: 'Pinyon Script, cursive', fontSize: '3.5rem', color: c.maroon }}
-          initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.8 }}>
-          {bride}
-        </motion.h2>
-
-        <motion.img src={A.ampersand} alt="&" className="w-12 h-12 object-contain my-1"
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-          transition={{ delay: 0.3 }} />
-
-        <motion.h2 className="leading-tight mb-8"
-          style={{ fontFamily: 'Pinyon Script, cursive', fontSize: '3.5rem', color: c.maroon }}
-          initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }} transition={{ delay: 0.35, duration: 0.8 }}>
-          {groom}
-        </motion.h2>
-
-        <Divider />
-
-        <motion.div className="flex flex-col items-center gap-1 opacity-75"
-          initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }} transition={{ delay: 0.5 }}>
-          <FloatOrnament />
-        </motion.div>
-      </div>
-    </section>
   )
 }
 
@@ -661,6 +630,7 @@ export default function MinangElegantTheme({
         <AnimatePresence>
           {!opened && (
             <CoverSection key="cover"
+              data={data}
               bride={bride} groom={groom}
               primaryEvent={primary}
               handleOpen={handleOpen}
@@ -676,8 +646,7 @@ export default function MinangElegantTheme({
 
             <MotionVideoBg />
 
-            <div className="relative flex flex-col gap-5 pb-6" style={{ zIndex: 2 }}>
-              <HeroSection data={data} bride={bride} groom={groom} />
+            <div className="relative flex flex-col gap-5 pt-8 pb-6" style={{ zIndex: 2 }}>
               <ProfileSection data={data} />
               <CountdownSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
               <EventsSection akad={akad} baralek={baralek} />
