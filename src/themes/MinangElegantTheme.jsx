@@ -6,18 +6,22 @@ import InvitationLayout from './components/InvitationLayout'
 // --- UTILITAS & WARNA ---
 const colors = {
   bg: 'transparent',
-  surface: 'rgba(253, 246, 238, 0.85)', // Translucent cream for readable sections
-  text: '#4a2c2a', // Dark brown/maroon for light background
-  accent: '#a05a2c', // Dark gold/brown
+  surface: 'rgba(253, 246, 238, 0.85)',
+  text: '#4a2c2a',
+  accent: '#a05a2c',
   secondary: '#8b1a1a',
 }
 
 const assets = {
-  bg: '/themes/Adat/theme-12/background-cover-06-new.jpg.jpeg',
+  mobileBg: '/themes/Adat/theme-12/bg.jpeg',
+  desktopBg: '/themes/Adat/theme-12/dekstop%20bg.jpeg',
   ampersand: '/themes/Adat/theme-12/06.png',
-  frame: '/themes/Adat/theme-12/asset-motion-06-3-min.png',
-  tree: '/themes/Adat/theme-12/asset-motion-06-4.png',
-  house: '/themes/Adat/theme-12/asset-motion-06-6.png'
+  frame: '/themes/Adat/theme-12/Frame%20bg.png',
+  motion1: '/themes/Adat/theme-12/asset-motion-1.png',
+  motion2: '/themes/Adat/theme-12/asset-motion-2.png',
+  motion3: '/themes/Adat/theme-12/asset-motion-3.png',
+  motion4: '/themes/Adat/theme-12/asset-motion-4.png',
+  motion5: '/themes/Adat/theme-12/asset-motion-5.png',
 }
 
 const DividerMinang = ({ color }) => (
@@ -27,8 +31,6 @@ const DividerMinang = ({ color }) => (
     <div className="flex-1 h-[1px]" style={{ backgroundColor: color }} />
   </div>
 )
-
-const CornerOrnament = ({ color, className }) => null // Disabled in favor of png assets
 
 const formatCoverDate = (dateStr) => {
   if (!dateStr) return 'Sabtu, 28 Desember 2027'
@@ -67,6 +69,39 @@ const formatLoveStoryDate = (dateStr) => {
   }
 }
 
+// --- ORNAMEN MELAYANG (BOTTOM CORNERS) ---
+const FloatingOrnaments = () => (
+  <div className="fixed bottom-0 left-0 right-0 h-64 pointer-events-none z-40 overflow-hidden">
+    {/* Kiri Bawah */}
+    <motion.img 
+      src={assets.motion1} 
+      className="absolute -bottom-10 -left-10 w-48 h-48 object-contain origin-bottom-left"
+      animate={{ rotate: [-3, 3, -3], scale: [1, 1.05, 1] }}
+      transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+    />
+    <motion.img 
+      src={assets.motion3} 
+      className="absolute bottom-10 -left-6 w-32 h-32 object-contain origin-bottom-left opacity-80"
+      animate={{ rotate: [5, -2, 5], y: [0, -10, 0] }}
+      transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+    />
+
+    {/* Kanan Bawah */}
+    <motion.img 
+      src={assets.motion2} 
+      className="absolute -bottom-10 -right-10 w-48 h-48 object-contain origin-bottom-right"
+      animate={{ rotate: [3, -3, 3], scale: [1, 1.05, 1] }}
+      transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+    />
+    <motion.img 
+      src={assets.motion4} 
+      className="absolute bottom-12 -right-8 w-36 h-36 object-contain origin-bottom-right opacity-80"
+      animate={{ rotate: [-4, 4, -4], y: [0, -15, 0] }}
+      transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  </div>
+)
+
 // --- KOMPONEN SECTION ---
 const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) => (
   <motion.div 
@@ -75,11 +110,11 @@ const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) 
     animate={animateClose ? { y: '-100%', opacity: 0 } : { y: 0, opacity: 1 }}
     transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }}
   >
-    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 z-20 w-full">
+    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 z-20 w-full bg-white/10 backdrop-blur-sm">
       <motion.p 
-        className="uppercase tracking-[0.3em] text-xs font-sans mb-8 opacity-80 font-bold"
+        className="uppercase tracking-[0.3em] text-xs font-sans mb-8 opacity-90 font-bold"
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 0.8, y: 0 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
         Baralek Gadang
@@ -115,7 +150,7 @@ const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) 
       </motion.h1>
 
       <motion.p 
-        className="font-sans text-sm mb-12 opacity-90 font-medium tracking-wide"
+        className="font-sans text-sm mb-12 opacity-90 font-bold tracking-wide"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
@@ -125,7 +160,7 @@ const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) 
 
       <motion.button
         onClick={handleOpen}
-        className="relative px-8 py-3 rounded-full font-sans text-xs tracking-widest uppercase transition-all overflow-hidden group shadow-md"
+        className="relative px-8 py-3 rounded-full font-sans text-xs tracking-widest uppercase transition-all overflow-hidden group shadow-md font-bold"
         style={{ 
           color: colors.surface, 
           backgroundColor: colors.secondary
@@ -145,24 +180,25 @@ const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) 
 const ProfileSection = ({ data }) => {
   const renderPerson = (person, type) => (
     <motion.div 
-      className="flex flex-col items-center text-center w-full my-12 px-6"
+      className="flex flex-col items-center text-center w-full my-12 px-6 relative z-10"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.8 }}
     >
-      <p className="font-serif italic text-lg mb-6 opacity-90" style={{ color: colors.accent }}>
+      <p className="font-serif italic text-lg mb-6 font-bold" style={{ color: colors.secondary }}>
         {type === 'bride' ? 'Puti' : 'Sutan'}
       </p>
       
-      <div className="relative w-56 h-56 mb-8 flex items-center justify-center">
-        {/* Ornamen Frame Melingkar */}
+      <div className="relative w-64 h-64 mb-8 flex items-center justify-center">
+        {/* Frame ornamen di belakang */}
         <img 
           src={assets.frame} 
           alt="Frame" 
-          className="absolute inset-0 w-full h-full object-contain scale-[1.15] z-10 drop-shadow-md" 
+          className="absolute inset-0 w-full h-full object-contain scale-[1.15] z-0 drop-shadow-md" 
         />
-        <div className="w-[85%] h-[85%] rounded-full overflow-hidden bg-stone-200 z-0">
+        {/* Foto mempelai di DEPAN */}
+        <div className="w-[75%] h-[75%] rounded-full overflow-hidden bg-stone-200 z-10 shadow-lg border-4 border-white/50">
           {person?.photo ? (
             <img src={person.photo} alt={person.nickname} className="w-full h-full object-cover" />
           ) : (
@@ -173,7 +209,7 @@ const ProfileSection = ({ data }) => {
 
       <h2 className="font-serif text-3xl mb-2" style={{ color: colors.secondary }}>{person?.nickname}</h2>
       <p className="text-lg mb-2 font-bold tracking-wide" style={{ color: colors.text }}>{person?.name}</p>
-      <p className="text-sm opacity-80 leading-relaxed max-w-xs">
+      <p className="text-sm opacity-90 leading-relaxed max-w-xs font-medium">
         Putra dari Bpk. {person?.father} <br/> &amp; Ibu {person?.mother}
       </p>
       {person?.instagram && (
@@ -187,15 +223,15 @@ const ProfileSection = ({ data }) => {
   )
 
   return (
-    <section className="w-full py-20 mt-12" style={{ backgroundColor: colors.surface, backdropFilter: 'blur(4px)' }}>
+    <section className="w-full py-20 mt-12 relative" style={{ backgroundColor: colors.surface }}>
       <div className="max-w-md mx-auto">
         <motion.div 
-          className="w-full flex justify-center mb-4"
+          className="w-full flex justify-center mb-4 relative z-10"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <img src={assets.tree} alt="Tree" className="h-24 object-contain opacity-80" />
+          <img src={assets.motion5} alt="Ornament Top" className="h-20 object-contain drop-shadow-md" />
         </motion.div>
 
         {renderPerson(data?.bride, 'bride')}
@@ -215,7 +251,7 @@ const CountdownSection = ({ countdown, primaryEvent, groom, bride }) => {
   ]
 
   return (
-    <section className="w-full py-24 px-6 relative flex flex-col items-center border-y" style={{ backgroundColor: 'rgba(255,255,255,0.6)', borderColor: colors.accent }}>
+    <section className="w-full py-24 px-6 relative flex flex-col items-center border-y" style={{ backgroundColor: 'rgba(255,255,255,0.7)', borderColor: colors.accent }}>
       <motion.h3 
         className="font-serif text-3xl text-center mb-12"
         style={{ color: colors.secondary }}
@@ -226,18 +262,18 @@ const CountdownSection = ({ countdown, primaryEvent, groom, bride }) => {
         Menuju Hari Bahagia
       </motion.h3>
 
-      <div className="flex gap-4 justify-center mb-16">
+      <div className="flex gap-4 justify-center mb-16 relative z-10">
         {timeBlocks.map((block, i) => (
           <motion.div 
             key={block.label}
-            className="relative w-[4.5rem] h-24 flex flex-col items-center justify-center bg-white/60 shadow-sm rounded-md"
-            style={{ border: `1px solid ${colors.accent}40` }}
+            className="relative w-[4.5rem] h-24 flex flex-col items-center justify-center bg-white/80 shadow-md rounded-md"
+            style={{ border: `1px solid ${colors.accent}60` }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1, duration: 0.6 }}
           >
-            <span className="font-serif text-3xl mb-1" style={{ color: colors.secondary }}>
+            <span className="font-serif text-3xl mb-1 font-bold" style={{ color: colors.secondary }}>
               {block.value.toString().padStart(2, '0')}
             </span>
             <span className="text-[10px] uppercase tracking-widest opacity-80 font-bold" style={{ color: colors.text }}>
@@ -252,7 +288,7 @@ const CountdownSection = ({ countdown, primaryEvent, groom, bride }) => {
           href={`https://www.google.com/calendar/render?action=TEMPLATE&text=Pernikahan+${groom}+%26+${bride}&dates=${primaryEvent.date.replace(/-/g, '')}T080000Z/${primaryEvent.date.replace(/-/g, '')}T100000Z`}
           target="_blank"
           rel="noreferrer"
-          className="px-8 py-3 rounded-full font-sans text-xs tracking-widest uppercase transition-all shadow-lg"
+          className="relative z-10 px-8 py-3 rounded-full font-sans text-xs tracking-widest uppercase transition-all shadow-lg font-bold"
           style={{ 
             backgroundColor: colors.secondary,
             color: '#fff'
@@ -277,22 +313,22 @@ const EventsSection = ({ akadEvent, baralekEvent }) => {
 
     return (
       <motion.div 
-        className="relative w-full p-8 flex flex-col items-center text-center my-8 shadow-xl bg-white/90 rounded-lg"
+        className="relative w-full p-8 flex flex-col items-center text-center my-8 shadow-xl bg-white/95 rounded-lg z-10"
         style={{ border: `1px solid ${colors.accent}60` }}
         initial={{ opacity: 0, x: direction === 'left' ? -30 : 30 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.8 }}
       >
-        <h3 className="font-serif text-3xl mb-6" style={{ color: colors.secondary }}>
+        <h3 className="font-serif text-3xl mb-6 font-bold" style={{ color: colors.secondary }}>
           {title}
         </h3>
 
         <div className="flex items-center gap-4 mb-6">
-          <span className="font-serif text-5xl" style={{ color: colors.accent }}>
+          <span className="font-serif text-5xl font-bold" style={{ color: colors.accent }}>
             {dateObj.day}
           </span>
-          <div className="flex flex-col text-left text-sm uppercase tracking-wider opacity-80 font-bold">
+          <div className="flex flex-col text-left text-sm uppercase tracking-wider opacity-90 font-bold">
             <span style={{ color: colors.text }}>{dateObj.monthYear.split(' ')[0]}</span>
             <span style={{ color: colors.text }}>{dateObj.monthYear.split(' ')[1]}</span>
           </div>
@@ -306,7 +342,7 @@ const EventsSection = ({ akadEvent, baralekEvent }) => {
         <p className="font-bold text-lg mb-2" style={{ color: colors.secondary }}>
           {eventData.location || 'Nama Venue Belum Ditentukan'}
         </p>
-        <p className="text-sm opacity-80 mb-8 max-w-xs leading-relaxed" style={{ color: colors.text }}>
+        <p className="text-sm opacity-90 mb-8 max-w-xs leading-relaxed font-medium" style={{ color: colors.text }}>
           {eventData.address || 'Alamat lengkap akan diperbarui'}
         </p>
 
@@ -315,8 +351,8 @@ const EventsSection = ({ akadEvent, baralekEvent }) => {
             href={eventData.mapUrl} 
             target="_blank" 
             rel="noreferrer"
-            className="flex items-center gap-2 px-6 py-2 rounded-full font-sans text-xs tracking-widest uppercase transition-all"
-            style={{ border: `1px solid ${colors.secondary}`, color: colors.secondary, backgroundColor: 'transparent' }}
+            className="flex items-center gap-2 px-6 py-2 rounded-full font-sans text-xs tracking-widest uppercase transition-all font-bold bg-stone-50 hover:bg-stone-100"
+            style={{ border: `1px solid ${colors.secondary}`, color: colors.secondary }}
           >
             <MapPin size={14} />
             Petunjuk Lokasi
@@ -327,7 +363,7 @@ const EventsSection = ({ akadEvent, baralekEvent }) => {
   }
 
   return (
-    <section className="w-full py-16 px-6" style={{ backgroundColor: colors.surface }}>
+    <section className="w-full py-16 px-6 relative" style={{ backgroundColor: colors.surface }}>
       <div className="max-w-md mx-auto flex flex-col items-center">
         {renderEventCard(akadEvent, 'Akad Nikah', 'left')}
         {(akadEvent && baralekEvent) && <DividerMinang color={colors.accent} />}
@@ -342,10 +378,10 @@ const LoveStorySection = ({ data }) => {
   if (stories.length === 0) return null
 
   return (
-    <section className="w-full py-24 px-6 relative" style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
-      <div className="max-w-md mx-auto">
+    <section className="w-full py-24 px-6 relative" style={{ backgroundColor: 'rgba(255,255,255,0.75)' }}>
+      <div className="max-w-md mx-auto relative z-10">
         <motion.h3 
-          className="font-serif text-3xl text-center mb-16"
+          className="font-serif text-3xl text-center mb-16 font-bold"
           style={{ color: colors.secondary }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -356,7 +392,7 @@ const LoveStorySection = ({ data }) => {
 
         <div className="relative">
           <div 
-            className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px]" 
+            className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[3px]" 
             style={{ backgroundColor: colors.accent, opacity: 0.3 }} 
           />
 
@@ -372,7 +408,7 @@ const LoveStorySection = ({ data }) => {
                 transition={{ duration: 0.8 }}
               >
                 <div 
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4" 
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 shadow-sm" 
                   style={{ backgroundColor: '#fff', borderColor: colors.secondary, zIndex: 10 }}
                 />
 
@@ -382,7 +418,7 @@ const LoveStorySection = ({ data }) => {
                       <img src={story.photo} alt={story.title} className="w-full h-full object-cover rounded-full" />
                     </div>
                   ) : (
-                    <div className="w-28 h-28 rounded-full border border-dashed flex items-center justify-center text-xs bg-white/50" style={{ borderColor: colors.accent }}>
+                    <div className="w-28 h-28 rounded-full border border-dashed flex items-center justify-center text-xs bg-white/80" style={{ borderColor: colors.accent }}>
                       <Heart size={20} color={colors.secondary} />
                     </div>
                   )}
@@ -395,7 +431,7 @@ const LoveStorySection = ({ data }) => {
                   <h4 className="font-bold text-lg mb-2 leading-tight" style={{ color: colors.secondary }}>
                     {story.title}
                   </h4>
-                  <p className="text-xs opacity-90 leading-relaxed font-medium" style={{ color: colors.text }}>
+                  <p className="text-xs opacity-90 leading-relaxed font-semibold" style={{ color: colors.text }}>
                     {story.story}
                   </p>
                 </div>
@@ -413,10 +449,10 @@ const GallerySection = ({ data }) => {
   if (photos.length === 0) return null
 
   return (
-    <section className="w-full py-20 px-6" style={{ backgroundColor: colors.surface }}>
-      <div className="max-w-md mx-auto">
+    <section className="w-full py-20 px-6 relative" style={{ backgroundColor: colors.surface }}>
+      <div className="max-w-md mx-auto relative z-10">
         <motion.h3 
-          className="font-serif text-3xl text-center mb-12"
+          className="font-serif text-3xl text-center mb-12 font-bold"
           style={{ color: colors.secondary }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -483,10 +519,10 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
   const recentWishes = (wishes || data?.rsvps || []).slice(0, 5)
 
   return (
-    <section className="w-full py-20 px-6 relative border-t" style={{ backgroundColor: 'rgba(255,255,255,0.8)', borderColor: colors.accent }}>
-      <div className="max-w-md mx-auto">
+    <section className="w-full py-20 px-6 relative border-t" style={{ backgroundColor: 'rgba(255,255,255,0.85)', borderColor: colors.accent }}>
+      <div className="max-w-md mx-auto relative z-10">
         <motion.h3 
-          className="font-serif text-3xl text-center mb-12"
+          className="font-serif text-3xl text-center mb-12 font-bold"
           style={{ color: colors.secondary }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -519,7 +555,7 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
             rows={4}
             value={message}
             onChange={e => setMessage(e.target.value)}
-            className="w-full bg-transparent p-3 outline-none text-sm font-sans resize-none mt-2 rounded-md font-medium"
+            className="w-full bg-stone-50 p-3 outline-none text-sm font-sans resize-none mt-2 rounded-md font-medium shadow-inner"
             style={{ border: `1px solid ${colors.accent}60`, color: colors.text }}
           />
 
@@ -559,8 +595,8 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
                 <select 
                   value={pax}
                   onChange={e => setPax(e.target.value)}
-                  className="w-full p-3 outline-none text-sm font-sans appearance-none rounded-md font-bold"
-                  style={{ border: `1px solid ${colors.accent}60`, color: colors.text, backgroundColor: '#fcfaf6' }}
+                  className="w-full p-3 outline-none text-sm font-sans appearance-none rounded-md font-bold bg-stone-50"
+                  style={{ border: `1px solid ${colors.accent}60`, color: colors.text }}
                 >
                   <option value="1">1 Orang</option>
                   <option value="2">2 Orang</option>
@@ -591,7 +627,7 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
             {recentWishes.map((wish, i) => (
               <motion.div 
                 key={wish.id || i}
-                className="p-4 bg-white/40 rounded-lg shadow-sm"
+                className="p-4 bg-white/60 rounded-lg shadow-sm"
                 style={{ borderLeft: `4px solid ${colors.secondary}` }}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -617,10 +653,6 @@ const FooterSection = ({ bride, groom }) => (
     className="w-full flex flex-col items-center justify-center text-center relative overflow-hidden"
     style={{ backgroundColor: colors.surface, minHeight: '60vh' }}
   >
-    <div className="absolute bottom-0 opacity-40 w-full flex justify-center pointer-events-none">
-      <img src={assets.house} alt="House" className="w-full max-w-md object-contain translate-y-12" />
-    </div>
-
     <div className="flex-1 flex flex-col justify-center items-center px-8 z-20 py-24">
       <motion.h2 
         className="font-serif text-5xl mb-8"
@@ -661,9 +693,9 @@ const FooterSection = ({ bride, groom }) => (
         viewport={{ once: true }}
         transition={{ delay: 0.6 }}
       >
-        <h1 className="font-serif text-3xl" style={{ color: colors.secondary }}>{bride}</h1>
+        <h1 className="font-serif text-3xl font-bold" style={{ color: colors.secondary }}>{bride}</h1>
         <img src={assets.ampersand} alt="&" className="w-10 h-10 object-contain" />
-        <h1 className="font-serif text-3xl" style={{ color: colors.secondary }}>{groom}</h1>
+        <h1 className="font-serif text-3xl font-bold" style={{ color: colors.secondary }}>{groom}</h1>
       </motion.div>
     </div>
 
@@ -704,17 +736,19 @@ export default function MinangElegantTheme({
   }
 
   return (
-    <InvitationLayout layout="minang-elegant" data={data}>
+    <InvitationLayout layout="minang-elegant" data={data} bgUrl={assets.desktopBg}>
       <div 
-        className="w-full relative min-h-screen flex flex-col overflow-x-hidden font-sans bg-[#fbf7f2]"
+        className="w-full relative min-h-screen flex flex-col overflow-x-hidden font-sans"
         style={{ 
-          backgroundImage: `url('${assets.bg}')`,
+          backgroundImage: `url('${assets.mobileBg}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
           color: colors.text 
         }}
       >
+        {opened && <FloatingOrnaments />}
+
         <AnimatePresence>
           {!opened && <CoverSection key="cover" bride={bride} groom={groom} primaryEvent={primaryEvent} handleOpen={handleOpen} animateClose={animateClose} />}
         </AnimatePresence>
