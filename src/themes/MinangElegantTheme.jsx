@@ -1,863 +1,686 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Clock, MapPin } from 'lucide-react'
+import { Clock, MapPin, Heart } from 'lucide-react'
 import InvitationLayout from './components/InvitationLayout'
 
-// --- UTILITAS & WARNA ---
-const colors = {
-  bg: 'transparent',
-  surface: 'rgba(253, 246, 238, 0.85)',
-  text: '#4a2c2a',
-  accent: '#a05a2c',
-  secondary: '#8b1a1a',
+// ─── FONT IMPORT ─────────────────────────────────────────────────
+// Tambahkan ke index.html atau biarkan dimuat via @import di style global
+// Fonts: Cormorant Infant (serif elegan), Nunito Sans (body), Pinyon Script (kaligrafi)
+
+// ─── WARNA ───────────────────────────────────────────────────────
+const c = {
+  maroon:   '#7a1c1c',
+  gold:     '#b5863a',
+  cream:    '#fdf6ee',
+  text:     '#3d2218',
+  glass:    'rgba(253,246,238,0.55)',
+  glassBrd: 'rgba(181,134,58,0.25)',
+  overlay:  'rgba(253,246,238,0.18)',
 }
 
-const assets = {
-  mobileBg: '/themes/Adat/theme-12/bg.jpeg',
-  desktopBg: '/themes/Adat/theme-12/dekstop%20bg.jpeg',
-  ampersand: '/themes/Adat/theme-12/06.png',
-  frame: '/themes/Adat/theme-12/Frame%20bg.png',
-  motion1: '/themes/Adat/theme-12/asset-motion-1.png',
-  motion2: '/themes/Adat/theme-12/asset-motion-2.png',
-  motion3: '/themes/Adat/theme-12/asset-motion-3.png',
-  motion4: '/themes/Adat/theme-12/asset-motion-4.png',
-  motion5: '/themes/Adat/theme-12/asset-motion-5.png',
-  // Video background (letakkan file .mp4 di folder theme-12 dengan nama persis ini)
+// ─── ASSETS ──────────────────────────────────────────────────────
+const A = {
+  mobileBg:   '/themes/Adat/theme-12/bg.jpeg',
+  desktopBg:  '/themes/Adat/theme-12/dekstop%20bg.jpeg',
   coverVideo: '/themes/Adat/theme-12/cover-motion-06.mp4',
-  bgVideo: '/themes/Adat/theme-12/bg-motion-fixed-06-compress-1.mp4',
+  bgVideo:    '/themes/Adat/theme-12/bg-motion-fixed-06-compress-1.mp4',
+  ampersand:  '/themes/Adat/theme-12/06.png',
+  frame:      '/themes/Adat/theme-12/Frame%20bg.png',
+  m1: '/themes/Adat/theme-12/asset-motion-1.png',
+  m2: '/themes/Adat/theme-12/asset-motion-2.png',
+  m3: '/themes/Adat/theme-12/asset-motion-3.png',
+  m4: '/themes/Adat/theme-12/asset-motion-4.png',
+  m5: '/themes/Adat/theme-12/asset-motion-5.png',
 }
 
-const DividerMinang = ({ color }) => (
-  <div className="w-full flex items-center justify-center my-12 opacity-60">
-    <div className="flex-1 h-[1px]" style={{ backgroundColor: color }} />
-    <img src={assets.ampersand} alt="divider" className="w-8 h-8 mx-4 object-contain opacity-50 grayscale" />
-    <div className="flex-1 h-[1px]" style={{ backgroundColor: color }} />
-  </div>
-)
+// ─── HELPERS ─────────────────────────────────────────────────────
+const fmtCoverDate = (s) => {
+  if (!s) return 'Sabtu, 28 Desember 2027'
+  try {
+    const d = new Date(s)
+    const D = ['Ahad','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu']
+    const M = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+    return `${D[d.getDay()]}, ${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`
+  } catch { return s }
+}
 
-// --- VIDEO BACKGROUND COMPONENTS ---
-// Video cover (sebelum dibuka) — fallback ke gambar jika file .mp4 belum ada
-const VideoBackground = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden">
-    <video
-      autoPlay
-      muted
-      loop
-      playsInline
-      poster={assets.mobileBg}
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        // Jika video gagal load, sembunyikan dan tampilkan fallback poster
-        e.target.style.display = 'none'
-      }}
-    >
-      <source src={assets.coverVideo} type="video/mp4" />
-    </video>
-    {/* Overlay tipis agar teks tetap terbaca */}
-    <div className="absolute inset-0" style={{ backgroundColor: 'rgba(250,240,230,0.25)' }} />
-  </div>
-)
+const fmtEventDate = (s) => {
+  if (!s) return { day: '28', mon: 'Desember', yr: '2027' }
+  try {
+    const d = new Date(s)
+    const M = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+    return { day: d.getDate().toString().padStart(2,'0'), mon: M[d.getMonth()], yr: d.getFullYear().toString() }
+  } catch { return { day: '28', mon: 'Desember', yr: '2027' } }
+}
 
-// Video BG motion (sesudah dibuka) — parallax fixed video di belakang konten
-const MotionVideoBg = () => (
+const fmtLSDate = (s) => {
+  if (!s) return ''
+  try {
+    const d = new Date(s)
+    const M = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des']
+    return `${d.getDate().toString().padStart(2,'0')} ${M[d.getMonth()]} ${d.getFullYear()}`
+  } catch { return s }
+}
+
+// ─── GLASS CARD ──────────────────────────────────────────────────
+const Glass = ({ children, className = '', style = {} }) => (
   <div
-    className="fixed inset-0 z-0 pointer-events-none"
-    style={{ zIndex: 0 }}
+    className={`${className}`}
+    style={{
+      background: c.glass,
+      backdropFilter: 'blur(14px)',
+      WebkitBackdropFilter: 'blur(14px)',
+      border: `1px solid ${c.glassBrd}`,
+      borderRadius: '16px',
+      boxShadow: '0 8px 32px rgba(122,28,28,0.10), 0 2px 8px rgba(0,0,0,0.06)',
+      ...style
+    }}
   >
-    <video
-      autoPlay
-      muted
-      loop
-      playsInline
-      poster={assets.mobileBg}
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        e.target.parentElement.style.backgroundImage = `url('${assets.mobileBg}')`
-        e.target.parentElement.style.backgroundSize = 'cover'
-        e.target.parentElement.style.backgroundPosition = 'center'
-        e.target.style.display = 'none'
-      }}
-    >
-      <source src={assets.bgVideo} type="video/mp4" />
-    </video>
-    {/* Overlay semi-transparan agar konten mudah dibaca */}
-    <div className="absolute inset-0" style={{ backgroundColor: 'rgba(253,246,238,0.15)' }} />
+    {children}
   </div>
 )
 
-const formatCoverDate = (dateStr) => {
-  if (!dateStr) return 'Sabtu, 28 Desember 2027'
-  try {
-    const d = new Date(dateStr)
-    const days = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-    return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
-  } catch {
-    return dateStr
-  }
-}
+// ─── DIVIDER ─────────────────────────────────────────────────────
+const Divider = () => (
+  <div className="flex items-center justify-center gap-3 my-8 opacity-60">
+    <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, ${c.gold})` }} />
+    <img src={A.m5} alt="" className="w-6 h-6 object-contain opacity-70 grayscale" />
+    <div className="flex-1 h-px" style={{ background: `linear-gradient(to left, transparent, ${c.gold})` }} />
+  </div>
+)
 
-const formatEventDate = (dateStr) => {
-  if (!dateStr) return { day: '28', monthYear: 'Desember 2027' }
-  try {
-    const d = new Date(dateStr)
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-    return { 
-      day: d.getDate().toString().padStart(2, '0'), 
-      monthYear: `${months[d.getMonth()]} ${d.getFullYear()}`
-    }
-  } catch {
-    return { day: '28', monthYear: 'Desember 2027' }
-  }
-}
+// ─── VIDEO BG ────────────────────────────────────────────────────
+const VideoBg = ({ src, fallback }) => (
+  <div className="absolute inset-0 z-0 overflow-hidden">
+    <video autoPlay muted loop playsInline poster={fallback}
+      className="w-full h-full object-cover"
+      onError={e => { e.target.style.display = 'none' }}>
+      <source src={src} type="video/mp4" />
+    </video>
+    <div className="absolute inset-0" style={{ background: c.overlay }} />
+  </div>
+)
 
-const formatLoveStoryDate = (dateStr) => {
-  if (!dateStr) return ''
-  try {
-    const d = new Date(dateStr)
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-    return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`
-  } catch {
-    return dateStr
-  }
-}
-
-// --- ORNAMEN POJOK (pakai sticky/absolute karena fixed tidak bekerja di dalam overflow:hidden) ---
-const FloatingOrnaments = () => (
+// ─── FLOATING ORNAMENTS ──────────────────────────────────────────
+const FloatOrnament = () => (
   <>
-    {/* Pojok Kiri Bawah */}
-    <motion.div
-      className="sticky bottom-0 left-0 w-0 h-0 pointer-events-none z-30"
-      style={{ marginBottom: 0 }}
-    >
-      <motion.img 
-        src={assets.motion1} 
-        className="absolute -bottom-2 -left-4 w-40 h-40 object-contain origin-bottom-left"
-        animate={{ rotate: [-3, 3, -3], scale: [1, 1.05, 1] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.img 
-        src={assets.motion3} 
-        className="absolute bottom-32 -left-2 w-24 h-24 object-contain origin-bottom-left opacity-75"
-        animate={{ rotate: [5, -2, 5], y: [0, -8, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-      />
-    </motion.div>
-
-    {/* Pojok Kanan Bawah */}
-    <motion.div
-      className="sticky bottom-0 self-end w-0 h-0 pointer-events-none z-30"
-    >
-      <motion.img 
-        src={assets.motion2} 
-        className="absolute -bottom-2 -right-4 w-40 h-40 object-contain origin-bottom-right"
-        animate={{ rotate: [3, -3, 3], scale: [1, 1.05, 1] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.img 
-        src={assets.motion4} 
-        className="absolute bottom-32 -right-2 w-28 h-28 object-contain origin-bottom-right opacity-75"
-        animate={{ rotate: [-4, 4, -4], y: [0, -12, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-      />
-    </motion.div>
+    <motion.img src={A.m1} alt=""
+      className="absolute bottom-0 left-0 w-36 h-36 object-contain pointer-events-none z-10"
+      animate={{ rotate: [-2, 2, -2], y: [0, -6, 0] }}
+      transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} />
+    <motion.img src={A.m2} alt=""
+      className="absolute bottom-0 right-0 w-36 h-36 object-contain pointer-events-none z-10"
+      animate={{ rotate: [2, -2, 2], y: [0, -8, 0] }}
+      transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
   </>
 )
 
-// --- KOMPONEN SECTION ---
-const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) => (
-  <motion.div 
-    className="absolute inset-0 z-50 flex flex-col justify-center items-center overflow-hidden"
-    style={{ color: colors.text }}
+// ─── 1. COVER SECTION ────────────────────────────────────────────
+const CoverSection = ({ bride, groom, primaryEvent, handleOpen, animateClose }) => (
+  <motion.div
+    className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+    style={{ color: c.text }}
     animate={animateClose ? { y: '-100%', opacity: 0 } : { y: 0, opacity: 1 }}
     transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }}
   >
-    {/* Video / Gambar Background Cover */}
-    <VideoBackground />
+    <VideoBg src={A.coverVideo} fallback={A.mobileBg} />
 
-    {/* Ornamen pojok kiri bawah cover */}
-    <motion.img
-      src={assets.motion1}
-      className="absolute bottom-0 left-0 w-40 h-40 object-contain z-10 pointer-events-none"
-      initial={{ rotate: -90, opacity: 0 }}
-      animate={{ rotate: 0, opacity: 1 }}
-      transition={{ delay: 0.6, duration: 0.8, ease: 'easeOut' }}
-    />
-    {/* Ornamen pojok kanan bawah cover */}
-    <motion.img
-      src={assets.motion2}
-      className="absolute bottom-0 right-0 w-40 h-40 object-contain z-10 pointer-events-none"
-      initial={{ rotate: 90, opacity: 0 }}
-      animate={{ rotate: 0, opacity: 1 }}
-      transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
-    />
+    {/* ornamen pojok */}
+    <motion.img src={A.m1} alt="" className="absolute bottom-0 left-0 w-36 h-36 object-contain z-10 pointer-events-none"
+      initial={{ rotate: -80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
+      transition={{ delay: 0.6, duration: 0.9, ease: 'easeOut' }} />
+    <motion.img src={A.m2} alt="" className="absolute bottom-0 right-0 w-36 h-36 object-contain z-10 pointer-events-none"
+      initial={{ rotate: 80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
+      transition={{ delay: 0.8, duration: 0.9, ease: 'easeOut' }} />
 
-    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 z-20 w-full bg-white/15 backdrop-blur-[1px]">  
-      <motion.p 
-        className="uppercase tracking-[0.3em] text-xs font-sans mb-8 opacity-90 font-bold"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+    <div className="relative z-20 flex flex-col items-center text-center px-10 w-full">
+      <motion.p className="text-[10px] tracking-[0.35em] uppercase font-sans mb-6 opacity-80"
+        style={{ fontFamily: 'Nunito Sans, sans-serif', color: c.text }}
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         Baralek Gadang
       </motion.p>
 
-      <motion.h1 
-        className="font-serif text-5xl sm:text-6xl mb-2"
-        style={{ color: colors.secondary }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4, duration: 0.8 }}
-      >
+      <motion.h1 className="mb-1 leading-none"
+        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8 }}>
         {bride}
       </motion.h1>
 
-      <motion.img 
-        src={assets.ampersand} 
-        alt="&" 
-        className="w-16 h-16 object-contain my-2"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5, duration: 0.5, type: 'spring' }}
-      />
+      <motion.img src={A.ampersand} alt="&" className="w-12 h-12 object-contain my-1"
+        initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.55, type: 'spring', stiffness: 200 }} />
 
-      <motion.h1 
-        className="font-serif text-5xl sm:text-6xl mt-2 mb-8"
-        style={{ color: colors.secondary }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.6, duration: 0.8 }}
-      >
+      <motion.h1 className="mb-8 leading-none"
+        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8 }}>
         {groom}
       </motion.h1>
 
-      <motion.p 
-        className="font-sans text-sm mb-12 opacity-90 font-bold tracking-wide"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-      >
-        {formatCoverDate(primaryEvent?.date)}
+      <motion.p className="text-[11px] tracking-widest mb-10 opacity-80 font-sans"
+        style={{ color: c.text }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+        {fmtCoverDate(primaryEvent?.date)}
       </motion.p>
 
-      <motion.button
-        onClick={handleOpen}
-        className="relative px-8 py-3 rounded-full font-sans text-xs tracking-widest uppercase transition-all overflow-hidden group shadow-md font-bold"
-        style={{ 
-          color: colors.surface, 
-          backgroundColor: colors.secondary
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <span className="relative z-10">Buka Undangan</span>
+      <motion.button onClick={handleOpen}
+        className="px-8 py-2.5 text-[10px] tracking-[0.3em] uppercase font-sans font-semibold rounded-full shadow-lg"
+        style={{ backgroundColor: c.maroon, color: '#fff', letterSpacing: '0.3em' }}
+        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }}
+        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        Buka Undangan
       </motion.button>
     </div>
   </motion.div>
 )
 
+// ─── 2. HERO SECTION (foto couple pertama kali dibuka) ────────────
+const HeroSection = ({ data, bride, groom }) => {
+  const heroPhoto = data?.meta?.coverPhoto || data?.meta?.photo || data?.bride?.photo || data?.groom?.photo || null
+  return (
+    <section className="relative w-full flex flex-col items-center justify-center overflow-hidden"
+      style={{ minHeight: '85vh' }}>
+      {/* video bg tetap berjalan di belakang */}
+      <div className="absolute inset-0 z-0">
+        {heroPhoto ? (
+          <img src={heroPhoto} alt="couple" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full" style={{ background: `url('${A.mobileBg}') center/cover` }} />
+        )}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(253,246,238,0.1) 0%, rgba(253,246,238,0.7) 100%)' }} />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center text-center px-8 pt-20 pb-16">
+        <motion.p className="text-[9px] tracking-[0.4em] uppercase mb-4 font-sans opacity-70"
+          style={{ color: c.text }}
+          initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          The Wedding Of
+        </motion.p>
+
+        <motion.h2 className="leading-tight mb-1"
+          style={{ fontFamily: 'Pinyon Script, cursive', fontSize: '3.5rem', color: c.maroon }}
+          initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.8 }}>
+          {bride}
+        </motion.h2>
+
+        <motion.img src={A.ampersand} alt="&" className="w-12 h-12 object-contain my-1"
+          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+          transition={{ delay: 0.3 }} />
+
+        <motion.h2 className="leading-tight mb-8"
+          style={{ fontFamily: 'Pinyon Script, cursive', fontSize: '3.5rem', color: c.maroon }}
+          initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }} transition={{ delay: 0.35, duration: 0.8 }}>
+          {groom}
+        </motion.h2>
+
+        <Divider />
+
+        <motion.div className="flex flex-col items-center gap-1 opacity-75"
+          initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ delay: 0.5 }}>
+          <FloatOrnament />
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// ─── 3. PROFILE SECTION ──────────────────────────────────────────
 const ProfileSection = ({ data }) => {
-  const renderPerson = (person, type) => (
-    <motion.div 
-      className="flex flex-col items-center text-center w-full my-12 px-6 relative z-10"
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.8 }}
-    >
-      <p className="font-serif italic text-lg mb-6 font-bold" style={{ color: colors.secondary }}>
-        {type === 'bride' ? 'Puti' : 'Sutan'}
+  const renderPerson = (person, label) => (
+    <motion.div className="flex flex-col items-center text-center px-6 py-10"
+      initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.7 }}>
+      <p className="text-[9px] tracking-[0.35em] uppercase mb-3 font-sans opacity-60" style={{ color: c.text }}>
+        {label}
       </p>
-      
-      <div className="relative w-64 h-64 mb-8 flex items-center justify-center">
-        {/* Frame ornamen di belakang */}
-        <img 
-          src={assets.frame} 
-          alt="Frame" 
-          className="absolute inset-0 w-full h-full object-contain scale-[1.15] z-0 drop-shadow-md" 
-        />
-        {/* Foto mempelai di DEPAN */}
-        <div className="w-[75%] h-[75%] rounded-full overflow-hidden bg-stone-200 z-10 shadow-lg border-4 border-white/50">
-          {person?.photo ? (
-            <img src={person.photo} alt={person.nickname} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-stone-500 text-sm">Foto {type === 'bride' ? 'Wanita' : 'Pria'}</div>
-          )}
+
+      {/* Frame + Foto */}
+      <div className="relative w-52 h-52 flex items-center justify-center mb-6">
+        <img src={A.frame} alt="" className="absolute inset-0 w-full h-full object-contain scale-[1.12] z-10 drop-shadow" />
+        <div className="w-[75%] h-[75%] rounded-full overflow-hidden z-20 shadow-md border-2 border-white/60"
+          style={{ backdropFilter: 'blur(4px)' }}>
+          {person?.photo
+            ? <img src={person.photo} alt={person.nickname} className="w-full h-full object-cover" />
+            : <div className="w-full h-full flex items-center justify-center text-xs font-sans opacity-40" style={{ background: c.cream }}>Foto</div>}
         </div>
       </div>
 
-      <h2 className="font-serif text-3xl mb-2" style={{ color: colors.secondary }}>{person?.nickname}</h2>
-      <p className="text-lg mb-2 font-bold tracking-wide" style={{ color: colors.text }}>{person?.name}</p>
-      <p className="text-sm opacity-90 leading-relaxed max-w-xs font-medium">
-        Putra dari Bpk. {person?.father} <br/> &amp; Ibu {person?.mother}
+      <h3 className="mb-1 leading-tight"
+        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
+        {person?.nickname}
+      </h3>
+      <p className="text-xs font-semibold mb-2 tracking-wide font-sans" style={{ color: c.text }}>
+        {person?.name}
+      </p>
+      <p className="text-[10px] leading-relaxed opacity-70 max-w-[220px] font-sans" style={{ color: c.text }}>
+        Putri/Putra dari<br />
+        Bpk. {person?.father || '—'} &amp; Ibu {person?.mother || '—'}
       </p>
       {person?.instagram && (
-        <a href={`https://instagram.com/${person.instagram.replace('@', '')}`} target="_blank" rel="noreferrer" 
-           className="mt-5 text-xs tracking-wider uppercase border-b pb-1 hover:opacity-100 transition-opacity font-bold"
-           style={{ borderColor: colors.accent, color: colors.accent }}>
-          Instagram
+        <a href={`https://instagram.com/${person.instagram.replace('@','')}`}
+          target="_blank" rel="noreferrer"
+          className="mt-4 flex items-center gap-1.5 text-[10px] tracking-widest uppercase font-sans font-semibold opacity-70 hover:opacity-100 transition-opacity"
+          style={{ color: c.gold }}>
+          <span className="font-bold">@</span>
+          {person.instagram}
         </a>
       )}
     </motion.div>
   )
 
   return (
-    <section className="w-full py-20 mt-12 relative" style={{ backgroundColor: colors.surface }}>
-      <div className="max-w-md mx-auto">
-        <motion.div 
-          className="w-full flex justify-center mb-4 relative z-10"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <img src={assets.motion5} alt="Ornament Top" className="h-20 object-contain drop-shadow-md" />
-        </motion.div>
-
-        {renderPerson(data?.bride, 'bride')}
-        <DividerMinang color={colors.accent} />
-        {renderPerson(data?.groom, 'groom')}
-      </div>
+    <section className="w-full py-4">
+      <Glass className="mx-4 overflow-hidden">
+        {/* Dekorasi top */}
+        <div className="flex justify-center pt-8 opacity-50">
+          <img src={A.m5} alt="" className="h-16 object-contain" />
+        </div>
+        <div className="px-2">
+          <motion.p className="text-center text-[9px] tracking-[0.4em] uppercase pt-4 pb-2 font-sans opacity-60"
+            style={{ color: c.text }}
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
+            Bride &amp; Groom
+          </motion.p>
+          {renderPerson(data?.bride, 'Puti')}
+          <Divider />
+          {renderPerson(data?.groom, 'Sutan')}
+        </div>
+      </Glass>
     </section>
   )
 }
 
-const CountdownSection = ({ countdown, primaryEvent, groom, bride }) => {
-  const timeBlocks = [
-    { label: 'Hari', value: countdown?.d || 0 },
-    { label: 'Jam', value: countdown?.h || 0 },
-    { label: 'Menit', value: countdown?.m || 0 },
-    { label: 'Detik', value: countdown?.s || 0 },
+// ─── 4. COUNTDOWN ────────────────────────────────────────────────
+const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
+  const blocks = [
+    { label: 'Hari', v: countdown?.d || 0 },
+    { label: 'Jam',  v: countdown?.h || 0 },
+    { label: 'Menit', v: countdown?.m || 0 },
+    { label: 'Detik', v: countdown?.s || 0 },
   ]
-
   return (
-    <section className="w-full py-24 px-6 relative flex flex-col items-center border-y" style={{ backgroundColor: 'rgba(255,255,255,0.7)', borderColor: colors.accent }}>
-      <motion.h3 
-        className="font-serif text-3xl text-center mb-12"
-        style={{ color: colors.secondary }}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-      >
-        Menuju Hari Bahagia
-      </motion.h3>
-
-      <div className="flex gap-4 justify-center mb-16 relative z-10">
-        {timeBlocks.map((block, i) => (
-          <motion.div 
-            key={block.label}
-            className="relative w-[4.5rem] h-24 flex flex-col items-center justify-center bg-white/80 shadow-md rounded-md"
-            style={{ border: `1px solid ${colors.accent}60` }}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1, duration: 0.6 }}
-          >
-            <span className="font-serif text-3xl mb-1 font-bold" style={{ color: colors.secondary }}>
-              {block.value.toString().padStart(2, '0')}
-            </span>
-            <span className="text-[10px] uppercase tracking-widest opacity-80 font-bold" style={{ color: colors.text }}>
-              {block.label}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-
-      {primaryEvent?.date && (
-        <motion.a
-          href={`https://www.google.com/calendar/render?action=TEMPLATE&text=Pernikahan+${groom}+%26+${bride}&dates=${primaryEvent.date.replace(/-/g, '')}T080000Z/${primaryEvent.date.replace(/-/g, '')}T100000Z`}
-          target="_blank"
-          rel="noreferrer"
-          className="relative z-10 px-8 py-3 rounded-full font-sans text-xs tracking-widest uppercase transition-all shadow-lg font-bold"
-          style={{ 
-            backgroundColor: colors.secondary,
-            color: '#fff'
-          }}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Simpan Tanggal
-        </motion.a>
-      )}
-    </section>
-  )
-}
-
-const EventsSection = ({ akadEvent, baralekEvent }) => {
-  const renderEventCard = (eventData, title, direction) => {
-    if (!eventData) return null
-    const dateObj = formatEventDate(eventData.date)
-
-    return (
-      <motion.div 
-        className="relative w-full p-8 flex flex-col items-center text-center my-8 shadow-xl bg-white/95 rounded-lg z-10"
-        style={{ border: `1px solid ${colors.accent}60` }}
-        initial={{ opacity: 0, x: direction === 'left' ? -30 : 30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.8 }}
-      >
-        <h3 className="font-serif text-3xl mb-6 font-bold" style={{ color: colors.secondary }}>
-          {title}
+    <section className="w-full py-6 px-4">
+      <Glass className="p-8 flex flex-col items-center">
+        <p className="text-[9px] tracking-[0.4em] uppercase mb-2 font-sans opacity-60" style={{ color: c.text }}>
+          Save The Date
+        </p>
+        <h3 className="mb-8 text-center"
+          style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
+          Menuju Hari Bahagia
         </h3>
 
-        <div className="flex items-center gap-4 mb-6">
-          <span className="font-serif text-5xl font-bold" style={{ color: colors.accent }}>
-            {dateObj.day}
-          </span>
-          <div className="flex flex-col text-left text-sm uppercase tracking-wider opacity-90 font-bold">
-            <span style={{ color: colors.text }}>{dateObj.monthYear.split(' ')[0]}</span>
-            <span style={{ color: colors.text }}>{dateObj.monthYear.split(' ')[1]}</span>
-          </div>
+        <div className="flex gap-3 justify-center mb-8">
+          {blocks.map((b, i) => (
+            <motion.div key={b.label}
+              className="w-16 h-16 flex flex-col items-center justify-center rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.5)', border: `1px solid ${c.glassBrd}`, boxShadow: '0 2px 12px rgba(122,28,28,0.08)' }}
+              initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+              <span className="leading-none mb-0.5"
+                style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon, fontWeight: 600 }}>
+                {b.v.toString().padStart(2,'0')}
+              </span>
+              <span className="text-[8px] uppercase tracking-widest font-sans opacity-60" style={{ color: c.text }}>
+                {b.label}
+              </span>
+            </motion.div>
+          ))}
         </div>
 
-        <div className="flex items-center gap-2 mb-6 text-sm font-bold" style={{ color: colors.text }}>
-          <Clock size={16} color={colors.accent} />
-          <span>{eventData.time || '10:00 - Selesai'}</span>
-        </div>
-
-        <p className="font-bold text-lg mb-2" style={{ color: colors.secondary }}>
-          {eventData.location || 'Nama Venue Belum Ditentukan'}
-        </p>
-        <p className="text-sm opacity-90 mb-8 max-w-xs leading-relaxed font-medium" style={{ color: colors.text }}>
-          {eventData.address || 'Alamat lengkap akan diperbarui'}
-        </p>
-
-        {eventData.mapUrl && (
-          <a 
-            href={eventData.mapUrl} 
-            target="_blank" 
-            rel="noreferrer"
-            className="flex items-center gap-2 px-6 py-2 rounded-full font-sans text-xs tracking-widest uppercase transition-all font-bold bg-stone-50 hover:bg-stone-100"
-            style={{ border: `1px solid ${colors.secondary}`, color: colors.secondary }}
-          >
-            <MapPin size={14} />
-            Petunjuk Lokasi
+        {primaryEvent?.date && (
+          <a href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Pernikahan+${groom}+%26+${bride}&dates=${primaryEvent.date.replace(/-/g,'')}T080000Z/${primaryEvent.date.replace(/-/g,'')}T120000Z`}
+            target="_blank" rel="noreferrer"
+            className="text-[10px] tracking-[0.25em] uppercase font-sans font-semibold px-6 py-2 rounded-full shadow"
+            style={{ backgroundColor: c.maroon, color: '#fff' }}>
+            Simpan Tanggal
           </a>
         )}
+      </Glass>
+    </section>
+  )
+}
+
+// ─── 5. EVENTS SECTION ───────────────────────────────────────────
+const EventsSection = ({ akad, baralek }) => {
+  const renderCard = (ev, title, dir) => {
+    if (!ev) return null
+    const { day, mon, yr } = fmtEventDate(ev.date)
+    return (
+      <motion.div className="w-full"
+        initial={{ opacity: 0, x: dir === 'L' ? -20 : 20 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
+        <Glass className="p-7 flex flex-col items-center text-center">
+          <p className="text-[9px] tracking-[0.35em] uppercase mb-1 font-sans opacity-50" style={{ color: c.text }}>
+            {title}
+          </p>
+          <div className="flex items-end gap-2 mt-3 mb-5">
+            <span style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3rem', color: c.maroon, fontWeight: 600, lineHeight: 1 }}>
+              {day}
+            </span>
+            <div className="flex flex-col items-start text-left mb-1">
+              <span className="text-xs font-semibold font-sans tracking-wide" style={{ color: c.text }}>{mon}</span>
+              <span className="text-[10px] font-sans opacity-60" style={{ color: c.text }}>{yr}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 mb-3 text-[11px] font-sans opacity-80" style={{ color: c.text }}>
+            <Clock size={11} color={c.gold} />
+            <span>{ev.time || '10:00 — Selesai'}</span>
+          </div>
+          <p className="font-semibold text-sm mb-1 font-sans" style={{ color: c.maroon }}>{ev.location || '—'}</p>
+          <p className="text-[10px] leading-relaxed mb-5 opacity-70 font-sans max-w-[200px]" style={{ color: c.text }}>
+            {ev.address || ''}
+          </p>
+          {ev.mapUrl && (
+            <a href={ev.mapUrl} target="_blank" rel="noreferrer"
+              className="flex items-center gap-1.5 text-[10px] tracking-widest uppercase font-sans font-semibold px-5 py-2 rounded-full"
+              style={{ border: `1px solid ${c.maroon}`, color: c.maroon }}>
+              <MapPin size={10} /> Petunjuk Arah
+            </a>
+          )}
+        </Glass>
       </motion.div>
     )
   }
-
   return (
-    <section className="w-full py-16 px-6 relative" style={{ backgroundColor: colors.surface }}>
-      <div className="max-w-md mx-auto flex flex-col items-center">
-        {renderEventCard(akadEvent, 'Akad Nikah', 'left')}
-        {(akadEvent && baralekEvent) && <DividerMinang color={colors.accent} />}
-        {renderEventCard(baralekEvent, 'Baralek', 'right')}
-      </div>
+    <section className="w-full py-4 px-4 flex flex-col gap-4">
+      <motion.p className="text-center text-[9px] tracking-[0.4em] uppercase font-sans opacity-60"
+        style={{ color: c.text }}
+        initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
+        Waktu &amp; Tempat
+      </motion.p>
+      {renderCard(akad, 'Akad Nikah', 'L')}
+      {renderCard(baralek, 'Baralek', 'R')}
     </section>
   )
 }
 
+// ─── 6. LOVE STORY ───────────────────────────────────────────────
 const LoveStorySection = ({ data }) => {
   const stories = data?.loveStory || []
-  if (stories.length === 0) return null
-
+  if (!stories.length) return null
   return (
-    <section className="w-full py-24 px-6 relative" style={{ backgroundColor: 'rgba(255,255,255,0.75)' }}>
-      <div className="max-w-md mx-auto relative z-10">
-        <motion.h3 
-          className="font-serif text-3xl text-center mb-16 font-bold"
-          style={{ color: colors.secondary }}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+    <section className="w-full py-6 px-4">
+      <Glass className="p-8">
+        <p className="text-center text-[9px] tracking-[0.4em] uppercase mb-2 font-sans opacity-60" style={{ color: c.text }}>
+          Our Story
+        </p>
+        <h3 className="text-center mb-10"
+          style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
           Kisah Kami
-        </motion.h3>
-
+        </h3>
         <div className="relative">
-          <div 
-            className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[3px]" 
-            style={{ backgroundColor: colors.accent, opacity: 0.3 }} 
-          />
-
-          {stories.map((story, i) => {
-            const isEven = i % 2 === 0
+          <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-px" style={{ background: `${c.gold}50` }} />
+          {stories.map((s, i) => {
+            const isL = i % 2 === 0
             return (
-              <motion.div 
-                key={story.id || i}
-                className={`flex w-full items-center justify-between mb-16 relative ${isEven ? 'flex-row' : 'flex-row-reverse'}`}
-                initial={{ opacity: 0, x: isEven ? -30 : 30 }}
+              <motion.div key={s.id || i}
+                className={`flex w-full items-center justify-between mb-12 relative ${isL ? 'flex-row' : 'flex-row-reverse'}`}
+                initial={{ opacity: 0, x: isL ? -20 : 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.8 }}
-              >
-                <div 
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 shadow-sm" 
-                  style={{ backgroundColor: '#fff', borderColor: colors.secondary, zIndex: 10 }}
-                />
-
+                viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 bg-white"
+                  style={{ borderColor: c.maroon, zIndex: 10 }} />
                 <div className="w-5/12 flex justify-center">
-                  {story.photo ? (
-                    <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden p-1 bg-white shadow-md" style={{ border: `1px solid ${colors.accent}` }}>
-                      <img src={story.photo} alt={story.title} className="w-full h-full object-cover rounded-full" />
-                    </div>
-                  ) : (
-                    <div className="w-28 h-28 rounded-full border border-dashed flex items-center justify-center text-xs bg-white/80" style={{ borderColor: colors.accent }}>
-                      <Heart size={20} color={colors.secondary} />
-                    </div>
-                  )}
+                  {s.photo
+                    ? <div className="w-24 h-24 rounded-full overflow-hidden border-2 shadow-md" style={{ borderColor: c.gold + '80' }}>
+                        <img src={s.photo} alt={s.title} className="w-full h-full object-cover" />
+                      </div>
+                    : <div className="w-16 h-16 rounded-full border flex items-center justify-center" style={{ borderColor: c.gold + '60', background: 'rgba(255,255,255,0.5)' }}>
+                        <Heart size={16} color={c.maroon} />
+                      </div>}
                 </div>
-
-                <div className={`w-5/12 flex flex-col ${isEven ? 'text-left' : 'text-right'}`}>
-                  <span className="font-serif italic text-sm mb-2 font-bold" style={{ color: colors.accent }}>
-                    {formatLoveStoryDate(story.date || story.year)}
+                <div className={`w-5/12 flex flex-col ${isL ? 'text-left' : 'text-right'}`}>
+                  <span className="text-[9px] font-sans mb-1 opacity-60" style={{ color: c.gold }}>
+                    {fmtLSDate(s.date || s.year)}
                   </span>
-                  <h4 className="font-bold text-lg mb-2 leading-tight" style={{ color: colors.secondary }}>
-                    {story.title}
+                  <h4 className="font-semibold text-xs mb-1.5 font-sans leading-tight" style={{ color: c.maroon }}>
+                    {s.title}
                   </h4>
-                  <p className="text-xs opacity-90 leading-relaxed font-semibold" style={{ color: colors.text }}>
-                    {story.story}
+                  <p className="text-[10px] opacity-80 leading-relaxed font-sans" style={{ color: c.text }}>
+                    {s.story}
                   </p>
                 </div>
               </motion.div>
             )
           })}
         </div>
-      </div>
+      </Glass>
     </section>
   )
 }
 
+// ─── 7. GALLERY ──────────────────────────────────────────────────
 const GallerySection = ({ data }) => {
   const photos = data?.gallery || []
-  if (photos.length === 0) return null
-
+  if (!photos.length) return null
   return (
-    <section className="w-full py-20 px-6 relative" style={{ backgroundColor: colors.surface }}>
-      <div className="max-w-md mx-auto relative z-10">
-        <motion.h3 
-          className="font-serif text-3xl text-center mb-12 font-bold"
-          style={{ color: colors.secondary }}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          Momen Kami
-        </motion.h3>
-
-        <div className="grid grid-cols-2 gap-3">
-          {photos.map((photo, i) => {
-            // gallery item bisa berupa string URL atau objek { src, id }
-            const src = typeof photo === 'string' ? photo : photo?.src
+    <section className="w-full py-4 px-4">
+      <Glass className="p-6">
+        <p className="text-center text-[9px] tracking-[0.4em] uppercase mb-6 font-sans opacity-60" style={{ color: c.text }}>
+          Our Moments
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {photos.map((ph, i) => {
+            const src = typeof ph === 'string' ? ph : ph?.src
             if (!src) return null
             return (
-              <motion.div
-                key={i}
-                className="w-full aspect-square overflow-hidden cursor-pointer group rounded-sm shadow-md"
-                style={{ border: `2px solid #fff` }}
-                initial={{ opacity: 0, scale: 0.9 }}
+              <motion.div key={i}
+                className="aspect-square overflow-hidden rounded-lg shadow-sm group cursor-pointer"
+                style={{ border: `1px solid ${c.glassBrd}` }}
+                initial={{ opacity: 0, scale: 0.92 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-              >
-                <img 
-                  src={src} 
-                  alt={`Gallery ${i+1}`} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                />
+                viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
+                <img src={src} alt={`Foto ${i+1}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               </motion.div>
             )
           })}
         </div>
-      </div>
+      </Glass>
     </section>
   )
 }
 
+// ─── 8. WISH & RSVP ──────────────────────────────────────────────
 const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
   const [name, setName] = useState('')
-  const [message, setMessage] = useState('')
-  const [attendance, setAttendance] = useState('hadir')
+  const [msg, setMsg] = useState('')
+  const [att, setAtt] = useState('hadir')
   const [pax, setPax] = useState('1')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [busy, setBusy] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault()
-    if (!name || !message) return
-    setIsSubmitting(true)
-    if (onSubmitWish) {
-      await onSubmitWish({ name, message, attendance, pax })
-    }
-    setName('')
-    setMessage('')
-    setAttendance('hadir')
-    setPax('1')
-    setIsSubmitting(false)
+    if (!name || !msg) return
+    setBusy(true)
+    if (onSubmitWish) await onSubmitWish({ name, message: msg, attendance: att, pax })
+    setName(''); setMsg(''); setAtt('hadir'); setPax('1')
+    setBusy(false)
   }
 
-  const formatDate = (isoString) => {
+  const fmtDate = (s) => {
     try {
-      const d = new Date(isoString)
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des']
-      return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`
-    } catch {
-      return isoString
-    }
+      const d = new Date(s)
+      return `${d.getDate().toString().padStart(2,'0')} ${['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'][d.getMonth()]} ${d.getFullYear()}`
+    } catch { return s }
   }
 
-  const recentWishes = (wishes || data?.rsvps || []).slice(0, 5)
+  const list = (wishes || data?.rsvps || []).slice(0, 5)
 
   return (
-    <section className="w-full py-20 px-6 relative border-t" style={{ backgroundColor: 'rgba(255,255,255,0.85)', borderColor: colors.accent }}>
-      <div className="max-w-md mx-auto relative z-10">
-        <motion.h3 
-          className="font-serif text-3xl text-center mb-12 font-bold"
-          style={{ color: colors.secondary }}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          Sampaikan Doa &amp; Kehadiran
-        </motion.h3>
+    <section className="w-full py-6 px-4">
+      <Glass className="p-8">
+        <p className="text-center text-[9px] tracking-[0.4em] uppercase mb-2 font-sans opacity-60" style={{ color: c.text }}>
+          Doa &amp; Kehadiran
+        </p>
+        <h3 className="text-center mb-8"
+          style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
+          Sampaikan Doa
+        </h3>
 
-        <motion.form 
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-4 mb-16 p-8 shadow-xl bg-white rounded-lg"
-          style={{ border: `1px solid ${colors.accent}40` }}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <input 
-            type="text" 
-            placeholder="Nama Anda"
-            required
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full bg-transparent p-3 outline-none text-sm font-sans font-bold"
-            style={{ borderBottom: `2px solid ${colors.accent}60`, color: colors.text }}
-          />
-
-          <textarea 
-            placeholder="Tuliskan doa & ucapan..."
-            required
-            rows={4}
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            className="w-full bg-stone-50 p-3 outline-none text-sm font-sans resize-none mt-2 rounded-md font-medium shadow-inner"
-            style={{ border: `1px solid ${colors.accent}60`, color: colors.text }}
-          />
-
-          <div className="flex gap-4 mt-2">
-            <label className="flex items-center gap-2 text-sm cursor-pointer font-bold opacity-90" style={{ color: colors.text }}>
-              <input 
-                type="radio" 
-                name="attendance" 
-                value="hadir" 
-                checked={attendance === 'hadir'} 
-                onChange={e => setAttendance(e.target.value)}
-                className="accent-[#8b1a1a]"
-              />
-              Hadir
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer font-bold opacity-90" style={{ color: colors.text }}>
-              <input 
-                type="radio" 
-                name="attendance" 
-                value="tidak_hadir" 
-                checked={attendance === 'tidak_hadir'} 
-                onChange={e => setAttendance(e.target.value)}
-                className="accent-[#8b1a1a]"
-              />
-              Tidak Hadir
-            </label>
+        <form onSubmit={submit} className="flex flex-col gap-3 mb-8">
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Nama Anda" required
+            className="w-full text-[11px] font-sans bg-white/50 px-4 py-2.5 outline-none rounded-lg"
+            style={{ border: `1px solid ${c.glassBrd}`, color: c.text }} />
+          <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={3} placeholder="Tuliskan ucapan..." required
+            className="w-full text-[11px] font-sans bg-white/50 px-4 py-2.5 outline-none rounded-lg resize-none"
+            style={{ border: `1px solid ${c.glassBrd}`, color: c.text }} />
+          <div className="flex gap-4">
+            {[['hadir','Hadir'],['tidak_hadir','Tidak Hadir']].map(([v, l]) => (
+              <label key={v} className="flex items-center gap-2 text-[10px] font-sans cursor-pointer" style={{ color: c.text }}>
+                <input type="radio" name="att" value={v} checked={att===v} onChange={() => setAtt(v)} className="accent-[#7a1c1c]" />
+                {l}
+              </label>
+            ))}
           </div>
-
           <AnimatePresence>
-            {attendance === 'hadir' && (
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }} 
-                animate={{ height: 'auto', opacity: 1 }} 
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden mt-1"
-              >
-                <select 
-                  value={pax}
-                  onChange={e => setPax(e.target.value)}
-                  className="w-full p-3 outline-none text-sm font-sans appearance-none rounded-md font-bold bg-stone-50"
-                  style={{ border: `1px solid ${colors.accent}60`, color: colors.text }}
-                >
-                  <option value="1">1 Orang</option>
-                  <option value="2">2 Orang</option>
-                  <option value="3">3 Orang</option>
-                  <option value="4">4 Orang</option>
-                  <option value="5+">5+ Orang</option>
-                </select>
-              </motion.div>
+            {att === 'hadir' && (
+              <motion.select value={pax} onChange={e => setPax(e.target.value)}
+                className="w-full text-[11px] font-sans bg-white/50 px-4 py-2.5 outline-none rounded-lg appearance-none"
+                style={{ border: `1px solid ${c.glassBrd}`, color: c.text }}
+                initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                {['1','2','3','4','5+'].map(n => <option key={n} value={n}>{n} Orang</option>)}
+              </motion.select>
             )}
           </AnimatePresence>
-
-          <button 
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-4 px-6 py-3 font-sans text-xs tracking-widest uppercase transition-all shadow-md hover:opacity-90 active:scale-95 rounded-full font-bold"
-            style={{ 
-              backgroundColor: colors.secondary,
-              color: '#fff',
-              opacity: isSubmitting ? 0.7 : 1
-            }}
-          >
-            {isSubmitting ? 'Mengirim...' : 'Sampaikan Doa'}
+          <button type="submit" disabled={busy}
+            className="text-[10px] tracking-[0.25em] uppercase font-sans font-semibold px-6 py-2.5 rounded-full mt-1 shadow"
+            style={{ backgroundColor: c.maroon, color: '#fff', opacity: busy ? 0.7 : 1 }}>
+            {busy ? 'Mengirim…' : 'Sampaikan Doa'}
           </button>
-        </motion.form>
+        </form>
 
-        {recentWishes.length > 0 && (
-          <div className="flex flex-col gap-4">
-            {recentWishes.map((wish, i) => (
-              <motion.div 
-                key={wish.id || i}
-                className="p-4 bg-white/60 rounded-lg shadow-sm"
-                style={{ borderLeft: `4px solid ${colors.secondary}` }}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <div className="flex justify-between items-end mb-2">
-                  <span className="font-bold text-sm" style={{ color: colors.secondary }}>{wish.name}</span>
-                  <span className="text-[10px] opacity-80 uppercase tracking-wider font-bold" style={{ color: colors.text }}>{formatDate(wish.createdAt || new Date().toISOString())}</span>
+        {list.length > 0 && (
+          <div className="flex flex-col gap-3">
+            {list.map((w, i) => (
+              <motion.div key={w.id || i}
+                className="p-4 rounded-xl"
+                style={{ background: 'rgba(255,255,255,0.45)', borderLeft: `3px solid ${c.maroon}80` }}
+                initial={{ opacity: 0, x: -15 }} whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[11px] font-semibold font-sans" style={{ color: c.maroon }}>{w.name}</span>
+                  <span className="text-[8px] font-sans opacity-50" style={{ color: c.text }}>{fmtDate(w.createdAt || '')}</span>
                 </div>
-                <p className="text-sm opacity-90 leading-relaxed font-sans font-medium" style={{ color: colors.text }}>{wish.message || wish.wish}</p>
+                <p className="text-[10px] leading-relaxed font-sans opacity-80" style={{ color: c.text }}>{w.message || w.wish}</p>
               </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </Glass>
     </section>
   )
 }
 
+// ─── 9. FOOTER ───────────────────────────────────────────────────
 const FooterSection = ({ bride, groom }) => (
-  <section 
-    className="w-full flex flex-col items-center justify-center text-center relative overflow-hidden"
-    style={{ backgroundColor: colors.surface, minHeight: '60vh' }}
-  >
-    <div className="flex-1 flex flex-col justify-center items-center px-8 z-20 py-24">
-      <motion.h2 
-        className="font-serif text-5xl mb-8"
-        style={{ color: colors.secondary }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-      >
+  <section className="w-full px-4 pb-10 pt-6 relative overflow-hidden">
+    <Glass className="p-10 flex flex-col items-center text-center relative overflow-hidden">
+      {/* ornamen pojok */}
+      <img src={A.m3} alt="" className="absolute -bottom-4 -left-4 w-32 h-32 object-contain opacity-30 pointer-events-none" />
+      <img src={A.m4} alt="" className="absolute -bottom-4 -right-4 w-32 h-32 object-contain opacity-30 pointer-events-none" />
+
+      <p className="text-[9px] tracking-[0.4em] uppercase mb-3 font-sans opacity-60" style={{ color: c.text }}>
+        Terima Kasih
+      </p>
+      <h2 className="mb-6" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
         Tarimo Kasih
-      </motion.h2>
-
-      <motion.p 
-        className="text-sm opacity-90 leading-relaxed max-w-xs mb-8 font-sans font-bold"
-        style={{ color: colors.text }}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.2 }}
-      >
-        Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.
-      </motion.p>
-
-      <motion.p 
-        className="text-sm font-serif italic mb-16 font-bold"
-        style={{ color: colors.secondary }}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.4 }}
-      >
+      </h2>
+      <p className="text-[10px] leading-relaxed mb-6 max-w-[220px] font-sans opacity-75" style={{ color: c.text }}>
+        Merupakan kehormatan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu.
+      </p>
+      <p className="text-[10px] font-sans opacity-60 mb-8" style={{ fontFamily: 'Cormorant Infant, serif', fontStyle: 'italic', color: c.maroon }}>
         Wassalamu'alaikum Warahmatullahi Wabarakatuh
-      </motion.p>
-
-      <motion.div 
-        className="flex items-center gap-4 mt-4"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.6 }}
-      >
-        <h1 className="font-serif text-3xl font-bold" style={{ color: colors.secondary }}>{bride}</h1>
-        <img src={assets.ampersand} alt="&" className="w-10 h-10 object-contain" />
-        <h1 className="font-serif text-3xl font-bold" style={{ color: colors.secondary }}>{groom}</h1>
-      </motion.div>
-    </div>
-
-    <div className="absolute bottom-3 text-[9px] font-bold font-sans tracking-[0.2em] z-20 uppercase" style={{ color: colors.text }}>
-      Dibuat dengan ♥ oleh Ulema
-    </div>
+      </p>
+      <div className="flex items-center gap-3">
+        <span style={{ fontFamily: 'Pinyon Script, cursive', fontSize: '2rem', color: c.maroon }}>{bride}</span>
+        <img src={A.ampersand} alt="&" className="w-8 h-8 object-contain opacity-80" />
+        <span style={{ fontFamily: 'Pinyon Script, cursive', fontSize: '2rem', color: c.maroon }}>{groom}</span>
+      </div>
+      <p className="text-[8px] font-sans opacity-40 mt-8 tracking-widest uppercase" style={{ color: c.text }}>
+        Dibuat dengan ♥ oleh Ulema
+      </p>
+    </Glass>
   </section>
 )
 
+// ─── VIDEO BG MOTION (fixed behind all content) ──────────────────
+const MotionVideoBg = () => (
+  <div className="fixed inset-0 z-0 pointer-events-none">
+    <video autoPlay muted loop playsInline poster={A.mobileBg}
+      className="w-full h-full object-cover"
+      onError={e => {
+        e.target.parentElement.style.backgroundImage = `url('${A.mobileBg}')`
+        e.target.parentElement.style.backgroundSize = 'cover'
+        e.target.style.display = 'none'
+      }}>
+      <source src={A.bgVideo} type="video/mp4" />
+    </video>
+    <div className="absolute inset-0" style={{ background: 'rgba(253,246,238,0.18)' }} />
+  </div>
+)
+
+// ─── MAIN EXPORT ─────────────────────────────────────────────────
 export default function MinangElegantTheme({
-  data,
-  countdown,
-  opened,
-  setOpened,
-  animateClose,
-  setAnimateClose,
-  musicPlaying,
-  setMusicPlaying,
-  audioRef,
-  wishes,
-  onSubmitWish
+  data, countdown, opened, setOpened,
+  animateClose, setAnimateClose,
+  musicPlaying, setMusicPlaying, audioRef,
+  wishes, onSubmitWish
 }) {
   const groom = data?.groom?.nickname || 'Groom'
   const bride = data?.bride?.nickname || 'Bride'
-  const akadEvent = data?.events?.[0]
-  const baralekEvent = data?.events?.[1]
-  const primaryEvent = akadEvent || {}
+  const akad    = data?.events?.[0]
+  const baralek = data?.events?.[1]
+  const primary = akad || {}
 
   const handleOpen = () => {
     setAnimateClose(true)
     setTimeout(() => {
       setOpened(true)
       if (audioRef?.current) {
-        audioRef.current.play().catch(e => console.log('Autoplay blocked'))
+        audioRef.current.play().catch(() => {})
         setMusicPlaying(true)
       }
     }, 800)
   }
 
   return (
-    <InvitationLayout layout="minang-elegant" data={data} bgUrl={assets.desktopBg}>
-      <div 
-        className="w-full relative h-full flex flex-col overflow-x-hidden font-sans"
-        style={{ color: colors.text }}
-      >
+    <InvitationLayout layout="minang-elegant" data={data} bgUrl={A.desktopBg}>
+      {/* Google Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,400;0,600;1,400;1,600&family=Pinyon+Script&family=Nunito+Sans:wght@300;400;600&display=swap');
+      `}</style>
+
+      <div className="w-full relative h-full flex flex-col overflow-x-hidden"
+        style={{ fontFamily: 'Nunito Sans, sans-serif', color: c.text }}>
+
+        {/* Cover */}
         <AnimatePresence>
           {!opened && (
-            <CoverSection 
-              key="cover" 
-              bride={bride} 
-              groom={groom} 
-              primaryEvent={primaryEvent} 
-              handleOpen={handleOpen} 
-              animateClose={animateClose} 
-            />
+            <CoverSection key="cover"
+              bride={bride} groom={groom}
+              primaryEvent={primary}
+              handleOpen={handleOpen}
+              animateClose={animateClose} />
           )}
         </AnimatePresence>
 
+        {/* Konten Utama */}
         {opened && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-            className="flex flex-col w-full relative"
+          <motion.div className="flex flex-col w-full relative"
             style={{ zIndex: 1 }}
-          >
-            {/* Video BG bergerak di belakang semua konten */}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9 }}>
+
             <MotionVideoBg />
 
-            {/* Konten di atas video bg */}
-            <div className="relative" style={{ zIndex: 2 }}>
-              <FloatingOrnaments />
+            <div className="relative flex flex-col gap-5 pb-6" style={{ zIndex: 2 }}>
+              <HeroSection data={data} bride={bride} groom={groom} />
               <ProfileSection data={data} />
-              <CountdownSection countdown={countdown} primaryEvent={primaryEvent} groom={groom} bride={bride} />
-              <EventsSection akadEvent={akadEvent} baralekEvent={baralekEvent} />
+              <CountdownSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
+              <EventsSection akad={akad} baralek={baralek} />
               <LoveStorySection data={data} />
               <GallerySection data={data} />
               <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
