@@ -22,6 +22,9 @@ const assets = {
   motion3: '/themes/Adat/theme-12/asset-motion-3.png',
   motion4: '/themes/Adat/theme-12/asset-motion-4.png',
   motion5: '/themes/Adat/theme-12/asset-motion-5.png',
+  // Video background (letakkan file .mp4 di folder theme-12 dengan nama persis ini)
+  coverVideo: '/themes/Adat/theme-12/cover-motion-06.mp4',
+  bgVideo: '/themes/Adat/theme-12/bg-motion-fixed-06-compress-1.mp4',
 }
 
 const DividerMinang = ({ color }) => (
@@ -29,6 +32,56 @@ const DividerMinang = ({ color }) => (
     <div className="flex-1 h-[1px]" style={{ backgroundColor: color }} />
     <img src={assets.ampersand} alt="divider" className="w-8 h-8 mx-4 object-contain opacity-50 grayscale" />
     <div className="flex-1 h-[1px]" style={{ backgroundColor: color }} />
+  </div>
+)
+
+// --- VIDEO BACKGROUND COMPONENTS ---
+// Video cover (sebelum dibuka) — fallback ke gambar jika file .mp4 belum ada
+const VideoBackground = () => (
+  <div className="absolute inset-0 z-0 overflow-hidden">
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      poster={assets.mobileBg}
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        // Jika video gagal load, sembunyikan dan tampilkan fallback poster
+        e.target.style.display = 'none'
+      }}
+    >
+      <source src={assets.coverVideo} type="video/mp4" />
+    </video>
+    {/* Overlay tipis agar teks tetap terbaca */}
+    <div className="absolute inset-0" style={{ backgroundColor: 'rgba(250,240,230,0.25)' }} />
+  </div>
+)
+
+// Video BG motion (sesudah dibuka) — parallax fixed video di belakang konten
+const MotionVideoBg = () => (
+  <div
+    className="fixed inset-0 z-0 pointer-events-none"
+    style={{ zIndex: 0 }}
+  >
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
+      poster={assets.mobileBg}
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        e.target.parentElement.style.backgroundImage = `url('${assets.mobileBg}')`
+        e.target.parentElement.style.backgroundSize = 'cover'
+        e.target.parentElement.style.backgroundPosition = 'center'
+        e.target.style.display = 'none'
+      }}
+    >
+      <source src={assets.bgVideo} type="video/mp4" />
+    </video>
+    {/* Overlay semi-transparan agar konten mudah dibaca */}
+    <div className="absolute inset-0" style={{ backgroundColor: 'rgba(253,246,238,0.15)' }} />
   </div>
 )
 
@@ -115,16 +168,31 @@ const FloatingOrnaments = () => (
 const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) => (
   <motion.div 
     className="absolute inset-0 z-50 flex flex-col justify-center items-center overflow-hidden"
-    style={{ 
-      color: colors.text,
-      backgroundImage: `url('${assets.mobileBg}')`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    }}
+    style={{ color: colors.text }}
     animate={animateClose ? { y: '-100%', opacity: 0 } : { y: 0, opacity: 1 }}
     transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }}
   >
-    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 z-20 w-full bg-white/20 backdrop-blur-[2px]">  
+    {/* Video / Gambar Background Cover */}
+    <VideoBackground />
+
+    {/* Ornamen pojok kiri bawah cover */}
+    <motion.img
+      src={assets.motion1}
+      className="absolute bottom-0 left-0 w-40 h-40 object-contain z-10 pointer-events-none"
+      initial={{ rotate: -90, opacity: 0 }}
+      animate={{ rotate: 0, opacity: 1 }}
+      transition={{ delay: 0.6, duration: 0.8, ease: 'easeOut' }}
+    />
+    {/* Ornamen pojok kanan bawah cover */}
+    <motion.img
+      src={assets.motion2}
+      className="absolute bottom-0 right-0 w-40 h-40 object-contain z-10 pointer-events-none"
+      initial={{ rotate: 90, opacity: 0 }}
+      animate={{ rotate: 0, opacity: 1 }}
+      transition={{ delay: 0.8, duration: 0.8, ease: 'easeOut' }}
+    />
+
+    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 z-20 w-full bg-white/15 backdrop-blur-[1px]">  
       <motion.p 
         className="uppercase tracking-[0.3em] text-xs font-sans mb-8 opacity-90 font-bold"
         initial={{ opacity: 0, y: 20 }}
@@ -778,22 +846,23 @@ export default function MinangElegantTheme({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
-            className="flex flex-col w-full relative z-10"
-            style={{
-              backgroundImage: `url('${assets.mobileBg}')`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center top',
-              backgroundAttachment: 'local',
-            }}
+            className="flex flex-col w-full relative"
+            style={{ zIndex: 1 }}
           >
-            <FloatingOrnaments />
-            <ProfileSection data={data} />
-            <CountdownSection countdown={countdown} primaryEvent={primaryEvent} groom={groom} bride={bride} />
-            <EventsSection akadEvent={akadEvent} baralekEvent={baralekEvent} />
-            <LoveStorySection data={data} />
-            <GallerySection data={data} />
-            <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
-            <FooterSection bride={bride} groom={groom} />
+            {/* Video BG bergerak di belakang semua konten */}
+            <MotionVideoBg />
+
+            {/* Konten di atas video bg */}
+            <div className="relative" style={{ zIndex: 2 }}>
+              <FloatingOrnaments />
+              <ProfileSection data={data} />
+              <CountdownSection countdown={countdown} primaryEvent={primaryEvent} groom={groom} bride={bride} />
+              <EventsSection akadEvent={akadEvent} baralekEvent={baralekEvent} />
+              <LoveStorySection data={data} />
+              <GallerySection data={data} />
+              <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
+              <FooterSection bride={bride} groom={groom} />
+            </div>
           </motion.div>
         )}
       </div>
