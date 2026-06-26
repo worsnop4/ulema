@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, MapPin, Heart } from 'lucide-react'
+import { Clock, MapPin, Heart, Volume2, VolumeX } from 'lucide-react'
 import InvitationLayout from './components/InvitationLayout'
 
 // ─── FONT IMPORT ─────────────────────────────────────────────────
@@ -643,6 +643,17 @@ export default function MinangElegantTheme({
           <motion.div className="flex flex-col w-full relative"
             style={{ zIndex: 1 }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9 }}>
+            
+            {/* Tombol Musik */}
+            {data?.music !== false && (
+              <button
+                onClick={() => setMusicPlaying(!musicPlaying)}
+                className="fixed top-6 right-4 md:absolute md:top-6 md:right-4 z-50 w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all duration-300"
+                style={{ backgroundColor: c.maroon, color: '#fff', border: `1px solid ${c.gold}80` }}
+              >
+                {musicPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              </button>
+            )}
 
             <MotionVideoBg />
 
