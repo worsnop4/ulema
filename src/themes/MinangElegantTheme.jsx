@@ -69,48 +69,62 @@ const formatLoveStoryDate = (dateStr) => {
   }
 }
 
-// --- ORNAMEN MELAYANG (BOTTOM CORNERS) ---
+// --- ORNAMEN POJOK (pakai sticky/absolute karena fixed tidak bekerja di dalam overflow:hidden) ---
 const FloatingOrnaments = () => (
-  <div className="fixed bottom-0 left-0 right-0 h-64 pointer-events-none z-40 overflow-hidden">
-    {/* Kiri Bawah */}
-    <motion.img 
-      src={assets.motion1} 
-      className="absolute -bottom-10 -left-10 w-48 h-48 object-contain origin-bottom-left"
-      animate={{ rotate: [-3, 3, -3], scale: [1, 1.05, 1] }}
-      transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-    />
-    <motion.img 
-      src={assets.motion3} 
-      className="absolute bottom-10 -left-6 w-32 h-32 object-contain origin-bottom-left opacity-80"
-      animate={{ rotate: [5, -2, 5], y: [0, -10, 0] }}
-      transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-    />
+  <>
+    {/* Pojok Kiri Bawah */}
+    <motion.div
+      className="sticky bottom-0 left-0 w-0 h-0 pointer-events-none z-30"
+      style={{ marginBottom: 0 }}
+    >
+      <motion.img 
+        src={assets.motion1} 
+        className="absolute -bottom-2 -left-4 w-40 h-40 object-contain origin-bottom-left"
+        animate={{ rotate: [-3, 3, -3], scale: [1, 1.05, 1] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.img 
+        src={assets.motion3} 
+        className="absolute bottom-32 -left-2 w-24 h-24 object-contain origin-bottom-left opacity-75"
+        animate={{ rotate: [5, -2, 5], y: [0, -8, 0] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </motion.div>
 
-    {/* Kanan Bawah */}
-    <motion.img 
-      src={assets.motion2} 
-      className="absolute -bottom-10 -right-10 w-48 h-48 object-contain origin-bottom-right"
-      animate={{ rotate: [3, -3, 3], scale: [1, 1.05, 1] }}
-      transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-    />
-    <motion.img 
-      src={assets.motion4} 
-      className="absolute bottom-12 -right-8 w-36 h-36 object-contain origin-bottom-right opacity-80"
-      animate={{ rotate: [-4, 4, -4], y: [0, -15, 0] }}
-      transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-    />
-  </div>
+    {/* Pojok Kanan Bawah */}
+    <motion.div
+      className="sticky bottom-0 self-end w-0 h-0 pointer-events-none z-30"
+    >
+      <motion.img 
+        src={assets.motion2} 
+        className="absolute -bottom-2 -right-4 w-40 h-40 object-contain origin-bottom-right"
+        animate={{ rotate: [3, -3, 3], scale: [1, 1.05, 1] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.img 
+        src={assets.motion4} 
+        className="absolute bottom-32 -right-2 w-28 h-28 object-contain origin-bottom-right opacity-75"
+        animate={{ rotate: [-4, 4, -4], y: [0, -12, 0] }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </motion.div>
+  </>
 )
 
 // --- KOMPONEN SECTION ---
 const CoverSection = ({ animateClose, bride, groom, primaryEvent, handleOpen }) => (
   <motion.div 
     className="absolute inset-0 z-50 flex flex-col justify-center items-center overflow-hidden"
-    style={{ color: colors.text }}
+    style={{ 
+      color: colors.text,
+      backgroundImage: `url('${assets.mobileBg}')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }}
     animate={animateClose ? { y: '-100%', opacity: 0 } : { y: 0, opacity: 1 }}
     transition={{ duration: 0.8, ease: [0.65, 0, 0.35, 1] }}
   >
-    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 z-20 w-full bg-white/10 backdrop-blur-sm">
+    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 z-20 w-full bg-white/20 backdrop-blur-[2px]">  
       <motion.p 
         className="uppercase tracking-[0.3em] text-xs font-sans mb-8 opacity-90 font-bold"
         initial={{ opacity: 0, y: 20 }}
@@ -462,23 +476,28 @@ const GallerySection = ({ data }) => {
         </motion.h3>
 
         <div className="grid grid-cols-2 gap-3">
-          {photos.map((photoUrl, i) => (
-            <motion.div
-              key={i}
-              className="w-full aspect-square overflow-hidden cursor-pointer group rounded-sm shadow-md"
-              style={{ border: `2px solid #fff` }}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.05 }}
-            >
-              <img 
-                src={photoUrl} 
-                alt={`Gallery ${i+1}`} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-            </motion.div>
-          ))}
+          {photos.map((photo, i) => {
+            // gallery item bisa berupa string URL atau objek { src, id }
+            const src = typeof photo === 'string' ? photo : photo?.src
+            if (!src) return null
+            return (
+              <motion.div
+                key={i}
+                className="w-full aspect-square overflow-hidden cursor-pointer group rounded-sm shadow-md"
+                style={{ border: `2px solid #fff` }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.05 }}
+              >
+                <img 
+                  src={src} 
+                  alt={`Gallery ${i+1}`} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                />
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -738,19 +757,20 @@ export default function MinangElegantTheme({
   return (
     <InvitationLayout layout="minang-elegant" data={data} bgUrl={assets.desktopBg}>
       <div 
-        className="w-full relative min-h-screen flex flex-col overflow-x-hidden font-sans"
-        style={{ 
-          backgroundImage: `url('${assets.mobileBg}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          color: colors.text 
-        }}
+        className="w-full relative h-full flex flex-col overflow-x-hidden font-sans"
+        style={{ color: colors.text }}
       >
-        {opened && <FloatingOrnaments />}
-
         <AnimatePresence>
-          {!opened && <CoverSection key="cover" bride={bride} groom={groom} primaryEvent={primaryEvent} handleOpen={handleOpen} animateClose={animateClose} />}
+          {!opened && (
+            <CoverSection 
+              key="cover" 
+              bride={bride} 
+              groom={groom} 
+              primaryEvent={primaryEvent} 
+              handleOpen={handleOpen} 
+              animateClose={animateClose} 
+            />
+          )}
         </AnimatePresence>
 
         {opened && (
@@ -759,7 +779,14 @@ export default function MinangElegantTheme({
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
             className="flex flex-col w-full relative z-10"
+            style={{
+              backgroundImage: `url('${assets.mobileBg}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center top',
+              backgroundAttachment: 'local',
+            }}
           >
+            <FloatingOrnaments />
             <ProfileSection data={data} />
             <CountdownSection countdown={countdown} primaryEvent={primaryEvent} groom={groom} bride={bride} />
             <EventsSection akadEvent={akadEvent} baralekEvent={baralekEvent} />
