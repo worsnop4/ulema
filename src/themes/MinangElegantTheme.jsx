@@ -129,14 +129,6 @@ const CoverSection = ({ data, bride, groom, primaryEvent, handleOpen, animateClo
     >
       <VideoBg src={A.coverVideo} fallback={A.mobileBg} />
 
-      {/* ornamen pojok */}
-      <motion.img src={A.m1} alt="" className="absolute bottom-0 left-0 w-36 h-36 object-contain z-10 pointer-events-none"
-        initial={{ rotate: -80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.9, ease: 'easeOut' }} />
-      <motion.img src={A.m2} alt="" className="absolute bottom-0 right-0 w-36 h-36 object-contain z-10 pointer-events-none"
-        initial={{ rotate: 80, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.9, ease: 'easeOut' }} />
-
       <div className="relative z-20 flex flex-col items-center text-center px-10 w-full pt-12">
         <motion.p className="text-[10px] tracking-[0.35em] uppercase font-sans mb-6 opacity-80"
           style={{ fontFamily: 'Nunito Sans, sans-serif', color: c.text }}
@@ -147,17 +139,17 @@ const CoverSection = ({ data, bride, groom, primaryEvent, handleOpen, animateClo
         {/* Frame Oval Foto */}
         {coverPhoto && (
           <motion.div 
-            className="mb-8 relative p-1.5 rounded-[50%]"
+            className="mb-8 relative p-1.5 rounded-full"
             style={{ border: `1px solid ${c.gold}80` }}
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            <div className="w-32 h-44 rounded-[50%] overflow-hidden relative shadow-lg"
+            <div className="w-40 h-56 rounded-full overflow-hidden relative shadow-lg"
                  style={{ border: `2px solid ${c.cream}` }}>
               <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover" />
               {/* Efek inner shadow/glass ringan di atas foto */}
-              <div className="absolute inset-0 rounded-[50%]" style={{ boxShadow: 'inset 0 0 15px rgba(0,0,0,0.1)' }} />
+              <div className="absolute inset-0 rounded-full pointer-events-none" style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.15)' }} />
             </div>
           </motion.div>
         )}
