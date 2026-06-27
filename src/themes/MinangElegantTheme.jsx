@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Clock, MapPin, Heart, Volume2, VolumeX } from 'lucide-react'
 import InvitationLayout from './components/InvitationLayout'
+import { MUSIC_URLS } from '../pages/InvitationTemplate'
 
 // ─── FONT IMPORT ─────────────────────────────────────────────────
 // Tambahkan ke index.html atau biarkan dimuat via @import di style global
@@ -625,6 +626,15 @@ export default function MinangElegantTheme({
 
       <div className="w-full relative h-full flex flex-col overflow-x-hidden"
         style={{ fontFamily: 'Nunito Sans, sans-serif', color: c.text }}>
+
+        {/* Audio Player */}
+        {data?.music !== false && (
+          <audio
+            ref={audioRef}
+            src={data?.musicUrl || MUSIC_URLS[data?.musicId || 1] || MUSIC_URLS[1]}
+            loop
+          />
+        )}
 
         {/* Cover */}
         <AnimatePresence>
