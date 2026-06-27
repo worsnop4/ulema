@@ -211,7 +211,7 @@ const ProfileSection = ({ data }) => {
       </div>
 
       <h3 className="mb-1 leading-tight"
-        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
+        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
         {person?.nickname}
       </h3>
       <p className="text-xs font-semibold mb-2 tracking-wide font-sans" style={{ color: c.text }}>
@@ -270,7 +270,7 @@ const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
           Save The Date
         </p>
         <h3 className="mb-8 text-center"
-          style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
+          style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
           Menuju Hari Bahagia
         </h3>
 
@@ -282,7 +282,7 @@ const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
               initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
               <span className="leading-none mb-0.5"
-                style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon, fontWeight: 600 }}>
+                style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic', fontWeight: 600 }}>
                 {b.v.toString().padStart(2,'0')}
               </span>
               <span className="text-[8px] uppercase tracking-widest font-sans opacity-60" style={{ color: c.text }}>
@@ -320,7 +320,7 @@ const EventsSection = ({ akad, baralek }) => {
             {title}
           </p>
           <div className="flex flex-col items-center justify-center mt-3 mb-5">
-            <span style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.5rem', color: c.maroon, fontWeight: 600, lineHeight: 1, marginBottom: '0.2rem' }}>
+            <span style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.5rem', color: c.maroon, fontWeight: 600, lineHeight: 1, marginBottom: '0.2rem' }}>
               {day}
             </span>
             <div className="flex items-center gap-1">
@@ -366,42 +366,49 @@ const LoveStorySection = ({ data }) => {
   if (!stories.length) return null
   return (
     <section className="w-full py-6 px-4">
-      <Glass className="p-8 flex flex-col items-center">
+      <Glass className="p-8">
         <p className="text-center text-xs tracking-[0.4em] uppercase mb-2 font-sans opacity-60" style={{ color: c.text }}>
-          Love Story
-        </p>
-        <h2 className="mb-10 text-center" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.5rem', color: c.maroon }}>
           Kisah Kami
+        </p>
+        <h2 className="mb-12 text-center" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
+          Love Story
         </h2>
-        <div className="w-full flex flex-col gap-10">
-          {stories.map((s, i) => (
-            <motion.div key={s.id || i}
-              className="flex flex-col items-center text-center w-full"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.7 }}>
-              
-              {s.photo ? (
-                <div className="w-24 h-24 rounded-full overflow-hidden mb-4 shadow-sm" style={{ border: `2px solid ${c.gold}80` }}>
-                  <img src={s.photo} alt={s.title} className="w-full h-full object-cover" />
+        <div className="relative w-full flex flex-col">
+          <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2"
+            style={{ background: `linear-gradient(to bottom, transparent, ${c.gold}60, transparent)` }} />
+          {stories.map((s, i) => {
+            const isL = i % 2 === 0
+            return (
+              <motion.div key={s.id || i}
+                className={`flex w-full items-center justify-between mb-12 relative ${isL ? 'flex-row' : 'flex-row-reverse'}`}
+                initial={{ opacity: 0, x: isL ? -20 : 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 bg-white"
+                  style={{ borderColor: c.maroon, zIndex: 10 }} />
+                <div className="w-5/12 flex justify-center">
+                  {s.photo
+                    ? <div className="w-24 h-24 rounded-full overflow-hidden border-2 shadow-md" style={{ borderColor: c.gold + '80' }}>
+                        <img src={s.photo} alt={s.title} className="w-full h-full object-cover" />
+                      </div>
+                    : <div className="w-16 h-16 rounded-full border flex items-center justify-center" style={{ borderColor: c.gold + '60', background: 'rgba(255,255,255,0.5)' }}>
+                        <Heart size={16} color={c.maroon} />
+                      </div>}
                 </div>
-              ) : (
-                <div className="w-14 h-14 rounded-full mb-4 flex items-center justify-center border" style={{ borderColor: c.gold + '60', background: 'rgba(255,255,255,0.5)' }}>
-                  <Heart size={16} color={c.maroon} />
+                <div className={`w-5/12 flex flex-col ${isL ? 'text-left' : 'text-right'}`}>
+                  <span className="text-xs font-sans mb-1 opacity-60 tracking-widest" style={{ color: c.gold }}>
+                    {fmtLSDate(s.date || s.year)}
+                  </span>
+                  <h4 className="font-semibold text-[15px] mb-1.5 font-sans leading-tight" style={{ color: c.maroon }}>
+                    {s.title}
+                  </h4>
+                  <p className="text-[13px] opacity-80 leading-relaxed font-sans" style={{ color: c.text }}>
+                    {s.story}
+                  </p>
                 </div>
-              )}
-              
-              <span className="text-[13px] font-sans mb-1 opacity-60 tracking-widest" style={{ color: c.gold }}>
-                {fmtLSDate(s.date || s.year)}
-              </span>
-              <h4 className="font-semibold text-[15px] mb-2 font-sans leading-tight" style={{ color: c.maroon }}>
-                {s.title}
-              </h4>
-              <p className="text-[13px] opacity-80 leading-relaxed font-sans max-w-[260px]" style={{ color: c.text }}>
-                {s.story}
-              </p>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </div>
       </Glass>
     </section>
@@ -473,7 +480,7 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
           Doa &amp; Kehadiran
         </p>
         <h3 className="text-center mb-8"
-          style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
+          style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
           Sampaikan Doa
         </h3>
 
@@ -610,7 +617,7 @@ const DresscodeSection = ({ data }) => {
           Dress Code
         </p>
         <div className="w-12 h-12 rounded-full mb-4 shadow-sm border border-white/40" style={{ background: data.dresscode.color || c.maroon }} />
-        <h3 className="mb-2" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '1.6rem', color: c.maroon }}>
+        <h3 className="mb-2" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
           {data.dresscode.name}
         </h3>
         <p className="text-[13px] leading-relaxed font-sans opacity-70" style={{ color: c.text }}>
@@ -640,7 +647,7 @@ const GiftSection = ({ data }) => {
         <p className="text-[13px] tracking-[0.3em] uppercase mb-2 font-sans opacity-60 text-center" style={{ color: c.text }}>
           Wedding Gift
         </p>
-        <h2 className="mb-6 text-center" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.5rem', color: c.maroon }}>
+        <h2 className="mb-6 text-center" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
           Kirim Hadiah
         </h2>
         <p className="text-[13px] leading-relaxed font-sans opacity-70 text-center max-w-[240px] mb-8" style={{ color: c.text }}>
@@ -701,7 +708,7 @@ const TurutMengundangSection = ({ data }) => {
         <p className="text-[13px] tracking-[0.3em] uppercase mb-2 font-sans opacity-60" style={{ color: c.text }}>
           Turut Mengundang
         </p>
-        <h2 className="mb-8" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.5rem', color: c.maroon }}>
+        <h2 className="mb-8" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>
           Keluarga Besar
         </h2>
         <div className="w-full flex flex-col gap-6">
