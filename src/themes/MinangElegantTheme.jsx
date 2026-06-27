@@ -155,17 +155,18 @@ const CoverSection = ({ data, bride, groom, primaryEvent, handleOpen, animateClo
         )}
 
       <motion.h1 className="mb-1 leading-none"
-        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}
+        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic', textShadow: '0 2px 12px rgba(255,255,255,0.8), 0 0 25px rgba(255,255,255,0.6)' }}
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8 }}>
         {bride}
       </motion.h1>
 
       <motion.img src={A.ampersand} alt="&" className="w-12 h-12 object-contain my-1"
+        style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}
         initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.55, type: 'spring', stiffness: 200 }} />
 
       <motion.h1 className="mb-8 leading-none"
-        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}
+        style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '3.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic', textShadow: '0 2px 12px rgba(255,255,255,0.8), 0 0 25px rgba(255,255,255,0.6)' }}
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.8 }}>
         {groom}
       </motion.h1>
