@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare, Image as ImageIcon, X, Loader2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { PACKAGE_NAMES } from '../../constants/config'
+import { PACKAGE_NAMES } from '../../config/constants'
 
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState([])

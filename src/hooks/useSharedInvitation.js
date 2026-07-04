@@ -10,12 +10,24 @@ import { useInvitationSave } from './useInvitationSave'
 
 export { defaultInvitationData, DEFAULT_THEMES, DEFAULT_ILLUSTRATIONS }
 
+// Cache the parsed/merged theme list so repeated getThemes() calls during
+// render (e.g. every countdown tick, or from every theme component) don't
+// re-read + re-parse localStorage and rebuild new array/object references
+// each time. Invalidated on any local-storage-update (own tab writes go
+// through saveThemes below; other tabs' writes are picked up via the event).
+let themesCache = null
+if (typeof window !== 'undefined') {
+  window.addEventListener('local-storage-update', () => { themesCache = null })
+}
+
 export function getThemes() {
+  if (themesCache) return themesCache
+
   const stored = storageService.getItem(STORAGE_KEYS.THEMES)
   if (stored) {
     // Find missing themes that are in DEFAULT_THEMES but not in stored
     const missingThemes = DEFAULT_THEMES.filter(dt => !stored.some(st => st.id === dt.id))
-    
+
     const merged = [...stored, ...missingThemes].map(t => {
       const matched = DEFAULT_THEMES.find(d => d.id === t.id)
       if (matched) {
@@ -35,14 +47,17 @@ export function getThemes() {
       storageService.setItem(STORAGE_KEYS.THEMES, merged, false)
     }
 
-    return merged
+    themesCache = merged
+    return themesCache
   }
   storageService.setItem(STORAGE_KEYS.THEMES, DEFAULT_THEMES, false)
-  return DEFAULT_THEMES
+  themesCache = DEFAULT_THEMES
+  return themesCache
 }
 
 export function saveThemes(themesList) {
   storageService.setItem(STORAGE_KEYS.THEMES, themesList)
+  themesCache = themesList
 }
 
 export function getPricing() {

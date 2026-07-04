@@ -646,28 +646,31 @@ export default function BaseThemeEngine({
 
                   {showGifts && (
                     <div className="space-y-3 animate-fade-in text-left">
-                      {data.accounts.map((acc, i) => (
-                        <div key={i} className={`${config.gift.cardClass} flex items-center gap-4`}>
-                          <div className={`w-10 h-10 flex items-center justify-center text-lg ${config.gift.iconClass}`}>
-                            {acc.type === 'bank' ? '🏦' : '📱'}
+                      {data.accounts.map((acc, i) => {
+                        const accKey = acc.id || acc.number || i
+                        return (
+                          <div key={accKey} className={`${config.gift.cardClass} flex items-center gap-4`}>
+                            <div className={`w-10 h-10 flex items-center justify-center text-lg ${config.gift.iconClass}`}>
+                              {acc.type === 'bank' ? '🏦' : '📱'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold ${config.global.textPrimary} text-xs`}>{acc.bank}</p>
+                              <p className={`${config.global.textSecondary} text-[10px] font-light`}>{acc.holder}</p>
+                              <p className={`font-mono text-sm font-bold ${config.global.textPrimary} mt-0.5`}>{acc.number}</p>
+                            </div>
+                            <button
+                              onClick={() => copyAccount(acc.number, accKey)}
+                              className={`flex-shrink-0 px-3 py-1.5 border ${config.global.borderClass} ${config.global.rounded} text-[9px] font-bold tracking-wider uppercase transition-all ${config.global.textPrimary} hover:opacity-80`}
+                              style={{
+                                background: copied === accKey ? primaryColor : 'transparent',
+                                color: copied === accKey ? '#fff' : primaryColor,
+                                borderColor: primaryColor
+                              }}>
+                              {copied === accKey ? 'Copied' : 'Copy'}
+                            </button>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-semibold ${config.global.textPrimary} text-xs`}>{acc.bank}</p>
-                            <p className={`${config.global.textSecondary} text-[10px] font-light`}>{acc.holder}</p>
-                            <p className={`font-mono text-sm font-bold ${config.global.textPrimary} mt-0.5`}>{acc.number}</p>
-                          </div>
-                          <button
-                            onClick={() => copyAccount(acc.number, i)}
-                            className={`flex-shrink-0 px-3 py-1.5 border ${config.global.borderClass} ${config.global.rounded} text-[9px] font-bold tracking-wider uppercase transition-all ${config.global.textPrimary} hover:opacity-80`}
-                            style={{
-                              background: copied === i ? primaryColor : 'transparent',
-                              color: copied === i ? '#fff' : primaryColor,
-                              borderColor: primaryColor
-                            }}>
-                            {copied === i ? 'Copied' : 'Copy'}
-                          </button>
-                        </div>
-                      ))}
+                        )
+                      })}
 
                       {data.giftAddress?.enabled && (
                         <div className={`${config.gift.cardClass} flex items-start gap-4`}>

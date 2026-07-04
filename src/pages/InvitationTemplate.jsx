@@ -1,9 +1,13 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSharedInvitation, getCountdownTarget, getThemes } from '../hooks/useSharedInvitation'
 import { useAudioPlayer } from '../hooks/useAudioPlayer'
 import { useRsvp } from '../hooks/useRsvp'
+import { useWishSubmit } from '../hooks/useWishSubmit'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
+import { invitationService } from '../services/invitationService'
 import { ThemeErrorBoundary } from '../components/common/ThemeErrorBoundary'
+import { THEMES } from '../config/constants'
 // Import Theme Layout Components via Lazy Loading (Code Splitting)
 const WatercolorFloralTheme = lazy(() => import('../themes/WatercolorFloralTheme'))
 const DarkLuxuryTheme = lazy(() => import('../themes/DarkLuxuryTheme'))
@@ -17,16 +21,16 @@ const CinematicLuxuryTheme = lazy(() => import('../themes/CinematicLuxuryTheme')
 const MinangElegantTheme = lazy(() => import('../themes/MinangElegantTheme'))
 
 const THEME_COMPONENTS = {
-  'watercolor-floral': WatercolorFloralTheme,
-  'dark-luxury': DarkLuxuryTheme,
-  'modern-minimalist': ModernMinimalistTheme,
-  'playful-illustrative': PlayfulIllustrativeTheme,
-  'traditional-adat': TraditionalAdatTheme,
-  'special-001': Special001Theme,
-  'special-002': Special002Theme,
-  'special-003': Special003Theme,
-  'cinematic-luxury': CinematicLuxuryTheme,
-  'minang-elegant': MinangElegantTheme,
+  [THEMES.WATERCOLOR_FLORAL]: WatercolorFloralTheme,
+  [THEMES.DARK_LUXURY]: DarkLuxuryTheme,
+  [THEMES.MODERN_MINIMALIST]: ModernMinimalistTheme,
+  [THEMES.PLAYFUL_ILLUSTRATIVE]: PlayfulIllustrativeTheme,
+  [THEMES.TRADITIONAL_ADAT]: TraditionalAdatTheme,
+  [THEMES.SPECIAL_001]: Special001Theme,
+  [THEMES.SPECIAL_002]: Special002Theme,
+  [THEMES.SPECIAL_003]: Special003Theme,
+  [THEMES.CINEMATIC_LUXURY]: CinematicLuxuryTheme,
+  [THEMES.MINANG_ELEGANT]: MinangElegantTheme,
 }
 
 // ── Countdown Hook ─────────────────────────────────────────────
@@ -122,23 +126,25 @@ export default function InvitationTemplate() {
 
   const [opened, setOpened] = useState(false)
   const [animateClose, setAnimateClose] = useState(false)
-  const [copied, setCopied] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [showGifts, setShowGifts] = useState(false)
 
   const [data, updateData, isLoading] = useSharedInvitation()
   const countdownTarget = getCountdownTarget(data)
   const countdown = useCountdown(countdownTarget)
-  
+
   // Custom hooks for extracted logic
   const { musicPlaying, setMusicPlaying, audioRef } = useAudioPlayer()
-  const { 
-    rsvpName, setRsvpName, 
-    rsvpWish, setRsvpWish, 
-    rsvpStatus, setRsvpStatus, 
-    rsvpSent, setRsvpSent, 
-    handleRsvpSubmit 
+  const {
+    rsvpName, setRsvpName,
+    rsvpWish, setRsvpWish,
+    rsvpStatus, setRsvpStatus,
+    rsvpSent, setRsvpSent,
+    handleRsvpSubmit
   } = useRsvp(updateData)
+  // Shared wish/RSVP submit used by custom themes (e.g. MinangElegantTheme) that manage their own form state
+  const { submitWish } = useWishSubmit(updateData)
+  const { copiedKey: copied, copy: copyAccount } = useCopyToClipboard()
 
 
 
@@ -153,12 +159,17 @@ export default function InvitationTemplate() {
     // Prevent tracking in admin demo mode or if already viewed in this session
     const isDemo = window.location.pathname.includes('/demo')
     const viewKey = 'has_viewed_' + (data.slug || 'temp')
-    
-    if (!isDemo && !sessionStorage.getItem(viewKey)) {
-      updateData(prev => ({ ...prev, views: (prev.views || 0) + 1 }))
+
+    // Atomic RPC increment instead of the full-object save pipeline — a guest
+    // just viewing the page must never overwrite the whole invitation row
+    // (see supabase/migrations for the increment_invitation_views function).
+    if (!isDemo && data.id && !sessionStorage.getItem(viewKey)) {
+      invitationService.incrementViews(data.id).then(({ error }) => {
+        if (error) console.error('[InvitationTemplate] Gagal mencatat view:', error)
+      })
       sessionStorage.setItem(viewKey, 'true')
     }
-  }, [data.slug])
+  }, [data.slug, data.id])
 
   const wishes = data.rsvps && data.rsvps.length > 0 ? data.rsvps : SAMPLE_WISHES
   const primaryEvent = data.events?.find(ev => ev.date && ev.date.length === 10) || data.events?.[0]
@@ -172,11 +183,13 @@ export default function InvitationTemplate() {
     }
   }
 
-  const themes = getThemes()
+  // Memoized so the countdown's per-second tick doesn't re-read localStorage
+  // and rebuild theme objects (and re-trigger the image-preload effect below) every render.
+  const themes = useMemo(() => getThemes(), [])
   const themeParam = searchParams.get('theme')
   const themeId = themeParam ? Number(themeParam) : data.themeId
-  const activeTheme = themes.find(t => t.id === themeId) || themes[0]
-  const layout = activeTheme?.layout || 'watercolor-floral'
+  const activeTheme = useMemo(() => themes.find(t => t.id === themeId) || themes[0], [themes, themeId])
+  const layout = activeTheme?.layout || THEMES.WATERCOLOR_FLORAL
   
   // Custom colors fallback to theme default colors
   const primaryColor = data.customColors?.primary || activeTheme?.colors?.[0] || '#134e4a'
@@ -233,20 +246,14 @@ export default function InvitationTemplate() {
   }, [activeTheme])
 
   const getAvatarClass = () => {
-    if (layout === 'watercolor-floral') return 'rounded-full'
-    if (layout === 'modern-minimalist') return 'rounded-none border-2'
-    if (layout === 'dark-luxury') return 'rounded-[30%_70%_70%_30%_/_40%_50%_60%_50%]'
-    if (layout === 'playful-illustrative') return 'rounded-[30%_70%_30%_70%_/_50%_30%_70%_50%]'
-    if (layout === 'traditional-adat') return 'rounded-3xl border-double border-8'
+    if (layout === THEMES.WATERCOLOR_FLORAL) return 'rounded-full'
+    if (layout === THEMES.MODERN_MINIMALIST) return 'rounded-none border-2'
+    if (layout === THEMES.DARK_LUXURY) return 'rounded-[30%_70%_70%_30%_/_40%_50%_60%_50%]'
+    if (layout === THEMES.PLAYFUL_ILLUSTRATIVE) return 'rounded-[30%_70%_30%_70%_/_50%_30%_70%_50%]'
+    if (layout === THEMES.TRADITIONAL_ADAT) return 'rounded-3xl border-double border-8'
     return 'rounded-2xl'
   }
   const avatarClass = getAvatarClass()
-
-  const copyAccount = (text, id) => {
-    navigator.clipboard.writeText(text)
-    setCopied(id)
-    setTimeout(() => setCopied(null), 2000)
-  }
 
   const handleNavClick = (e, href) => {
     e.preventDefault()
@@ -319,6 +326,7 @@ export default function InvitationTemplate() {
             scrolled={scrolled}
             handleScroll={handleScroll}
             wishes={wishes}
+            onSubmitWish={submitWish}
             handleRsvpSubmit={handleRsvpSubmit}
             rsvpName={rsvpName}
             setRsvpName={setRsvpName}

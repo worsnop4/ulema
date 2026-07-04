@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Clock, MapPin, Heart, Volume2, VolumeX } from 'lucide-react'
 import InvitationLayout from './components/InvitationLayout'
 import { MUSIC_URLS } from '../pages/InvitationTemplate'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
+import { THEMES } from '../config/constants'
 
 // ─── FONT IMPORT ─────────────────────────────────────────────────
 // Tambahkan ke index.html atau biarkan dimuat via @import di style global
@@ -430,7 +432,7 @@ const GallerySection = ({ data }) => {
             const src = typeof ph === 'string' ? ph : ph?.src
             if (!src) return null
             return (
-              <motion.div key={i}
+              <motion.div key={ph?.id || src}
                 className="aspect-square overflow-hidden rounded-lg shadow-sm group cursor-pointer"
                 style={{ border: `1px solid ${c.glassBrd}` }}
                 initial={{ opacity: 0, scale: 0.92 }}
@@ -459,7 +461,7 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
     e.preventDefault()
     if (!name || !msg) return
     setBusy(true)
-    if (onSubmitWish) await onSubmitWish({ name, message: msg, attendance: att, pax })
+    if (onSubmitWish) await onSubmitWish({ name, message: msg, attendance: att, guests: pax })
     setName(''); setMsg(''); setAtt('hadir'); setPax('1')
     setBusy(false)
   }
@@ -570,26 +572,34 @@ const FooterSection = ({ bride, groom }) => (
   </section>
 )
 
-const LightParticles = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
-    {[...Array(15)].map((_, i) => {
-      const size = Math.random() * 4 + 2
-      const top = Math.random() * 100
-      const left = Math.random() * 100
-      const delay = Math.random() * 5
-      const duration = Math.random() * 3 + 2
-      return (
+const LightParticles = () => {
+  // Generated once per mount instead of on every render — otherwise every
+  // parent re-render (music toggle, sync update, etc.) reshuffles all
+  // particle positions/sizes, making the animation jump instead of float.
+  const [particles] = useState(() => (
+    [...Array(15)].map(() => ({
+      size: Math.random() * 4 + 2,
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      delay: Math.random() * 5,
+      duration: Math.random() * 3 + 2,
+    }))
+  ))
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full"
-          style={{ width: size, height: size, top: `${top}%`, left: `${left}%`, backgroundColor: c.cream, boxShadow: `0 0 ${size*3}px ${c.gold}` }}
+          style={{ width: p.size, height: p.size, top: `${p.top}%`, left: `${p.left}%`, backgroundColor: c.cream, boxShadow: `0 0 ${p.size * 3}px ${c.gold}` }}
           animate={{ opacity: [0, 0.8, 0], scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration, repeat: Infinity, delay, ease: "easeInOut" }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
         />
-      )
-    })}
-  </div>
-)
+      ))}
+    </div>
+  )
+}
 // ─── QUOTE SECTION ───────────────────────────────────────────────
 const QuoteSection = ({ data }) => {
   if (!data?.quote) return null
@@ -631,15 +641,9 @@ const DresscodeSection = ({ data }) => {
 // ─── GIFT SECTION ────────────────────────────────────────────────
 const GiftSection = ({ data }) => {
   const [showGifts, setShowGifts] = useState(false)
-  const [copied, setCopied] = useState(null)
-  
-  if (!data?.accounts || data.accounts.length === 0) return null
+  const { copiedKey: copied, copy: copyAccount } = useCopyToClipboard()
 
-  const copyAccount = (text, idx) => {
-    navigator.clipboard.writeText(text)
-    setCopied(idx)
-    setTimeout(() => setCopied(null), 2000)
-  }
+  if (!data?.accounts || data.accounts.length === 0) return null
 
   return (
     <section className="px-6 relative z-10">
@@ -665,18 +669,21 @@ const GiftSection = ({ data }) => {
         <AnimatePresence>
           {showGifts && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="w-full flex flex-col gap-4 mt-4 overflow-hidden">
-              {data.accounts.map((acc, i) => (
-                <div key={i} className="p-5 rounded-2xl border flex flex-col items-center text-center relative" style={{ borderColor: `${c.gold}40`, backgroundColor: 'rgba(255,255,255,0.3)' }}>
-                  <p className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: c.maroon }}>{acc.bank}</p>
-                  <p className="text-[13px] opacity-70 mb-3" style={{ color: c.text }}>{acc.holder}</p>
-                  <p className="text-[14px] font-mono tracking-widest font-semibold mb-4" style={{ color: c.text }}>{acc.number}</p>
-                  <button onClick={() => copyAccount(acc.number, i)}
-                    className="px-5 py-1.5 text-xs uppercase tracking-wider font-semibold rounded-full border transition-all"
-                    style={{ borderColor: copied === i ? c.maroon : c.gold, backgroundColor: copied === i ? c.maroon : 'transparent', color: copied === i ? '#fff' : c.maroon }}>
-                    {copied === i ? 'Tersalin!' : 'Salin Rekening'}
-                  </button>
-                </div>
-              ))}
+              {data.accounts.map((acc, i) => {
+                const accKey = acc.id || acc.number || i
+                return (
+                  <div key={accKey} className="p-5 rounded-2xl border flex flex-col items-center text-center relative" style={{ borderColor: `${c.gold}40`, backgroundColor: 'rgba(255,255,255,0.3)' }}>
+                    <p className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: c.maroon }}>{acc.bank}</p>
+                    <p className="text-[13px] opacity-70 mb-3" style={{ color: c.text }}>{acc.holder}</p>
+                    <p className="text-[14px] font-mono tracking-widest font-semibold mb-4" style={{ color: c.text }}>{acc.number}</p>
+                    <button onClick={() => copyAccount(acc.number, accKey)}
+                      className="px-5 py-1.5 text-xs uppercase tracking-wider font-semibold rounded-full border transition-all"
+                      style={{ borderColor: copied === accKey ? c.maroon : c.gold, backgroundColor: copied === accKey ? c.maroon : 'transparent', color: copied === accKey ? '#fff' : c.maroon }}>
+                      {copied === accKey ? 'Tersalin!' : 'Salin Rekening'}
+                    </button>
+                  </div>
+                )
+              })}
 
               {data.giftAddress?.enabled && (
                 <div className="p-5 rounded-2xl border flex flex-col items-center text-center relative mt-2" style={{ borderColor: `${c.gold}40`, backgroundColor: 'rgba(255,255,255,0.3)' }}>
@@ -701,7 +708,7 @@ const GiftSection = ({ data }) => {
 
 // ─── TURUT MENGUNDANG SECTION ────────────────────────────────────
 const TurutMengundangSection = ({ data }) => {
-  if (!data?.turutMengundangEnabled || !data?.families || !data.families.some(f => f.members.some(m => m.trim() !== ''))) return null
+  if (!data?.turutMengundangEnabled || !data?.families || !data.families.some(f => f.members?.some(m => m.trim() !== ''))) return null
   return (
     <section className="px-6 relative z-10">
       <Glass className="p-10 text-center flex flex-col items-center">
@@ -713,14 +720,14 @@ const TurutMengundangSection = ({ data }) => {
         </h2>
         <div className="w-full flex flex-col gap-6">
           {data.families.map((fam, i) => {
-            const validMembers = fam.members.filter(m => m.trim() !== '')
+            const validMembers = (fam.members || []).filter(m => m.trim() !== '')
             if (validMembers.length === 0) return null
             return (
-              <div key={i} className="flex flex-col items-center">
+              <div key={fam.id || fam.title || i} className="flex flex-col items-center">
                 {fam.title && <h3 className="text-sm font-bold tracking-widest uppercase mb-3 opacity-80" style={{ color: c.maroon }}>{fam.title}</h3>}
                 <div className="flex flex-col gap-1.5">
                   {validMembers.map((m, j) => (
-                    <p key={j} className="text-sm font-sans opacity-75 leading-relaxed" style={{ color: c.text }}>{m}</p>
+                    <p key={`${m}-${j}`} className="text-sm font-sans opacity-75 leading-relaxed" style={{ color: c.text }}>{m}</p>
                   ))}
                 </div>
               </div>
@@ -766,16 +773,19 @@ export default function MinangElegantTheme({
     setAnimateClose(true)
     setTimeout(() => {
       setOpened(true)
+      // useAudioPlayer's own effect calls .play() when musicPlaying flips true — no need to call it here too.
       if (audioRef?.current) {
-        audioRef.current.play().catch(() => {})
         setMusicPlaying(true)
       }
     }, 800)
   }
 
   return (
-    <InvitationLayout layout="minang-elegant" data={data} bgUrl={A.desktopBg}>
-      {/* Google Fonts */}
+    <InvitationLayout layout={THEMES.MINANG_ELEGANT} data={data} bgUrl={A.desktopBg}>
+      {/* Fixed typography by design: this is a premium/motion theme with its own bespoke
+          layout, so it intentionally doesn't participate in InvitationTemplate's generic
+          fontConfig customization (used by the BaseThemeEngine-based themes) — the Minang
+          Adat look is tied to this specific serif/script pairing. */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,400;0,600;1,400;1,600&family=Pinyon+Script&family=Nunito+Sans:wght@300;400;600&display=swap');
       `}</style>

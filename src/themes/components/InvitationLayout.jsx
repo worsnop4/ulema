@@ -1,35 +1,36 @@
 import React from 'react'
 import FallingLeaves from './FallingLeaves'
 import { THEME_CONFIGS } from '../themeConfigs'
+import { THEMES } from '../../config/constants'
 
-export default function InvitationLayout({ 
-  children, 
-  layout, 
-  primaryColor, 
-  accentColor, 
-  bgColor, 
+export default function InvitationLayout({
+  children,
+  layout,
+  primaryColor,
+  accentColor,
+  bgColor,
   bgUrl
 }) {
   const config = THEME_CONFIGS[layout] || {}
-  
+
   return (
     <div className="flex w-full min-h-screen font-sans items-center justify-center bg-[#ede6dc] p-0 md:p-6 lg:p-8"
-         style={{ 
-           background: layout === 'dark-luxury' 
-             ? 'radial-gradient(circle, #1e1915 0%, #0c0a09 100%)' 
-             : layout === 'modern-minimalist'
+         style={{
+           background: layout === THEMES.DARK_LUXURY
+             ? 'radial-gradient(circle, #1e1915 0%, #0c0a09 100%)'
+             : layout === THEMES.MODERN_MINIMALIST
                ? '#fcfaf6'
                : config.global?.desktopBg
                  ? config.global.desktopBg
-               : layout === 'playful-illustrative'
+               : layout === THEMES.PLAYFUL_ILLUSTRATIVE
                  ? `linear-gradient(180deg, ${bgColor} 0%, #ffffff 100%)`
-                 : layout === 'traditional-adat'
+                 : layout === THEMES.TRADITIONAL_ADAT
                    ? `linear-gradient(180deg, ${primaryColor} 0%, ${bgColor} 100%)`
-                   : `url('${bgUrl}') center/cover no-repeat` 
+                   : `url('${bgUrl}') center/cover no-repeat`
          }}>
-      
+
       {/* Background overlay for better contrast if using background image */}
-      {layout === 'watercolor-floral' && (
+      {layout === THEMES.WATERCOLOR_FLORAL && (
         <div className="absolute inset-0 bg-white/40 backdrop-blur-sm pointer-events-none" />
       )}
 

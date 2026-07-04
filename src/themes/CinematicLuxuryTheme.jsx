@@ -5,6 +5,7 @@ import { MUSIC_URLS, getEmbedUrl } from '../pages/InvitationTemplate'
 import InvitationLayout from './components/InvitationLayout'
 
 import { getThemes } from '../hooks/useSharedInvitation'
+import { THEMES } from '../config/constants'
 
 // Generic Reveal Component for smooth scroll animations
 const FadeUp = ({ children, delay = 0, duration = 0.8, className = '' }) => (
@@ -106,7 +107,7 @@ export default function CinematicLuxuryTheme({
   }
 
   return (
-    <InvitationLayout layout="dark-luxury" data={data} primaryColor={primaryColor} accentColor={luxGold} bgColor={luxBg} primaryEvent={primaryEvent}>
+    <InvitationLayout layout={THEMES.DARK_LUXURY} data={data} primaryColor={primaryColor} accentColor={luxGold} bgColor={luxBg} primaryEvent={primaryEvent}>
       <div 
         className="w-full relative min-h-screen flex flex-col overflow-x-hidden font-sans"
         style={{ backgroundColor: luxBg, color: luxText }}

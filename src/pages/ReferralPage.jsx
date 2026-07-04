@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Share2, Copy, Check, Users, TrendingUp, AlertCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../App'
-import { ADMIN_WHATSAPP, REFERRAL_MIN_WITHDRAWAL } from '../constants/config'
+import { ADMIN_WHATSAPP, REFERRAL_MIN_WITHDRAWAL } from '../config/constants'
 
 export default function ReferralPage() {
   const { user } = useAuth()

@@ -26,6 +26,40 @@ export const invitationService = {
   },
 
   /**
+   * Mengambil undangan milik user tertentu, opsional dipersempit ke slug tertentu
+   * (dipakai untuk mode admin demo, lihat useInvitationData)
+   * @param {string} userId
+   * @param {{slug?: string}} [options]
+   * @returns {Promise<{data: InvitationRecord | null, error: any}>}
+   */
+  async getInvitationForUser(userId, { slug } = {}) {
+    try {
+      let query = supabase.from('invitations').select('*').eq('user_id', userId)
+      if (slug) query = query.eq('data->>slug', slug)
+      const { data, error } = await query.maybeSingle()
+      return { data, error }
+    } catch (err) {
+      return { data: null, error: err }
+    }
+  },
+
+  /**
+   * Increment atomik untuk views di dalam JSONB `data`, lewat RPC Postgres
+   * (bukan lewat updateInvitation, supaya tidak menimpa seluruh row saat tamu buka undangan).
+   * Butuh function `increment_invitation_views` di Supabase — lihat supabase/migrations/.
+   * @param {string} id
+   * @returns {Promise<{error: any}>}
+   */
+  async incrementViews(id) {
+    try {
+      const { error } = await supabase.rpc('increment_invitation_views', { p_id: id })
+      return { error }
+    } catch (err) {
+      return { error: err }
+    }
+  },
+
+  /**
    * Membuat undangan baru
    * @param {Partial<InvitationRecord>} payload - Data undangan awal (minimal user_id, theme_id, data)
    * @returns {Promise<{data: InvitationRecord | null, error: any}>}

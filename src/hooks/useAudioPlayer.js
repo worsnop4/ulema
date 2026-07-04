@@ -7,8 +7,8 @@ export function useAudioPlayer() {
   useEffect(() => {
     if (!audioRef.current) return
     if (musicPlaying) {
-      audioRef.current.play().catch(err => {
-        console.log('Autoplay was prevented or audio failed to play:', err)
+      audioRef.current.play().catch(() => {
+        // Browser blocked autoplay (common until the user interacts with the page) — not an error to surface.
         setMusicPlaying(false)
       })
     } else {

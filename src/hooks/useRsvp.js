@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useWishSubmit } from './useWishSubmit'
 
 export function useRsvp(updateData) {
   const [rsvpName, setRsvpName] = useState('')
@@ -6,25 +7,14 @@ export function useRsvp(updateData) {
   const [rsvpStatus, setRsvpStatus] = useState('hadir')
   const [rsvpSent, setRsvpSent] = useState(false)
 
-  const handleRsvpSubmit = (e) => {
+  const { submitWish, isSubmitting } = useWishSubmit(updateData)
+
+  const handleRsvpSubmit = async (e) => {
     e.preventDefault()
-    if (!rsvpName.trim()) return
-    
-    const newRsvp = {
-      id: Date.now(),
-      name: rsvpName,
-      wish: rsvpWish,
-      rsvp: rsvpStatus,
-      guests: rsvpStatus === 'hadir' ? 1 : 0,
-      time: 'Baru saja',
-      timestamp: Date.now()
-    }
-    
-    updateData(prev => ({
-      ...prev,
-      rsvps: [newRsvp, ...(prev.rsvps || [])]
-    }))
-    
+    if (isSubmitting || !rsvpName.trim()) return
+
+    await submitWish({ name: rsvpName, message: rsvpWish, attendance: rsvpStatus })
+
     setRsvpSent(true)
     setRsvpName('')
     setRsvpWish('')
@@ -35,6 +25,7 @@ export function useRsvp(updateData) {
     rsvpWish, setRsvpWish,
     rsvpStatus, setRsvpStatus,
     rsvpSent, setRsvpSent,
-    handleRsvpSubmit
+    handleRsvpSubmit,
+    isSubmitting
   }
 }

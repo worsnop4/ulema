@@ -5,7 +5,7 @@ import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
 import { uploadMedia } from '../components/common/FormHelpers'
 import { supabase } from '../lib/supabase'
-import { ADMIN_WHATSAPP, REFERRAL_DISCOUNT_AMOUNT } from '../constants/config'
+import { ADMIN_WHATSAPP, REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 
 export default function TransactionPage() {
   const { user, logout } = useAuth()
