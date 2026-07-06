@@ -18,6 +18,8 @@ export default function InvitationLayout({
          style={{
            background: layout === THEMES.DARK_LUXURY
              ? 'radial-gradient(circle, #1e1915 0%, #0c0a09 100%)'
+             : layout === THEMES.CINEMATIC_SHADOW
+               ? 'radial-gradient(circle, #262626 0%, #1a1a1a 100%)'
              : layout === THEMES.MODERN_MINIMALIST
                ? '#fcfaf6'
                : config.global?.desktopBg

@@ -54,6 +54,7 @@ export const DEFAULT_THEMES = [
   { id: 11, name: 'Cinematic Luxury (Video)', code: 'LUX-002', emoji: '🎥', thumbnail: '/images/themes/darkluxury.png', layout: 'cinematic-luxury', colors: ['#0c0c0c', '#ddc497', '#ffffff'], desc: 'Tema cinematic mewah dengan background video animasi', category: 'Luxury', themeType: 'video' },
   { id: 12, name: 'Minang Elegant', code: 'ADT-001', emoji: '👑', thumbnail: '/images/themes/adat.png', layout: 'minang-elegant', colors: ['#1a0f0a', '#c0872a', '#8b1a1a'], desc: 'Tema adat Minangkabau premium dengan nuansa gelap elegan', category: 'Adat' },
   { id: 13, name: 'Bordeaux Luxe', code: 'LUX-003', emoji: '🍷', thumbnail: '/images/themes/darkluxury.png', layout: 'bordeaux-luxe', colors: ['#4b0f28', '#c9a24b', '#faf3ea'], desc: 'Tema luxury wine-burgundy dengan aksen emas & video background sinematik', category: 'Luxury', themeType: 'video' },
+  { id: 14, name: 'Cinematic Shadow', code: 'LUX-004', emoji: '🌳', thumbnail: '/images/themes/darkluxury.png', layout: 'cinematic-shadow', colors: ['#1a1a1a', '#c9a96e', '#f5f0e8'], desc: 'Tema luxury dark elegant dengan video background, siluet shadow tree, dan tipografi serif besar', category: 'Luxury', themeType: 'video' },
 ]
 
 export const DEFAULT_ILLUSTRATIONS = [
