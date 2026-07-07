@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getThemes, saveThemes } from '../../hooks/useSharedInvitation'
 import { storageService } from '../../services/storageService'
+import { PhotoUploadBox } from '../common/FormHelpers'
 import { Edit, Trash2, Check, Palette, Layout } from 'lucide-react'
 
 export default function AdminThemes() {
@@ -19,6 +20,7 @@ export default function AdminThemes() {
   const [themeColor3, setThemeColor3] = useState('#faf7f2')
   const [themeDesc, setThemeDesc] = useState('')
   const [themeCategory, setThemeCategory] = useState('Special')
+  const [themeThumbnail, setThemeThumbnail] = useState('')
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -44,7 +46,8 @@ export default function AdminThemes() {
             layout: themeLayout,
             colors: themeColors,
             desc: themeDesc.trim(),
-            category: themeCategory
+            category: themeCategory,
+            thumbnail: themeThumbnail
           }
         }
         return t
@@ -61,7 +64,8 @@ export default function AdminThemes() {
         layout: themeLayout,
         colors: themeColors,
         desc: themeDesc.trim(),
-        category: themeCategory
+        category: themeCategory,
+        thumbnail: themeThumbnail
       }
       const updated = [...themes, newTheme]
       saveThemes(updated)
@@ -77,6 +81,7 @@ export default function AdminThemes() {
     setThemeColor3('#faf7f2')
     setThemeDesc('')
     setThemeCategory('Special')
+    setThemeThumbnail('')
     setTimeout(() => setMessage(''), 3000)
   }
 
@@ -90,6 +95,7 @@ export default function AdminThemes() {
     setThemeColor3(theme.colors?.[2] || '#faf7f2')
     setThemeDesc(theme.desc || '')
     setThemeCategory(theme.category || 'Special')
+    setThemeThumbnail(theme.thumbnail || '')
   }
 
   const handleDeleteTheme = (id) => {
@@ -115,6 +121,7 @@ export default function AdminThemes() {
     setThemeColor3('#faf7f2')
     setThemeDesc('')
     setThemeCategory('Special')
+    setThemeThumbnail('')
   }
 
   const handleEditDemoClick = (themeId) => {
@@ -179,6 +186,11 @@ export default function AdminThemes() {
                   <label className="block text-xs font-semibold text-slate-500 mb-1">Nama Tema</label>
                   <input type="text" className="form-input text-sm" placeholder="Contoh: Classic Elegance" value={themeName} onChange={e => setThemeName(e.target.value)} required />
                 </div>
+                <PhotoUploadBox
+                  label="Foto Cover (tampil di Katalog Tema)"
+                  value={themeThumbnail}
+                  onChange={setThemeThumbnail}
+                />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">Emoji Ikon</label>
