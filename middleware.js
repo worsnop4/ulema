@@ -116,6 +116,13 @@ export default async function middleware(request) {
 
   return new Response(html, {
     status: 200,
-    headers: { 'content-type': 'text/html; charset=utf-8' },
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      // Never let Vercel's CDN or a browser cache this — invitation data
+      // (photo, title, desc) can change any time the couple edits it.
+      // WhatsApp/Facebook's own server-side scrape cache is separate and
+      // out of our control (see Sharing Debugger's "Scrape Again").
+      'cache-control': 'no-store, must-revalidate',
+    },
   })
 }
