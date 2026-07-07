@@ -76,7 +76,13 @@ export default async function middleware(request) {
 
   const url = new URL(request.url)
   const match = url.pathname.match(/^\/invite\/([^/]+)/)
-  const slug = match ? decodeURIComponent(match[1]) : null
+  const rawSlug = match ? decodeURIComponent(match[1]) : null
+
+  // Mirror useInvitationData.js: "/invite/demo?theme=N" isn't looked up by
+  // the literal slug "demo" — it resolves to the seeded "demo-theme-N" row.
+  const slug = rawSlug === 'demo'
+    ? `demo-theme-${url.searchParams.get('theme') || '1'}`
+    : rawSlug
 
   const pageUrl = `${url.origin}${url.pathname}`
   const defaultImage = `${url.origin}/hero/hero1.jpg`
@@ -85,7 +91,7 @@ export default async function middleware(request) {
   let description = 'Anda diundang! Buka tautan ini untuk melihat detail acara.'
   let image = defaultImage
 
-  const data = slug && slug !== 'demo' ? await fetchInvitationData(slug) : null
+  const data = slug ? await fetchInvitationData(slug) : null
   if (data) {
     const bride = data.bride?.nickname || ''
     const groom = data.groom?.nickname || ''
