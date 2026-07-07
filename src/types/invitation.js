@@ -52,6 +52,7 @@
  * @property {string|null} coverVideo - URL video sampul
  * @property {string|null} footerPhoto - URL foto penutup
  * @property {string} coverStyle - Gaya cover (cth: circle, full)
+ * @property {string|null} ogImage - URL foto untuk Open Graph meta tag (preview link WhatsApp/media sosial), dipakai oleh middleware.js
  */
 
 /**

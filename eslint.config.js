@@ -18,4 +18,12 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Vercel Edge Middleware — runs outside the browser bundle, has access to
+    // process.env for reading Vercel project environment variables.
+    files: ['middleware.js'],
+    languageOptions: {
+      globals: { ...globals.browser, process: 'readonly' },
+    },
+  },
 ])
