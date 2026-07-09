@@ -98,7 +98,7 @@ export default function LandingCatalog() {
                 {/* Background visual covering entire card */}
                 <div className="absolute inset-0 z-0 bg-gray-100">
                   {t.thumbnail ? (
-                    <img src={t.thumbnail} alt={t.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={t.thumbnail} alt={t.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center" style={{ background: gradientBg }}>
                       <span className="text-6xl opacity-90 drop-shadow-md">{t.emoji}</span>

@@ -5,7 +5,7 @@ const TESTI_BLANK = '/avatars/testimoni/testi%20blank.jpg'
 const testimonials = [
   {
     id: 1,
-    avatar: '/avatars/testimoni/testi1.png',
+    avatar: '/avatars/testimoni/testi1.jpg',
     name: 'Angga & Lala',
     city: 'Jakarta',
     stars: 5,
@@ -13,7 +13,7 @@ const testimonials = [
   },
   {
     id: 2,
-    avatar: '/avatars/testimoni/testi2.png',
+    avatar: '/avatars/testimoni/testi2.jpg',
     name: 'Rizky & Sinta',
     city: 'Bandung',
     stars: 4,
@@ -21,7 +21,7 @@ const testimonials = [
   },
   {
     id: 3,
-    avatar: '/avatars/testimoni/testi3.jpeg',
+    avatar: '/avatars/testimoni/testi3.jpg',
     name: 'Dian & Andi',
     city: 'Surabaya',
     stars: 5,
@@ -29,7 +29,7 @@ const testimonials = [
   },
   {
     id: 4,
-    avatar: '/avatars/testimoni/testi4.jpeg',
+    avatar: '/avatars/testimoni/testi4.jpg',
     name: 'Fariz & Nadia',
     city: 'Yogyakarta',
     stars: 4,
@@ -37,7 +37,7 @@ const testimonials = [
   },
   {
     id: 5,
-    avatar: '/avatars/testimoni/testi5.jpeg',
+    avatar: '/avatars/testimoni/testi5.jpg',
     name: 'Hendra & Putri',
     city: 'Medan',
     stars: 5,
@@ -203,6 +203,7 @@ export default function LandingTestimonials() {
                       <img
                         src={t.avatar}
                         alt={t.name}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.style.display = 'none'
@@ -280,8 +281,9 @@ export default function LandingTestimonials() {
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="w-7 h-7 rounded-full overflow-hidden border-2 border-white shadow-sm">
                   <img
-                    src={i <= 3 ? `/avatars/testimoni/testi${i}.${i === 3 ? 'jpeg' : 'png'}` : TESTI_BLANK}
+                    src={i <= 3 ? `/avatars/testimoni/testi${i}.jpg` : TESTI_BLANK}
                     alt=""
+                    loading="lazy"
                     className="w-full h-full object-cover"
                     onError={(e) => { e.target.src = TESTI_BLANK }}
                   />
