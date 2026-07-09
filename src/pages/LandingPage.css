@@ -23,34 +23,6 @@ html {
   background-clip: text;
 }
 
-/* ── luxury typography refinement ── */
-/* Playfair reads more elegant with slightly tightened tracking at display sizes */
-#hero h1,
-section h2.font-serif { letter-spacing: -0.015em; }
-/* Editorial airy spacing for uppercase eyebrow labels */
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.28em;
-  font-weight: 600;
-}
-
-/* ── luxury CTA: gold sheen sweep + soft glow on hover ── */
-.btn-luxe { position: relative; overflow: hidden; }
-.btn-luxe::after {
-  content: '';
-  position: absolute; top: 0; left: -75%;
-  width: 50%; height: 100%;
-  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-  transform: skewX(-20deg);
-  pointer-events: none;
-}
-.btn-luxe:hover::after { animation: sheen 0.9s ease; }
-@keyframes sheen { from { left: -75%; } to { left: 130%; } }
-.btn-luxe:hover { box-shadow: 0 10px 34px rgba(221, 196, 151, 0.55), 0 0 0 1px rgba(245, 222, 179, 0.45) !important; }
-
-/* ── thin gold ornament line (hero + section dividers) ── */
-.ornament-line { height: 1px; background: linear-gradient(to right, transparent, rgba(221, 196, 151, 0.7), transparent); }
-
 /* ── glass ── */
 .glass {
   background: rgba(28, 35, 46, 0.45);

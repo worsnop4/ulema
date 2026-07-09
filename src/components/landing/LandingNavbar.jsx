@@ -29,7 +29,7 @@ export default function LandingNavbar() {
             <a href="#how-it-works" className="text-blue-200 hover:text-white text-sm font-medium transition-colors">Cara Kerja</a>
             <a href="#faq" className="text-blue-200 hover:text-white text-sm font-medium transition-colors">FAQ</a>
             {/* Login Button */}
-            <Link to="/login" className="btn-luxe flex items-center gap-1.5 grad-gold text-[#151B23] hover:opacity-90 px-4 py-2 rounded-full text-sm font-bold transition-all hover:scale-105 shadow-lg" style={{ boxShadow: '0 4px 20px rgba(221,196,151,0.35)' }}>
+            <Link to="/login" className="flex items-center gap-1.5 grad-gold text-[#151B23] hover:opacity-90 px-4 py-2 rounded-full text-sm font-bold transition-all hover:scale-105 shadow-lg" style={{ boxShadow: '0 4px 20px rgba(221,196,151,0.35)' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>

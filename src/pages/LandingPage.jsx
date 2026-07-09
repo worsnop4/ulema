@@ -8,7 +8,6 @@ import LandingCatalog from '../components/landing/LandingCatalog'
 import LandingHowItWorks from '../components/landing/LandingHowItWorks'
 import LandingFAQ from '../components/landing/LandingFAQ'
 import LandingFooter from '../components/landing/LandingFooter'
-import GoldDivider from '../components/landing/GoldDivider'
 
 export default function LandingPage() {
   // Ensure smooth scroll is applied
@@ -24,13 +23,9 @@ export default function LandingPage() {
       <LandingNavbar />
       <LandingHero />
       <LandingFeatures />
-      <GoldDivider />
       <LandingTestimonials />
-      <GoldDivider />
       <LandingCatalog />
-      <GoldDivider />
       <LandingHowItWorks />
-      <GoldDivider />
       <LandingFAQ />
       <LandingFooter />
 
