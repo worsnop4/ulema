@@ -23,7 +23,7 @@ const c = {
 
 // ─── ASSETS (full-bleed backgrounds uploaded to public/themes/Special/theme-10) ──
 const A = {
-  coverBg:  '/themes/Special/theme-10/bg1.png',
+  coverBg:  '/themes/Special/theme-10/bg1.jpg',
   eventsBg: '/themes/Special/theme-10/bg2.jpg',
 }
 
