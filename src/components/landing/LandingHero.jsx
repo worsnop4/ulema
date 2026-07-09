@@ -73,10 +73,29 @@ export default function LandingHero() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60 z-10 pointer-events-none"></div>
 
         <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-16">
+          {/* Eyebrow with thin gold ornament lines */}
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <span className="ornament-line w-10 sm:w-16"></span>
+            <span className="eyebrow text-[10px] sm:text-xs text-[#DDC497] drop-shadow">Undangan Pernikahan Digital</span>
+            <span className="ornament-line w-10 sm:w-16"></span>
+          </div>
+
           <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-xl">
-            Undangan Digital<br />Express #1
+            Undangan Digital<br />
+            <span className="text-grad">Express #1</span>
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-white/90 font-medium mb-12 drop-shadow-md">
+
+          {/* Centered gold diamond ornament divider */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <span className="ornament-line w-16 sm:w-24"></span>
+            <svg width="12" height="12" viewBox="0 0 14 14" className="flex-shrink-0">
+              <polygon points="7,1 13,7 7,13 1,7" fill="none" stroke="#DDC497" strokeWidth="1.5" />
+              <polygon points="7,4 10,7 7,10 4,7" fill="#DDC497" opacity="0.6" />
+            </svg>
+            <span className="ornament-line w-16 sm:w-24"></span>
+          </div>
+
+          <p className="text-lg sm:text-xl md:text-2xl text-white/90 font-medium mb-12 drop-shadow-md tracking-wide">
             Cepat, Mudah, dan Praktis
           </p>
           <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
@@ -90,7 +109,7 @@ export default function LandingHero() {
             </a>
             <a
               href="#catalog"
-              className="w-full inline-flex justify-center items-center gap-2 bg-[#DDC497] hover:bg-[#C4A771] text-gray-900 font-bold px-8 py-4 rounded-full transition-all hover:scale-[1.02] text-base shadow-lg"
+              className="btn-luxe w-full inline-flex justify-center items-center gap-2 bg-[#DDC497] hover:bg-[#C4A771] text-gray-900 font-bold px-8 py-4 rounded-full transition-all hover:scale-[1.02] text-base shadow-lg"
             >
               Lihat Katalog Undangan
             </a>

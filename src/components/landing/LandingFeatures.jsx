@@ -227,7 +227,7 @@ export default function LandingFeatures() {
                 </div>
               </div>
 
-              <a href="#catalog" className="inline-flex items-center gap-2 grad-gold text-[#151B23] font-bold px-8 py-4 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition-all text-base" style={{ boxShadow: '0 8px 32px rgba(221,196,151,0.4)' }}>
+              <a href="#catalog" className="btn-luxe inline-flex items-center gap-2 grad-gold text-[#151B23] font-bold px-8 py-4 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition-all text-base" style={{ boxShadow: '0 8px 32px rgba(221,196,151,0.4)' }}>
                 🎉 Klaim Diskon Sekarang &rarr;
               </a>
             </div>

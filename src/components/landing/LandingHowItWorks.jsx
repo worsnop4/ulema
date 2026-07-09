@@ -64,7 +64,7 @@ export default function LandingHowItWorks() {
 
         {/* CTA below steps */}
         <div className="text-center mt-14 reveal">
-          <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 grad-gold text-[#151B23] font-bold px-8 py-4 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition-all" style={{ boxShadow: '0 8px 32px rgba(221,196,151,0.35)' }}>
+          <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" className="btn-luxe inline-flex items-center gap-2 grad-gold text-[#151B23] font-bold px-8 py-4 rounded-full shadow-lg hover:opacity-90 hover:scale-105 transition-all" style={{ boxShadow: '0 8px 32px rgba(221,196,151,0.35)' }}>
             Mulai Sekarang &rarr;
           </a>
         </div>
