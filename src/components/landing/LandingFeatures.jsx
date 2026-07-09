@@ -191,7 +191,7 @@ export default function LandingFeatures() {
 
         {/* Promo Container Card */}
         <div className="max-w-4xl mx-auto relative z-20">
-          <div className="relative overflow-hidden rounded-[40px] sm:rounded-[48px] grad-hero shadow-2xl px-6 py-10 text-center">
+          <div className="relative overflow-hidden rounded-[40px] sm:rounded-[48px] promo-glass shadow-2xl px-6 py-10 text-center">
             {/* decorative lines */}
             <div className="absolute top-0 left-0 w-full h-1 grad-gold"></div>
             
