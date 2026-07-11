@@ -67,7 +67,11 @@ export function useInvitationData({ user, isPublicInvite, publicSlug, adminDemo 
           const { data: inviteRow, error: fetchErr } = await invitationService.getInvitation('data->>slug', publicSlug)
           if (fetchErr) throw fetchErr
           if (inviteRow) {
-            dataResult = { ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id }
+            // Pay-to-publish gate: a real public invitation is only shown to
+            // guests when the owner's package is active. Owner id is carried so
+            // the owner can still preview it while logged in (checked upstream).
+            const { active } = await invitationService.isUserActive(inviteRow.user_id)
+            dataResult = { ...defaultInvitationData, ...inviteRow.data, id: inviteRow.id, _ownerId: inviteRow.user_id, _active: active }
           }
         } else if (publicSlug === 'demo') {
           const queryThemeId = new URLSearchParams(window.location.search).get('theme') || '1'

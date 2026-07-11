@@ -101,11 +101,11 @@ export default function App() {
               <ProtectedRoute><DashboardLayout /></ProtectedRoute>
             }>
               <Route index element={
-                user?.role === 'admin' 
-                  ? <Navigate to="/dashboard/admin" replace /> 
-                  : user?.package === 'none'
-                    ? <Navigate to="/dashboard/transactions" replace />
-                    : <Navigate to="/dashboard/invitation/edit" replace />
+                user?.role === 'admin'
+                  ? <Navigate to="/dashboard/admin" replace />
+                  // Build-first: land everyone on the editor. Payment gates
+                  // publishing/sharing, not access to the editor itself.
+                  : <Navigate to="/dashboard/invitation/edit" replace />
               } />
               <Route path="invitation/edit" element={<InvitationEdit />} />
               <Route path="guests" element={<GuestsPage />} />

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../App'
 import Logo from '../components/Logo'
 import {
@@ -45,19 +45,9 @@ function SidebarContent({ onClose }) {
     navigate('/login')
   }
 
-  // If user has no package paid yet, restrict options to Transaction only
-  const activeGroups = user?.role === 'admin' 
-    ? adminGroups 
-    : user?.package === 'none'
-      ? [
-          {
-            label: 'Pembayaran',
-            items: [
-              { label: 'Transaksi', icon: CreditCard, path: '/dashboard/transactions' }
-            ]
-          }
-        ]
-      : navGroups
+  // Build-first: everyone (paid or not) gets the full editor nav. Publishing
+  // the live invitation is what's gated on payment, not access to the tools.
+  const activeGroups = user?.role === 'admin' ? adminGroups : navGroups
 
   return (
     <div className="flex flex-col h-full">
@@ -133,19 +123,7 @@ function SidebarContent({ onClose }) {
 }
 
 export default function DashboardLayout() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  // Block navigate if package is 'none' and trying to access anything other than transactions
-  useEffect(() => {
-    if (user && user.role !== 'admin' && user.package === 'none') {
-      if (location.pathname !== '/dashboard/transactions') {
-        navigate('/dashboard/transactions', { replace: true })
-      }
-    }
-  }, [user, location.pathname, navigate])
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">

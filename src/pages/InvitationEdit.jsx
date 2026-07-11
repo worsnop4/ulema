@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../App'
 import {
   Users, MessageSquare, CalendarCheck, Copy, Check, ExternalLink,
@@ -35,6 +36,12 @@ export default function InvitationEdit() {
   const [copied, setCopied] = useState(false)
   const [guestParam, setGuestParam] = useState('Tamu Undangan')
   const [activeModule, setActiveModule] = useState(null)
+
+  // Pay-to-publish: the owner can always BUILD and preview their own
+  // invitation, but sharing the live link to guests requires an active
+  // package (otherwise guests hit the "belum aktif" gate). Admin & demo
+  // mode are always publishable.
+  const isPublishable = !!adminDemo || user?.role === 'admin' || (!!user?.package && user.package !== 'none')
 
   const fullUrl = BASE_URL.includes('?') 
     ? `${window.location.origin}${BASE_URL}&to=${encodeURIComponent(guestParam)}`
@@ -84,10 +91,15 @@ export default function InvitationEdit() {
               <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full inline-block animate-pulse" />
               Mode Admin Demo
             </span>
-          ) : (
+          ) : isPublishable ? (
             <span className="badge bg-[#F4E8CD] text-[#1C232E]">
               <span className="w-1.5 h-1.5 bg-[#DDC497] rounded-full inline-block" />
               Aktif
+            </span>
+          ) : (
+            <span className="badge bg-amber-100 text-amber-700">
+              <span className="w-1.5 h-1.5 bg-amber-500 rounded-full inline-block" />
+              Belum Aktif
             </span>
           )}
         </div>
@@ -168,26 +180,43 @@ export default function InvitationEdit() {
           </div>
           <Copy size={15} className="text-slate-400 mt-0.5 flex-shrink-0" />
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 flex items-center gap-0 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-            <span className="text-xs text-slate-400 px-3 py-2.5 bg-slate-100 border-r border-slate-200 whitespace-nowrap flex-shrink-0">
-              {BASE_URL.includes('?') ? `${BASE_URL}&to=` : `${BASE_URL}?to=`}
-            </span>
-            <input
-              type="text"
-              className="flex-1 bg-transparent text-sm text-slate-700 px-3 py-2.5 focus:outline-none min-w-0"
-              value={guestParam}
-              onChange={e => setGuestParam(e.target.value)}
-              placeholder="Nama Tamu"
-            />
+        {isPublishable ? (
+          <>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 flex items-center gap-0 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+                <span className="text-xs text-slate-400 px-3 py-2.5 bg-slate-100 border-r border-slate-200 whitespace-nowrap flex-shrink-0">
+                  {BASE_URL.includes('?') ? `${BASE_URL}&to=` : `${BASE_URL}?to=`}
+                </span>
+                <input
+                  type="text"
+                  className="flex-1 bg-transparent text-sm text-slate-700 px-3 py-2.5 focus:outline-none min-w-0"
+                  value={guestParam}
+                  onChange={e => setGuestParam(e.target.value)}
+                  placeholder="Nama Tamu"
+                />
+              </div>
+              <button onClick={handleCopy}
+                      className={`btn-primary flex-shrink-0 ${copied ? 'bg-[#DDC497] hover:bg-[#DDC497] text-[#1C232E]' : ''}`}>
+                {copied ? <><Check size={14} /> Tersalin!</> : <><Copy size={14} /> Salin URL</>}
+              </button>
+            </div>
+            {guestParam && (
+              <p className="text-[11px] text-slate-400 mt-2 font-mono break-all">{fullUrl}</p>
+            )}
+          </>
+        ) : (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-bold text-amber-900">Aktifkan undangan untuk membagikan link</p>
+              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                Kamu bebas menyiapkan seluruh isi undangan sekarang. Link baru bisa dibagikan ke tamu
+                setelah pembayaran diverifikasi — sebelum aktif, tamu yang membuka link akan melihat halaman "belum aktif".
+              </p>
+            </div>
+            <Link to="/dashboard/transactions" className="btn-primary flex-shrink-0 text-xs py-2 px-4 whitespace-nowrap">
+              Aktifkan Sekarang
+            </Link>
           </div>
-          <button onClick={handleCopy}
-                  className={`btn-primary flex-shrink-0 ${copied ? 'bg-[#DDC497] hover:bg-[#DDC497] text-[#1C232E]' : ''}`}>
-            {copied ? <><Check size={14} /> Tersalin!</> : <><Copy size={14} /> Salin URL</>}
-          </button>
-        </div>
-        {guestParam && (
-          <p className="text-[11px] text-slate-400 mt-2 font-mono break-all">{fullUrl}</p>
         )}
       </div>
 

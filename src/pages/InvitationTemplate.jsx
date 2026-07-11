@@ -8,6 +8,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import { invitationService } from '../services/invitationService'
 import { ThemeErrorBoundary } from '../components/common/ThemeErrorBoundary'
 import { THEMES } from '../config/constants'
+import { useAuth } from '../hooks/useAuth'
 // Import Theme Layout Components via Lazy Loading (Code Splitting)
 const WatercolorFloralTheme = lazy(() => import('../themes/WatercolorFloralTheme'))
 const DarkLuxuryTheme = lazy(() => import('../themes/DarkLuxuryTheme'))
@@ -123,12 +124,34 @@ export const getEmbedUrl = (url) => {
   return null
 }
 
+// ── Pay-to-publish gate screen (shown to guests when owner hasn't paid) ──
+function InvitationInactive({ bride, groom }) {
+  const couple = bride && groom ? `${bride} & ${groom}` : 'Undangan Pernikahan'
+  return (
+    <div className="min-h-[100dvh] w-full flex items-center justify-center p-6" style={{ background: 'linear-gradient(160deg, #faf7f2 0%, #ece7db 100%)' }}>
+      <div className="max-w-sm w-full text-center rounded-3xl bg-white/70 backdrop-blur px-8 py-12 shadow-xl" style={{ border: '1px solid rgba(201,162,75,0.3)' }}>
+        <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: 'rgba(201,162,75,0.14)' }}>
+          <span className="text-3xl">💌</span>
+        </div>
+        <p className="text-[11px] tracking-[0.35em] uppercase mb-3" style={{ color: '#c9a24b' }}>The Wedding Of</p>
+        <h1 className="mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontSize: '1.8rem', color: '#2b2b26' }}>{couple}</h1>
+        <p className="text-sm leading-relaxed" style={{ color: 'rgba(43,43,38,0.65)' }}>
+          Undangan ini <strong>belum aktif</strong>. Silakan hubungi pemilik undangan untuk informasi lebih lanjut.
+        </p>
+        <div className="mt-8 h-px w-16 mx-auto" style={{ background: 'rgba(201,162,75,0.5)' }} />
+        <p className="mt-6 text-[10px] tracking-widest uppercase" style={{ color: 'rgba(43,43,38,0.4)' }}>Dibuat dengan Ulema</p>
+      </div>
+    </div>
+  )
+}
+
 // ══════════════════════════════════════════════════════════════
 //  MAIN COMPONENT
 // ══════════════════════════════════════════════════════════════
 export default function InvitationTemplate() {
   const [searchParams] = useSearchParams()
   const guestName = searchParams.get('to') || 'Tamu Undangan'
+  const { user } = useAuth() || {}
 
   const [opened, setOpened] = useState(false)
   const [animateClose, setAnimateClose] = useState(false)
@@ -280,6 +303,15 @@ export default function InvitationTemplate() {
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Membuka Undangan...</p>
       </div>
     )
+  }
+
+  // Pay-to-publish gate: if the owner's package isn't active, guests see the
+  // "belum aktif" screen. The owner (logged in) always gets a full preview so
+  // they can keep building. `_active` defaults to true when the gate RPC isn't
+  // available yet, so existing live invitations are never accidentally hidden.
+  const isOwner = user && data?._ownerId && user.id === data._ownerId
+  if (data?._active === false && !isOwner) {
+    return <InvitationInactive bride={data?.bride?.nickname} groom={data?.groom?.nickname} />
   }
 
   return (

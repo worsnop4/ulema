@@ -60,6 +60,24 @@ export const invitationService = {
   },
 
   /**
+   * Cek apakah paket pemilik undangan aktif (paid + belum kedaluwarsa), lewat
+   * RPC `is_user_active` (security definer). Dipakai gate pay-to-publish di
+   * halaman publik. Kalau RPC belum ada (migrasi belum dijalankan) atau error,
+   * default ke `true` supaya undangan yang sudah live tidak ikut terblokir.
+   * @param {string} userId
+   * @returns {Promise<{active: boolean, error: any}>}
+   */
+  async isUserActive(userId) {
+    try {
+      const { data, error } = await supabase.rpc('is_user_active', { p_user_id: userId })
+      if (error) return { active: true, error }
+      return { active: !!data, error: null }
+    } catch (err) {
+      return { active: true, error: err }
+    }
+  },
+
+  /**
    * Membuat undangan baru
    * @param {Partial<InvitationRecord>} payload - Data undangan awal (minimal user_id, theme_id, data)
    * @returns {Promise<{data: InvitationRecord | null, error: any}>}
