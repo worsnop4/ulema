@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Users, DollarSign, Award, AlertTriangle, CreditCard, XSquare, CheckSquare, Image as ImageIcon, X, Loader2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { PACKAGE_NAMES } from '../../config/constants'
+import { PACKAGE_NAMES, PACKAGE_DURATION_MONTHS } from '../../config/constants'
 
 export default function AdminTransactions() {
   const [transactions, setTransactions] = useState([])
@@ -50,8 +50,14 @@ export default function AdminTransactions() {
       return
     }
 
-    // Update User Profile
-    const { error: profileError } = await supabase.from('profiles').update({ package_type: packageName }).eq('id', userId)
+    // Update User Profile — activate the package AND set a fresh expiry.
+    // Expiry is what the public pay-to-publish gate (is_user_active) checks,
+    // so an approved invitation goes live now and auto-lapses after the term.
+    const expiry = new Date()
+    expiry.setMonth(expiry.getMonth() + PACKAGE_DURATION_MONTHS)
+    const { error: profileError } = await supabase.from('profiles')
+      .update({ package_type: packageName, package_expiry: expiry.toISOString() })
+      .eq('id', userId)
     if (profileError) {
       alert('Transaksi disetujui tapi gagal update paket user: ' + profileError.message)
       return
@@ -89,7 +95,11 @@ export default function AdminTransactions() {
   }
 
   const handleRejectPayment = async (txId) => {
-    const { error } = await supabase.from('transactions').update({ status: 'rejected' }).eq('id', txId)
+    const reason = window.prompt('Alasan penolakan (akan ditampilkan ke customer):', 'Bukti transfer tidak valid / nominal tidak sesuai.')
+    if (reason === null) return // admin cancelled
+    const { error } = await supabase.from('transactions')
+      .update({ status: 'rejected', rejection_reason: reason.trim() || null })
+      .eq('id', txId)
     if (error) {
       alert('Gagal menolak transaksi: ' + error.message)
       return

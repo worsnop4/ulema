@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 import { ADMIN_WHATSAPP, REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 
 export default function TransactionPage() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   
   const [transactions, setTransactions] = useState([])
   const [isLoadingTx, setIsLoadingTx] = useState(true)
@@ -153,7 +153,8 @@ export default function TransactionPage() {
     desc: `Kategori ${t.package_name}`,
     finalAmount: t.amount,
     status: t.status,
-    paymentProof: t.payment_proof_url
+    paymentProof: t.payment_proof_url,
+    rejectionReason: t.rejection_reason
   }))
   
   const hasPendingTransaction = myTransactions.some(t => t.status === 'pending' && t.desc === `Kategori ${selectedPlan}`)
@@ -198,41 +199,10 @@ export default function TransactionPage() {
     ? themes // Luxury gets all themes
     : themes.filter(t => t.category === user?.package) // Others get themes from their package
 
-  const isAccountLocked = user && user.role !== 'admin' && user.package === 'none' && myTransactions.some(t => t.status === 'pending')
-
-  if (isAccountLocked) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white max-w-md w-full rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-6">
-          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500">
-            <Clock size={40} />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Akun Sedang Terkunci</h2>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Kami sedang memverifikasi bukti pembayaran Anda. Selama proses ini, akun Anda sementara dikunci. Mohon tunggu persetujuan dari Admin.
-            </p>
-          </div>
-          <div className="pt-4 flex flex-col gap-3">
-             <a 
-                  href={`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm bg-green-500 text-white hover:bg-green-600 hover:shadow-md"
-              >
-                <MessageCircle size={16} /> Hubungi Admin via WhatsApp
-              </a>
-              <button 
-                onClick={logout}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold mt-2"
-              >
-                Keluar (Logout)
-              </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Build-first funnel: we no longer hard-lock the whole account while a
+  // payment is pending. Users can keep preparing their invitation in the
+  // editor; only publishing/sharing the live link is gated on payment.
+  const hasPendingReview = user && user.role !== 'admin' && user.package === 'none' && myTransactions.some(t => t.status === 'pending')
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
@@ -243,16 +213,31 @@ export default function TransactionPage() {
         <p className="text-slate-500 text-sm mt-1">Kelola transaksi, upgrade paket undangan, dan gunakan kode promo.</p>
       </div>
 
-      {/* Unpaid Warning Banner */}
-      {user && user.role !== 'admin' && user.package === 'none' && (
+      {/* Pending-review Banner (build-first: account stays usable) */}
+      {hasPendingReview && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-2xl p-5 space-y-2 flex items-start gap-3 shadow-sm">
+          <Clock size={22} className="text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-base text-blue-900">Pembayaran Sedang Diverifikasi</p>
+            <p className="text-xs text-blue-700 leading-relaxed mt-1">
+              Terima kasih! Bukti transfer Anda sedang kami periksa. Sementara menunggu, Anda tetap bisa
+              menyiapkan &amp; mengisi undangan di menu Editor. Undangan akan otomatis <strong>aktif &amp; bisa dibagikan</strong> setelah pembayaran disetujui admin.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Unpaid Warning Banner (no pending payment yet) */}
+      {user && user.role !== 'admin' && user.package === 'none' && !hasPendingReview && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-2xl p-5 space-y-2 flex items-start gap-3 shadow-sm">
           <AlertCircle size={22} className="text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-base text-amber-900">Akun Anda Belum Aktif</p>
+            <p className="font-bold text-base text-amber-900">Undangan Anda Belum Aktif</p>
             <p className="text-xs text-amber-700 leading-relaxed mt-1">
-              Anda telah mendaftar dengan pilihan kategori awal <strong className="text-amber-900">{user?.selectedCategory || 'Special'}</strong>. 
-              Silakan selesaikan pembayaran di bawah ini dan unggah bukti transfer. 
-              Setelah pembayaran diverifikasi oleh administrator, Anda akan mendapatkan akses penuh untuk menyesuaikan undangan digital Anda.
+              Anda bisa <strong className="text-amber-900">mulai menyiapkan undangan sekarang</strong> di menu Editor.
+              Untuk bisa <strong className="text-amber-900">membagikan link undangan ke tamu</strong>, selesaikan pembayaran kategori
+              <strong className="text-amber-900"> {user?.selectedCategory || 'Special'}</strong> di bawah ini dan unggah bukti transfer.
+              Setelah diverifikasi admin, undangan langsung aktif.
             </p>
           </div>
         </div>
@@ -348,6 +333,11 @@ export default function TransactionPage() {
                       Rp {tx.finalAmount ? tx.finalAmount.toLocaleString('id-ID') : tx.amount.toLocaleString('id-ID')}
                     </span>
                   </div>
+                  {tx.status === 'rejected' && tx.rejectionReason && (
+                    <p className="text-[10px] text-red-600 bg-red-50 rounded-lg px-2 py-1.5 leading-relaxed">
+                      <strong>Alasan ditolak:</strong> {tx.rejectionReason}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -653,6 +643,11 @@ export default function TransactionPage() {
                       Rp {tx.finalAmount ? tx.finalAmount.toLocaleString('id-ID') : tx.amount.toLocaleString('id-ID')}
                     </span>
                   </div>
+                  {tx.status === 'rejected' && tx.rejectionReason && (
+                    <p className="text-[10px] text-red-600 bg-red-50 rounded-lg px-2 py-1.5 leading-relaxed">
+                      <strong>Alasan ditolak:</strong> {tx.rejectionReason}
+                    </p>
+                  )}
                 </div>
               ))}
               {myTransactions.length === 0 && (

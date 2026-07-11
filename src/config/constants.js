@@ -105,6 +105,10 @@ export const TX_STATUS = {
  */
 export const PACKAGE_NAMES = ['Special', 'Adat', 'Motion', 'Luxury']
 
+// How many months a package stays active after payment is verified.
+// Kept in one place so the duration rule isn't scattered/hardcoded.
+export const PACKAGE_DURATION_MONTHS = 12
+
 // Admin WhatsApp number for manual transfers and withdrawals
 export const ADMIN_WHATSAPP = '6281234567890'
 
