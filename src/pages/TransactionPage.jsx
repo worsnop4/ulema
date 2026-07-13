@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
 import { getThemes } from '../hooks/useSharedInvitation'
 import { fetchPricing, validateVoucher, findReferrer } from '../services/billingService'
-import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles, MessageCircle, Loader2 } from 'lucide-react'
+import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Sparkles, Loader2 } from 'lucide-react'
 import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
-import { uploadMedia } from '../components/common/FormHelpers'
 import { supabase } from '../lib/supabase'
-import { ADMIN_WHATSAPP, REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
+import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 
 export default function TransactionPage() {
   const { user } = useAuth()
@@ -48,7 +47,6 @@ export default function TransactionPage() {
   const [appliedVoucher, setAppliedVoucher] = useState(null)
   const [voucherError, setVoucherError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
-  const [paymentProofFile, setPaymentProofFile] = useState(null) // Base64 string
   const [midtransBusy, setMidtransBusy] = useState(false)
   
   // Load authoritative prices from the DB (matches what the server charges).
@@ -151,49 +149,6 @@ export default function TransactionPage() {
     }
   }
 
-  // Handle Payment Submission
-  const handlePay = async (e) => {
-    e.preventDefault()
-    
-    const { data: newTxRow, error } = await supabase.from('transactions').insert({
-      user_id: user.id,
-      package_name: selectedPlan,
-      amount: finalPrice,
-      status: 'pending',
-      payment_proof_url: paymentProofFile || ''
-    }).select().single()
-
-    if (error) {
-      alert('Gagal mengirim transaksi: ' + error.message)
-      return
-    }
-
-    // Jika menggunakan referral, catat ke referral_history
-    if (appliedVoucher && appliedVoucher.type === 'referral' && newTxRow) {
-      const commissionAmount = Math.round(finalPrice * 0.20) // Komisi 20%
-      await supabase.from('referral_history').insert({
-        referrer_id: appliedVoucher.referrer_id,
-        referred_user_id: user.id,
-        transaction_id: newTxRow.id,
-        commission_amount: commissionAmount,
-        status: 'pending'
-      })
-    }
-
-    if (newTxRow) {
-      setTransactions(prev => [newTxRow, ...prev])
-    }
-
-    // Clear form
-    setVoucherCode('')
-    setAppliedVoucher(null)
-    setPaymentSuccess('🎉 Konfirmasi transfer berhasil dikirim! Silakan tunggu verifikasi admin.')
-    setTimeout(() => {
-      setPaymentSuccess('')
-      setShowPaymentForm(false)
-    }, 3000)
-  }
-
   const myTransactions = transactions.map(t => ({
     id: t.id,
     date: new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -204,26 +159,8 @@ export default function TransactionPage() {
     rejectionReason: t.rejection_reason
   }))
   
-  const hasPendingTransaction = myTransactions.some(t => t.status === 'pending' && t.desc === `Kategori ${selectedPlan}`)
-
   // Available themes for the selected plan
   const availableThemes = themes.filter(t => t.category === selectedPlan)
-
-  const [isUploadingProof, setIsUploadingProof] = useState(false)
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setIsUploadingProof(true)
-    try {
-      const publicUrl = await uploadMedia(file, 'payment_proof')
-      setPaymentProofFile(publicUrl)
-    } catch (err) {
-      alert('Gagal mengunggah bukti transfer: ' + err.message)
-    } finally {
-      setIsUploadingProof(false)
-    }
-  }
 
   // Handle instant theme change for active packages
   const handleInstantThemeChange = (themeName, themeId) => {
@@ -260,15 +197,15 @@ export default function TransactionPage() {
         <p className="text-slate-500 text-sm mt-1">Kelola transaksi, upgrade paket undangan, dan gunakan kode promo.</p>
       </div>
 
-      {/* Pending-review Banner (build-first: account stays usable) */}
+      {/* Pending Banner — a payment was started but not completed yet */}
       {hasPendingReview && (
         <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-2xl p-5 space-y-2 flex items-start gap-3 shadow-sm">
           <Clock size={22} className="text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-base text-blue-900">Pembayaran Sedang Diverifikasi</p>
+            <p className="font-bold text-base text-blue-900">Pembayaran Belum Selesai</p>
             <p className="text-xs text-blue-700 leading-relaxed mt-1">
-              Terima kasih! Bukti transfer Anda sedang kami periksa. Sementara menunggu, Anda tetap bisa
-              menyiapkan &amp; mengisi undangan di menu Editor. Undangan akan otomatis <strong>aktif &amp; bisa dibagikan</strong> setelah pembayaran disetujui admin.
+              Ada pembayaran yang belum tuntas. Selesaikan pembayaran untuk mengaktifkan undangan —
+              begitu berhasil, undangan <strong>aktif otomatis</strong>. Sementara itu Anda tetap bisa menyiapkan undangan di menu Editor.
             </p>
           </div>
         </div>
@@ -457,7 +394,7 @@ export default function TransactionPage() {
               </button>
             </div>
             
-            <form onSubmit={handlePay} className="space-y-5">
+            <form onSubmit={e => e.preventDefault()} className="space-y-5">
               {/* Plan selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Kategori</label>
@@ -583,15 +520,15 @@ export default function TransactionPage() {
                 </div>
               </div>
 
-              {/* Bayar Otomatis (Midtrans) — instant activation, no admin */}
-              {midtransClientKey && (
+              {/* Pembayaran via Midtrans — instant activation, no admin */}
+              {midtransClientKey ? (
                 <div className="rounded-xl border-2 border-brand-200 bg-brand-50/40 p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <ShieldCheck size={16} className="text-brand-600" />
-                    <p className="text-sm font-bold text-brand-800">Bayar Otomatis (Rekomendasi)</p>
+                    <p className="text-sm font-bold text-brand-800">Pembayaran Aman</p>
                   </div>
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    QRIS / Virtual Account / e-wallet. Undangan <strong>langsung aktif otomatis</strong> setelah bayar — tanpa upload bukti &amp; tanpa menunggu admin.
+                    QRIS / Virtual Account / kartu / e-wallet. Undangan <strong>langsung aktif otomatis</strong> setelah pembayaran berhasil.
                   </p>
                   <button
                     type="button"
@@ -605,91 +542,14 @@ export default function TransactionPage() {
                       ? <><Loader2 size={16} className="animate-spin" /> Memproses...</>
                       : <><CreditCard size={16} /> Bayar Rp {finalPrice.toLocaleString('id-ID')} Sekarang</>}
                   </button>
-                  <p className="text-[10px] text-slate-400 text-center">
-                    Pembayaran otomatis memakai harga paket {selectedPlan}. Kode voucher/referral saat ini hanya berlaku untuk transfer manual di bawah.
-                  </p>
-                </div>
-              )}
-
-              {/* ── atau bayar manual ── */}
-              {midtransClientKey && (
-                <div className="flex items-center gap-3 py-1">
-                  <div className="flex-1 h-px bg-slate-200" />
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">atau transfer manual</span>
-                  <div className="flex-1 h-px bg-slate-200" />
-                </div>
-              )}
-
-              {/* Payment Details */}
-              {isUploadingProof ? (
-                <div className="text-center py-4">
-                  <Loader2 size={24} className="mx-auto mb-2 text-brand-400 animate-spin" />
-                  <p className="text-sm font-semibold text-slate-700">Mengunggah...</p>
+                  {appliedVoucher && (
+                    <p className="text-[10px] text-teal-600 text-center font-semibold">Diskon voucher/referral sudah termasuk di total di atas.</p>
+                  )}
                 </div>
               ) : (
-                <div className="border border-amber-100 rounded-xl p-4 bg-amber-50/50 text-xs text-amber-800 space-y-1.5">
-                  <p className="font-bold">🏦 Informasi Rekening Pembayaran:</p>
-                  <p>Transfer Bank Mandiri: <strong>123-456-789-0</strong>01 a/n <strong>PT Ulema Digital</strong></p>
-                  <p>Silakan transfer nominal pas ke nomor rekening di atas, kemudian klik konfirmasi di bawah.</p>
+                <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 text-xs text-amber-800">
+                  Pembayaran online sedang tidak tersedia. Silakan hubungi admin.
                 </div>
-              )}
-
-              {/* File Upload for Payment Proof */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Unggah Bukti Transfer</label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    required
-                  />
-                  <div className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-xl transition-colors ${paymentProofFile ? 'border-brand-500 bg-brand-50' : 'border-slate-300 hover:border-brand-300 hover:bg-slate-50'}`}>
-                    {paymentProofFile ? (
-                      <>
-                        <ImageIcon size={18} className="text-brand-600" />
-                        <span className="text-sm font-semibold text-brand-700 truncate">Foto Bukti Terunggah</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload size={18} className="text-slate-400" />
-                        <span className="text-sm font-medium text-slate-500">Klik untuk memilih foto struk...</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={hasPendingTransaction}
-                className={`w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm ${
-                  hasPendingTransaction 
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                    : 'bg-brand-600 text-white hover:bg-brand-700 hover:shadow-md'
-                }`}
-              >
-                {hasPendingTransaction ? (
-                  <>
-                    <Clock size={16} /> Menunggu Konfirmasi Admin
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={16} /> Konfirmasi & Kirim Bukti Transfer
-                  </>
-                )}
-              </button>
-
-              {hasPendingTransaction && (
-                <a 
-                    href={`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent('Halo Admin, saya sudah melakukan pembayaran untuk upgrade undangan dengan email ' + user?.email + '. Mohon segera dikonfirmasi ya. Terima kasih!')}`}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm bg-green-500 text-white hover:bg-green-600 hover:shadow-md mt-3"
-                >
-                  <MessageCircle size={16} /> Konfirmasi via WhatsApp
-                </a>
               )}
             </form>
           </div>
