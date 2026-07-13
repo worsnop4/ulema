@@ -6,7 +6,9 @@
 // row (its uuid is the Midtrans order_id), then ask Midtrans for a Snap token
 // and return it. The Server Key stays server-side only.
 //
-// Sandbox vs Production is auto-detected from the Server Key prefix ("SB-").
+// Environment is controlled by MIDTRANS_IS_PRODUCTION ("true" = production).
+// Default is sandbox. (Key prefixes are NOT reliable — some Midtrans accounts
+// use the same "Mid-server-" format for both sandbox and production.)
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -57,7 +59,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Gagal membuat transaksi.' })
     }
 
-    const isProduction = !serverKey.startsWith('SB-')
+    const isProduction = process.env.MIDTRANS_IS_PRODUCTION === 'true'
     const base = isProduction ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com'
     const authHeader = Buffer.from(serverKey + ':').toString('base64')
     const origin = req.headers.origin || `https://${req.headers.host || 'www.ulema.id'}`

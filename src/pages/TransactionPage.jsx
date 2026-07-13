@@ -61,12 +61,13 @@ export default function TransactionPage() {
     return () => window.removeEventListener('local-storage-update', handleUpdate)
   }, [])
 
-  // Load Midtrans Snap.js once. Sandbox vs production is inferred from the
-  // client key prefix ("SB-"), matching the server-side Server Key detection.
+  // Load Midtrans Snap.js once. Environment comes from an explicit flag
+  // (VITE_MIDTRANS_IS_PRODUCTION="true" = production), defaulting to sandbox —
+  // key prefixes aren't reliable across Midtrans accounts.
   const midtransClientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY
   useEffect(() => {
     if (!midtransClientKey || document.getElementById('midtrans-snap')) return
-    const isProduction = !midtransClientKey.startsWith('SB-')
+    const isProduction = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true'
     const script = document.createElement('script')
     script.id = 'midtrans-snap'
     script.src = isProduction
