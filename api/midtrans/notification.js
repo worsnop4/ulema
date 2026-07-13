@@ -15,6 +15,7 @@ import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 
 const DURATION_MONTHS = 12
+const REFERRAL_COMMISSION_RATE = 0.20 // mirror of src/config/constants.js
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -65,6 +66,27 @@ export default async function handler(req, res) {
         .from('profiles')
         .update({ package_type: tx.package_name, package_expiry: expiry.toISOString() })
         .eq('id', tx.user_id)
+
+      // Count voucher usage (atomic, so concurrent settlements can't over-count).
+      if (tx.voucher_code) {
+        await supabase.rpc('increment_voucher_usage', { p_code: tx.voucher_code })
+      }
+
+      // Pay the referrer their commission (mirrors the manual-approval path).
+      if (tx.referrer_id) {
+        const commission = Math.round((tx.amount || 0) * REFERRAL_COMMISSION_RATE)
+        await supabase.from('referral_history').insert({
+          referrer_id: tx.referrer_id,
+          referred_user_id: tx.user_id,
+          transaction_id: tx.id,
+          commission_amount: commission,
+          status: 'available',
+        })
+        await supabase.rpc('increment_wallet_balance', {
+          user_id_input: tx.referrer_id,
+          amount_input: commission,
+        })
+      }
     } else if (failed && tx.status === 'pending') {
       await supabase
         .from('transactions')
