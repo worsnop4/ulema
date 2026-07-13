@@ -49,6 +49,7 @@ export default function TransactionPage() {
   const [voucherError, setVoucherError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
   const [paymentProofFile, setPaymentProofFile] = useState(null) // Base64 string
+  const [midtransBusy, setMidtransBusy] = useState(false)
   
   // Sync changes
   useEffect(() => {
@@ -59,6 +60,67 @@ export default function TransactionPage() {
     window.addEventListener('local-storage-update', handleUpdate)
     return () => window.removeEventListener('local-storage-update', handleUpdate)
   }, [])
+
+  // Load Midtrans Snap.js once. Sandbox vs production is inferred from the
+  // client key prefix ("SB-"), matching the server-side Server Key detection.
+  const midtransClientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY
+  useEffect(() => {
+    if (!midtransClientKey || document.getElementById('midtrans-snap')) return
+    const isProduction = !midtransClientKey.startsWith('SB-')
+    const script = document.createElement('script')
+    script.id = 'midtrans-snap'
+    script.src = isProduction
+      ? 'https://app.midtrans.com/snap/snap.js'
+      : 'https://app.sandbox.midtrans.com/snap/snap.js'
+    script.setAttribute('data-client-key', midtransClientKey)
+    document.body.appendChild(script)
+  }, [midtransClientKey])
+
+  // Pay via Midtrans Snap: ask our serverless function for a Snap token
+  // (server sets the price + creates the pending tx), then open the popup.
+  // Activation happens automatically via the webhook — no admin needed.
+  const handleMidtransPay = async () => {
+    if (midtransBusy) return
+    if (!window.snap) {
+      alert('Gagal memuat pembayaran. Muat ulang halaman lalu coba lagi.')
+      return
+    }
+    setMidtransBusy(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+      if (!accessToken) {
+        alert('Sesi Anda berakhir. Silakan login ulang.')
+        return
+      }
+      const resp = await fetch('/api/midtrans/create-transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packageName: selectedPlan, accessToken }),
+      })
+      const result = await resp.json()
+      if (!resp.ok || !result.token) {
+        alert('Gagal memulai pembayaran: ' + (result.error || 'coba lagi.'))
+        return
+      }
+      window.snap.pay(result.token, {
+        onSuccess: () => {
+          setPaymentSuccess('🎉 Pembayaran berhasil! Undangan Anda sedang diaktifkan...')
+          setTimeout(() => window.location.reload(), 3500)
+        },
+        onPending: () => {
+          setPaymentSuccess('⏳ Menunggu pembayaran. Undangan aktif otomatis setelah pembayaran selesai.')
+          setShowPaymentForm(false)
+        },
+        onError: () => alert('Pembayaran gagal. Silakan coba lagi.'),
+        onClose: () => { /* user closed the popup without finishing */ },
+      })
+    } catch (err) {
+      alert('Terjadi kesalahan: ' + err.message)
+    } finally {
+      setMidtransBusy(false)
+    }
+  }
 
   // Calculate prices
   const basePrice = pricing[selectedPlan] || 99000
@@ -535,6 +597,43 @@ export default function TransactionPage() {
                   <span className="font-mono text-brand-600">Rp {finalPrice.toLocaleString('id-ID')}</span>
                 </div>
               </div>
+
+              {/* Bayar Otomatis (Midtrans) — instant activation, no admin */}
+              {midtransClientKey && (
+                <div className="rounded-xl border-2 border-brand-200 bg-brand-50/40 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-brand-600" />
+                    <p className="text-sm font-bold text-brand-800">Bayar Otomatis (Rekomendasi)</p>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    QRIS / Virtual Account / e-wallet. Undangan <strong>langsung aktif otomatis</strong> setelah bayar — tanpa upload bukti &amp; tanpa menunggu admin.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleMidtransPay}
+                    disabled={midtransBusy}
+                    className={`w-full flex justify-center items-center gap-2 py-3 text-sm rounded-xl font-bold transition-all shadow-sm ${
+                      midtransBusy ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-brand-600 text-white hover:bg-brand-700 hover:shadow-md'
+                    }`}
+                  >
+                    {midtransBusy
+                      ? <><Loader2 size={16} className="animate-spin" /> Memproses...</>
+                      : <><CreditCard size={16} /> Bayar Rp {(pricing[selectedPlan] || 0).toLocaleString('id-ID')} Sekarang</>}
+                  </button>
+                  <p className="text-[10px] text-slate-400 text-center">
+                    Pembayaran otomatis memakai harga paket {selectedPlan}. Kode voucher/referral saat ini hanya berlaku untuk transfer manual di bawah.
+                  </p>
+                </div>
+              )}
+
+              {/* ── atau bayar manual ── */}
+              {midtransClientKey && (
+                <div className="flex items-center gap-3 py-1">
+                  <div className="flex-1 h-px bg-slate-200" />
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">atau transfer manual</span>
+                  <div className="flex-1 h-px bg-slate-200" />
+                </div>
+              )}
 
               {/* Payment Details */}
               {isUploadingProof ? (

@@ -26,4 +26,11 @@ export default defineConfig([
       globals: { ...globals.browser, process: 'readonly' },
     },
   },
+  {
+    // Vercel serverless functions — Node.js runtime (process, Buffer, fetch…).
+    files: ['api/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
 ])
