@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getPricing, getVouchers, getThemes } from '../hooks/useSharedInvitation'
+import { getThemes } from '../hooks/useSharedInvitation'
+import { fetchPricing, validateVoucher, findReferrer } from '../services/billingService'
 import { CreditCard, CheckCircle2, AlertCircle, Clock, Percent, ShieldCheck, Upload, Image as ImageIcon, Sparkles, MessageCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
@@ -12,8 +13,7 @@ export default function TransactionPage() {
   
   const [transactions, setTransactions] = useState([])
   const [isLoadingTx, setIsLoadingTx] = useState(true)
-  const [pricing, setPricing] = useState(() => getPricing())
-  const [vouchers, setVouchers] = useState(() => getVouchers())
+  const [pricing, setPricing] = useState({ Special: 99000, Adat: 110000, Motion: 140000, Luxury: 175000 })
   const [themes] = useState(() => getThemes())
 
   const [showPaymentForm, setShowPaymentForm] = useState(false)
@@ -51,14 +51,9 @@ export default function TransactionPage() {
   const [paymentProofFile, setPaymentProofFile] = useState(null) // Base64 string
   const [midtransBusy, setMidtransBusy] = useState(false)
   
-  // Sync changes
+  // Load authoritative prices from the DB (matches what the server charges).
   useEffect(() => {
-    const handleUpdate = () => {
-      setPricing(getPricing())
-      setVouchers(getVouchers())
-    }
-    window.addEventListener('local-storage-update', handleUpdate)
-    return () => window.removeEventListener('local-storage-update', handleUpdate)
+    fetchPricing().then(setPricing)
   }, [])
 
   // Load Midtrans Snap.js once. Environment comes from an explicit flag
@@ -97,7 +92,7 @@ export default function TransactionPage() {
       const resp = await fetch('/api/midtrans/create-transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packageName: selectedPlan, accessToken }),
+        body: JSON.stringify({ packageName: selectedPlan, voucherCode: appliedVoucher?.code || '', accessToken }),
       })
       const result = await resp.json()
       if (!resp.ok || !result.token) {
@@ -135,35 +130,24 @@ export default function TransactionPage() {
   }
   const finalPrice = Math.max(0, basePrice - discountAmount)
 
-  // Apply Voucher or Referral Code
+  // Apply Voucher or Referral Code (validated server-side via RPCs — the same
+  // rules the payment server re-checks, so client & server always agree).
   const handleApplyVoucher = async () => {
     setVoucherError('')
     setAppliedVoucher(null)
     const code = voucherCode.trim().toUpperCase()
-    
     if (!code) return
 
-    // Cek di master voucher lokal
-    const v = vouchers.find(x => x.code === code)
-    if (v) {
-      if (v.used >= v.maxUse) {
-        setVoucherError('Kode voucher sudah habis digunakan.')
-      } else {
-        setAppliedVoucher(v)
-      }
-      return
-    }
+    // 1) Voucher (validate_voucher already excludes exhausted codes)
+    const v = await validateVoucher(code)
+    if (v) { setAppliedVoucher(v); return }
 
-    // Cek apakah kode referral valid di database
-    const { data: referrer, error } = await supabase.from('profiles').select('id, referral_code').eq('referral_code', code).single()
-    if (referrer) {
-      if (referrer.id === user.id) {
-        setVoucherError('Anda tidak bisa menggunakan kode referral milik sendiri.')
-      } else {
-        setAppliedVoucher({ type: 'referral', code: code, discount: REFERRAL_DISCOUNT_AMOUNT, referrer_id: referrer.id })
-      }
+    // 2) Referral (find_referrer_by_code already excludes the caller's own code)
+    const referrerId = await findReferrer(code)
+    if (referrerId) {
+      setAppliedVoucher({ type: 'referral', code, discount: REFERRAL_DISCOUNT_AMOUNT, referrer_id: referrerId })
     } else {
-      setVoucherError('Kode promo atau referral tidak ditemukan.')
+      setVoucherError('Kode promo atau referral tidak ditemukan atau kuota habis.')
     }
   }
 
@@ -619,7 +603,7 @@ export default function TransactionPage() {
                   >
                     {midtransBusy
                       ? <><Loader2 size={16} className="animate-spin" /> Memproses...</>
-                      : <><CreditCard size={16} /> Bayar Rp {(pricing[selectedPlan] || 0).toLocaleString('id-ID')} Sekarang</>}
+                      : <><CreditCard size={16} /> Bayar Rp {finalPrice.toLocaleString('id-ID')} Sekarang</>}
                   </button>
                   <p className="text-[10px] text-slate-400 text-center">
                     Pembayaran otomatis memakai harga paket {selectedPlan}. Kode voucher/referral saat ini hanya berlaku untuk transfer manual di bawah.

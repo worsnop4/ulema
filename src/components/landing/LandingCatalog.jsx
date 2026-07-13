@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getThemes, getPricing } from '../../hooks/useSharedInvitation'
+import { getThemes } from '../../hooks/useSharedInvitation'
+import { fetchPricing } from '../../services/billingService'
 
 export default function LandingCatalog() {
   const navigate = useNavigate()
   const [themes, setThemes] = useState(() => getThemes())
-  const [pricing, setPricing] = useState(() => getPricing())
+  const [pricing, setPricing] = useState({ Special: 99000, Adat: 110000, Motion: 140000, Luxury: 175000 })
   const [activeTab, setActiveTab] = useState('Special')
 
   useEffect(() => {
-    const handleUpdate = () => {
-      setThemes(getThemes())
-      setPricing(getPricing())
-    }
+    const handleUpdate = () => setThemes(getThemes())
     window.addEventListener('local-storage-update', handleUpdate)
     window.addEventListener('storage', handleUpdate)
     return () => {
@@ -20,6 +18,9 @@ export default function LandingCatalog() {
       window.removeEventListener('storage', handleUpdate)
     }
   }, [])
+
+  // Authoritative prices from the DB (public-readable).
+  useEffect(() => { fetchPricing().then(setPricing) }, [])
 
   const categories = [
     { id: 'Special', label: '⭐ SPECIAL' },

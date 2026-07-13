@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { getPricing, savePricing, getVouchers, saveVouchers } from '../../hooks/useSharedInvitation'
+import { fetchPricing, savePricingDB, fetchVouchers, createVoucherDB, deleteVoucherDB } from '../../services/billingService'
 import { Settings, Percent, Plus, Trash2 } from 'lucide-react'
 
 export default function AdminFinance() {
-  const [pricing, setPricing] = useState(() => getPricing())
-  const [vouchers, setVouchers] = useState(() => getVouchers())
+  const [vouchers, setVouchers] = useState([])
   const [message, setMessage] = useState('')
 
-  // Pricing Form States
-  const [priceSpecial, setPriceSpecial] = useState(pricing.Special || 99000)
-  const [priceAdat, setPriceAdat] = useState(pricing.Adat || 110000)
-  const [priceMotion, setPriceMotion] = useState(pricing.Motion || 140000)
-  const [priceLuxury, setPriceLuxury] = useState(pricing.Luxury || 175000)
+  // Pricing Form State (single object → direct setter, DB-backed)
+  const [pricing, setPricing] = useState({ Special: 99000, Adat: 110000, Motion: 140000, Luxury: 175000 })
+  const setPrice = (cat, val) => setPricing(p => ({ ...p, [cat]: val }))
 
   // Voucher Form States
   const [voucherCode, setVoucherCode] = useState('')
@@ -19,46 +16,40 @@ export default function AdminFinance() {
   const [voucherType, setVoucherType] = useState('percent')
   const [voucherMaxUse, setVoucherMaxUse] = useState(100)
 
+  const reloadVouchers = async () => setVouchers(await fetchVouchers())
+
   useEffect(() => {
-    const handleUpdate = () => {
-      setPricing(getPricing())
-      setVouchers(getVouchers())
-    }
-    window.addEventListener('local-storage-update', handleUpdate)
-    return () => window.removeEventListener('local-storage-update', handleUpdate)
+    fetchPricing().then(setPricing)
+    fetchVouchers().then(setVouchers)
   }, [])
 
-  const handleSavePricing = (e) => {
+  const handleSavePricing = async (e) => {
     e.preventDefault()
     const newPricing = {
-      Special: Number(priceSpecial),
-      Adat: Number(priceAdat),
-      Motion: Number(priceMotion),
-      Luxury: Number(priceLuxury)
+      Special: Number(pricing.Special),
+      Adat: Number(pricing.Adat),
+      Motion: Number(pricing.Motion),
+      Luxury: Number(pricing.Luxury)
     }
-    savePricing(newPricing)
-    setPricing(newPricing)
+    const { error } = await savePricingDB(newPricing)
+    if (error) { setMessage('❌ Gagal menyimpan harga: ' + error.message); setTimeout(() => setMessage(''), 4000); return }
     setMessage('🎉 Harga paket berhasil diperbarui!')
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const handleCreateVoucher = (e) => {
+  const handleCreateVoucher = async (e) => {
     e.preventDefault()
     if (!voucherCode.trim()) return
 
-    const newVoucher = {
-      id: Date.now(),
+    const { error } = await createVoucherDB({
       code: voucherCode.trim().toUpperCase(),
       discount: Number(voucherDiscount),
       type: voucherType,
       maxUse: Number(voucherMaxUse),
-      used: 0
-    }
+    })
+    if (error) { setMessage('❌ Gagal membuat voucher: ' + error.message); setTimeout(() => setMessage(''), 4000); return }
+    await reloadVouchers()
 
-    const updated = [...vouchers, newVoucher]
-    saveVouchers(updated)
-    setVouchers(updated)
-    
     setVoucherCode('')
     setVoucherDiscount(10)
     setVoucherType('percent')
@@ -67,10 +58,9 @@ export default function AdminFinance() {
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const handleDeleteVoucher = (id) => {
-    const updated = vouchers.filter(v => v.id !== id)
-    saveVouchers(updated)
-    setVouchers(updated)
+  const handleDeleteVoucher = async (id) => {
+    await deleteVoucherDB(id)
+    await reloadVouchers()
   }
 
   return (
@@ -90,19 +80,19 @@ export default function AdminFinance() {
           <form onSubmit={handleSavePricing} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Special (Rupiah)</label>
-              <input type="number" className="form-input text-sm font-mono" value={priceSpecial} onChange={e => setPriceSpecial(e.target.value)} required />
+              <input type="number" className="form-input text-sm font-mono" value={pricing.Special} onChange={e => setPrice('Special', e.target.value)} required />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Adat (Rupiah)</label>
-              <input type="number" className="form-input text-sm font-mono" value={priceAdat} onChange={e => setPriceAdat(e.target.value)} required />
+              <input type="number" className="form-input text-sm font-mono" value={pricing.Adat} onChange={e => setPrice('Adat', e.target.value)} required />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Motion (Rupiah)</label>
-              <input type="number" className="form-input text-sm font-mono" value={priceMotion} onChange={e => setPriceMotion(e.target.value)} required />
+              <input type="number" className="form-input text-sm font-mono" value={pricing.Motion} onChange={e => setPrice('Motion', e.target.value)} required />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Paket Luxury (Rupiah)</label>
-              <input type="number" className="form-input text-sm font-mono" value={priceLuxury} onChange={e => setPriceLuxury(e.target.value)} required />
+              <input type="number" className="form-input text-sm font-mono" value={pricing.Luxury} onChange={e => setPrice('Luxury', e.target.value)} required />
             </div>
             <button type="submit" className="btn-primary w-full justify-center py-2.5 text-sm rounded-xl">
               Simpan Konfigurasi Harga
