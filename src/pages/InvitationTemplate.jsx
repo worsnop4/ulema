@@ -23,6 +23,7 @@ const MinangElegantTheme = lazy(() => import('../themes/MinangElegantTheme'))
 const BordeauxLuxeTheme = lazy(() => import('../themes/BordeauxLuxeTheme'))
 const CinematicShadowTheme = lazy(() => import('../themes/CinematicShadowTheme'))
 const BotanicalIvoryTheme = lazy(() => import('../themes/BotanicalIvoryTheme'))
+const AurumNoirTheme = lazy(() => import('../themes/AurumNoirTheme'))
 
 const THEME_COMPONENTS = {
   [THEMES.WATERCOLOR_FLORAL]: WatercolorFloralTheme,
@@ -38,6 +39,7 @@ const THEME_COMPONENTS = {
   [THEMES.BORDEAUX_LUXE]: BordeauxLuxeTheme,
   [THEMES.CINEMATIC_SHADOW]: CinematicShadowTheme,
   [THEMES.BOTANICAL_IVORY]: BotanicalIvoryTheme,
+  [THEMES.AURUM_NOIR]: AurumNoirTheme,
 }
 
 // ── Countdown Hook ─────────────────────────────────────────────

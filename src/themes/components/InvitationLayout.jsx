@@ -24,6 +24,8 @@ export default function InvitationLayout({
                ? '#fcfaf6'
              : layout === THEMES.BOTANICAL_IVORY
                ? '#ece7db'
+             : layout === THEMES.AURUM_NOIR
+               ? 'radial-gradient(circle, #151009 0%, #0a0807 100%)'
                : config.global?.desktopBg
                  ? config.global.desktopBg
                : layout === THEMES.PLAYFUL_ILLUSTRATIVE
