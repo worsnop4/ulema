@@ -45,6 +45,9 @@ const F = {
 
 const shimmerBg = `linear-gradient(90deg, ${c.goldSh1}, ${c.goldSh2}, ${c.goldSh1})`
 
+// Corner-radius scale — soften the otherwise very square containers.
+const RAD = { card: 22, panel: 18, box: 14, img: 16, input: 12, pill: 999 }
+
 // ─── DATE HELPERS ────────────────────────────────────────────────
 const ID_DAYS = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 const ID_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -103,7 +106,7 @@ const GoldButton = ({ children, onClick, style = {}, as = 'button', href }) => {
     style: {
       padding: '15px 40px', border: 'none', cursor: 'pointer',
       background: shimmerBg, backgroundSize: '200% 100%', animation: 'aurum-shimmer 5s linear infinite',
-      color: c.btnText, fontFamily: F.sans, fontSize: 10, fontWeight: 600,
+      color: c.btnText, fontFamily: F.sans, fontSize: 10, fontWeight: 600, borderRadius: RAD.pill,
       letterSpacing: '0.32em', textTransform: 'uppercase', ...style,
     },
   }
@@ -118,7 +121,7 @@ const GhostButton = ({ children, onClick, href, as = 'button', style = {} }) => 
     className: 'inline-flex items-center justify-center gap-2',
     style: {
       padding: '13px 34px', background: 'transparent', border: `1px solid ${c.brd55}`,
-      color: c.goldBright, fontFamily: F.sans, fontSize: 10, fontWeight: 600,
+      color: c.goldBright, fontFamily: F.sans, fontSize: 10, fontWeight: 600, borderRadius: RAD.pill,
       letterSpacing: '0.3em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all .3s ease', ...style,
     },
   }
@@ -200,7 +203,7 @@ const Cover = ({ data, bride, groom, primaryEvent, guestName, handleOpen, animat
           {fmtCoverDate(primaryEvent?.date)}
         </p>
         {guestName && (
-          <div className="mb-8" style={{ border: `1px solid ${c.brd35}`, background: 'rgba(10,8,7,.55)', backdropFilter: 'blur(6px)', padding: '16px 34px' }}>
+          <div className="mb-8" style={{ border: `1px solid ${c.brd35}`, background: 'rgba(10,8,7,.55)', backdropFilter: 'blur(6px)', padding: '16px 34px', borderRadius: RAD.panel }}>
             <p className="uppercase" style={{ fontFamily: F.sans, fontSize: 8, fontWeight: 600, letterSpacing: '0.4em', color: c.muted, marginBottom: 4 }}>Kepada Yth.</p>
             <p style={{ fontFamily: F.serif, fontSize: 19, color: c.text }}>{guestName}</p>
           </div>
@@ -247,8 +250,8 @@ const Hero = ({ data, bride, groom, primaryEvent, countdown }) => {
             <div key={b.label} className="flex flex-col items-center gap-2">
               <div className="relative" style={{ width: 56, height: 62, perspective: 320 }}>
                 <motion.div key={b.v} initial={{ rotateX: -90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{ border: `1px solid ${c.brd35}`, background: 'linear-gradient(180deg,#1a1410 0%,#100c09 48%,#0c0a08 52%,#14100c 100%)', fontFamily: F.serif, fontSize: 28, fontWeight: 500, color: c.goldBright, transformOrigin: 'center bottom', backfaceVisibility: 'hidden' }}>
+                  className="absolute inset-0 flex items-center justify-center overflow-hidden"
+                  style={{ border: `1px solid ${c.brd35}`, background: 'linear-gradient(180deg,#1a1410 0%,#100c09 48%,#0c0a08 52%,#14100c 100%)', fontFamily: F.serif, fontSize: 28, fontWeight: 500, color: c.goldBright, transformOrigin: 'center bottom', backfaceVisibility: 'hidden', borderRadius: RAD.box }}>
                   {b.v.toString().padStart(2, '0')}
                 </motion.div>
                 <div className="absolute" style={{ left: 0, right: 0, top: '50%', height: 1, background: 'rgba(0,0,0,.5)', zIndex: 2 }} />
@@ -302,15 +305,20 @@ const Couple = ({ data }) => {
     </motion.div>
   )
   return (
-    <section style={{ padding: '96px 28px', background: c.bg }}>
-      <div className="text-center flex flex-col items-center" style={{ marginBottom: 56 }}>
-        <Eyebrow style={{ marginBottom: 14 }}>The Couple</Eyebrow>
-        <Heading style={{ fontSize: 34 }}>Dua Insan Bersatu</Heading>
-      </div>
-      <div className="flex flex-col gap-14" style={{ maxWidth: 360, margin: '0 auto' }}>
-        {person(data?.groom, 'The Groom', false)}
-        <DiamondRule />
-        {person(data?.bride, 'The Bride', true)}
+    <section className="relative overflow-hidden" style={{ padding: '96px 28px', background: c.bg }}>
+      {/* Gold bubble effect (like the footer) — framed at the top and bottom */}
+      <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '42%' }}><Particles count={10} /></div>
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: '42%' }}><Particles count={10} /></div>
+      <div className="relative" style={{ zIndex: 2 }}>
+        <div className="text-center flex flex-col items-center" style={{ marginBottom: 56 }}>
+          <Eyebrow style={{ marginBottom: 14 }}>The Couple</Eyebrow>
+          <Heading style={{ fontSize: 34 }}>Dua Insan Bersatu</Heading>
+        </div>
+        <div className="flex flex-col gap-14" style={{ maxWidth: 360, margin: '0 auto' }}>
+          {person(data?.groom, 'The Groom', false)}
+          <DiamondRule />
+          {person(data?.bride, 'The Bride', true)}
+        </div>
       </div>
     </section>
   )
@@ -341,7 +349,7 @@ const Events = ({ akad, resepsi }) => {
         </div>
       )}
       <motion.div key={tab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-        className="text-center" style={{ maxWidth: 340, margin: '0 auto', border: `1px solid ${c.brd22}`, background: `linear-gradient(180deg, ${c.card}, ${c.bgAlt})`, padding: '44px 30px' }}>
+        className="text-center" style={{ maxWidth: 340, margin: '0 auto', border: `1px solid ${c.brd22}`, background: `linear-gradient(180deg, ${c.card}, ${c.bgAlt})`, padding: '44px 30px', borderRadius: RAD.card }}>
         <Eyebrow style={{ color: c.gold, marginBottom: 20 }}>{ev.name || 'Acara'}</Eyebrow>
         <p className="uppercase" style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: '0.3em', color: c.text3 }}>{dayName}</p>
         <p style={{ margin: '2px 0', fontFamily: F.serif, fontWeight: 300, fontSize: 78, lineHeight: 1, color: c.goldBright }}>{day}</p>
@@ -381,7 +389,7 @@ const LoveStory = ({ data }) => {
                 </p>
               )}
               {s.photo && (
-                <div className="overflow-hidden mb-3" style={{ borderRadius: 2, border: `1px solid ${c.brd22}` }}>
+                <div className="overflow-hidden mb-3" style={{ borderRadius: RAD.img, border: `1px solid ${c.brd22}` }}>
                   <img src={s.photo} alt={s.title || ''} className="w-full object-cover" style={{ aspectRatio: '3 / 2' }} />
                 </div>
               )}
@@ -425,7 +433,7 @@ const Gallery = ({ data }) => {
       <div className="grid grid-cols-2 gap-2.5" style={{ maxWidth: 420, margin: '0 auto' }}>
         {photos.map((src, i) => (
           <motion.div key={i} className={`relative overflow-hidden ${i === 0 ? 'col-span-2' : ''}`}
-            style={{ aspectRatio: i === 0 ? '16 / 10' : '1', border: `1px solid ${c.brd14}` }}
+            style={{ aspectRatio: i === 0 ? '16 / 10' : '1', border: `1px solid ${c.brd14}`, borderRadius: RAD.img }}
             initial={{ opacity: 0, scale: 0.92 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: (i % 4) * 0.05 }}>
             <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
           </motion.div>
@@ -451,14 +459,14 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
     } finally { setBusy(false) }
   }
   const list = (wishes || data?.rsvps || []).slice(0, 5)
-  const inputStyle = { width: '100%', boxSizing: 'border-box', background: c.bg, border: `1px solid ${c.brd22}`, color: c.text, padding: '13px 14px', fontSize: 13, fontFamily: F.sans, outline: 'none' }
+  const inputStyle = { width: '100%', boxSizing: 'border-box', background: c.bg, border: `1px solid ${c.brd22}`, color: c.text, padding: '13px 14px', fontSize: 13, fontFamily: F.sans, outline: 'none', borderRadius: RAD.input }
   return (
     <section id="aurum-rsvp" style={{ padding: '96px 28px', background: c.bgAlt, borderTop: `1px solid ${c.brd14}`, borderBottom: `1px solid ${c.brd14}` }}>
       <div className="text-center flex flex-col items-center" style={{ marginBottom: 44 }}>
         <Eyebrow style={{ marginBottom: 14 }}>RSVP</Eyebrow>
         <Heading style={{ fontSize: 34 }}>Konfirmasi &amp; Ucapan</Heading>
       </div>
-      <form onSubmit={submit} className="flex flex-col gap-4" style={{ maxWidth: 360, margin: '0 auto', border: `1px solid ${c.brd22}`, background: c.card, padding: 28 }}>
+      <form onSubmit={submit} className="flex flex-col gap-4" style={{ maxWidth: 360, margin: '0 auto', border: `1px solid ${c.brd22}`, background: c.card, padding: 28, borderRadius: RAD.card }}>
         <div>
           <label className="block uppercase" style={{ fontFamily: F.sans, fontSize: 9, fontWeight: 600, letterSpacing: '0.35em', color: c.muted, marginBottom: 8 }}>Nama Lengkap</label>
           <input value={name} onChange={e => setName(e.target.value)} required placeholder="Masukkan nama Anda..." style={inputStyle} />
@@ -468,7 +476,7 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
           <div className="grid grid-cols-2 gap-2.5">
             {[['hadir', 'Hadir'], ['tidak_hadir', 'Berhalangan']].map(([v, l]) => (
               <button key={v} type="button" onClick={() => setAtt(v)} className="uppercase"
-                style={{ padding: '12px 0', cursor: 'pointer', fontFamily: F.sans, fontSize: 9, fontWeight: 600, letterSpacing: '0.25em', border: `1px solid ${c.brd55}`, background: att === v ? c.gold : 'transparent', color: att === v ? c.btnText : c.text3, transition: 'all .3s ease' }}>
+                style={{ padding: '12px 0', cursor: 'pointer', fontFamily: F.sans, fontSize: 9, fontWeight: 600, letterSpacing: '0.25em', border: `1px solid ${c.brd55}`, background: att === v ? c.gold : 'transparent', color: att === v ? c.btnText : c.text3, transition: 'all .3s ease', borderRadius: RAD.pill }}>
                 {l}
               </button>
             ))}
@@ -484,9 +492,9 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
         <div className="flex flex-col gap-3" style={{ maxWidth: 360, margin: '36px auto 0' }}>
           <Eyebrow style={{ color: c.muted, marginBottom: 4 }}>Ucapan Tamu ({list.length})</Eyebrow>
           {list.map((w, i) => (
-            <motion.div key={w.id || i} className="flex gap-3.5" style={{ border: `1px solid ${c.brd14}`, background: c.cardAlt, padding: '16px 18px' }}
+            <motion.div key={w.id || i} className="flex gap-3.5" style={{ border: `1px solid ${c.brd14}`, background: c.cardAlt, padding: '16px 18px', borderRadius: RAD.img }}
               initial={{ opacity: 0, x: -15 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-              <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 34, height: 34, border: `1px solid ${c.brd40}`, fontFamily: F.serif, fontSize: 16, color: c.goldBright }}>
+              <div className="flex-shrink-0 flex items-center justify-center rounded-full" style={{ width: 34, height: 34, border: `1px solid ${c.brd40}`, fontFamily: F.serif, fontSize: 16, color: c.goldBright }}>
                 {(w.name || '?').charAt(0).toUpperCase()}
               </div>
               <div style={{ minWidth: 0 }}>
@@ -529,14 +537,14 @@ const Gift = ({ data }) => {
             {accounts.map((acc, i) => {
               const key = acc.id || acc.number || i
               return (
-                <div key={key} className="flex items-center gap-4" style={{ border: `1px solid ${c.brd22}`, background: `linear-gradient(135deg, #17120d, ${c.bgAlt})`, padding: 22 }}>
+                <div key={key} className="flex items-center gap-4" style={{ border: `1px solid ${c.brd22}`, background: `linear-gradient(135deg, #17120d, ${c.bgAlt})`, padding: 22, borderRadius: RAD.panel }}>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <p className="uppercase" style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '0.3em', color: c.gold, marginBottom: 2 }}>{acc.bank}</p>
                     <p style={{ fontFamily: F.sans, fontSize: 11, fontWeight: 300, color: c.muted, marginBottom: 6 }}>a.n. {acc.holder}</p>
                     <p style={{ fontFamily: F.serif, fontSize: 20, letterSpacing: '0.12em', color: c.text }}>{acc.number}</p>
                   </div>
                   <button onClick={() => copy(acc.number, key)} className="flex-shrink-0 uppercase"
-                    style={{ padding: '9px 14px', cursor: 'pointer', fontFamily: F.sans, fontSize: 8, fontWeight: 600, letterSpacing: '0.25em', border: `1px solid ${c.brd55}`, background: copiedKey === key ? c.gold : 'transparent', color: copiedKey === key ? c.btnText : c.goldBright, transition: 'all .3s ease' }}>
+                    style={{ padding: '9px 14px', cursor: 'pointer', fontFamily: F.sans, fontSize: 8, fontWeight: 600, letterSpacing: '0.25em', border: `1px solid ${c.brd55}`, background: copiedKey === key ? c.gold : 'transparent', color: copiedKey === key ? c.btnText : c.goldBright, transition: 'all .3s ease', borderRadius: RAD.pill }}>
                     {copiedKey === key ? 'Tersalin' : 'Salin'}
                   </button>
                 </div>
