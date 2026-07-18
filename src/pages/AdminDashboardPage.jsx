@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
         {/* Navigation Tabs */}
         <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
           {[
-            { id: 'dashboard', label: 'Analitik & Pembayaran', icon: CreditCard },
+            { id: 'dashboard', label: 'Analitik & Transaksi', icon: CreditCard },
             { id: 'users', label: 'Kelola Pengguna', icon: UsersIcon },
             { id: 'themes', label: 'Daftar Tema', icon: Palette },
             { id: 'illustrations', label: 'Kelola Ilustrasi', icon: ImageIcon },
