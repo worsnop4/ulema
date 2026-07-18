@@ -48,7 +48,6 @@ const shimmerBg = `linear-gradient(90deg, ${c.goldSh1}, ${c.goldSh2}, ${c.goldSh
 // ─── DATE HELPERS ────────────────────────────────────────────────
 const ID_DAYS = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 const ID_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-const ID_MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des']
 
 const fmtCoverDate = (s) => {
   if (!s) return 'Kamis, 26 November 2026'
@@ -69,14 +68,6 @@ const fmtEventDate = (s) => {
       dayName: ID_DAYS[d.getDay()],
     }
   } catch { return { day: '26', mon: 'November', yr: '2026', dayName: 'Kamis' } }
-}
-
-const fmtShortDate = (s) => {
-  if (!s) return ''
-  try {
-    const d = new Date(s)
-    return `${d.getDate().toString().padStart(2, '0')} ${ID_MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
-  } catch { return s }
 }
 
 // ─── SHARED PRIMITIVES ───────────────────────────────────────────
@@ -220,7 +211,9 @@ const Cover = ({ data, bride, groom, primaryEvent, guestName, handleOpen, animat
 
 // ─── HERO ────────────────────────────────────────────────────────
 const Hero = ({ data, bride, groom, primaryEvent, countdown }) => {
-  const bg = data?.meta?.coverPhoto || data?.meta?.photo || data?.bride?.photo || data?.groom?.photo || null
+  // "Foto Slide Awal" (meta.photo) is the dedicated hero image from the
+  // photo editor; fall back to the cover / couple photos only if unset.
+  const bg = data?.meta?.photo || data?.meta?.coverPhoto || data?.bride?.photo || data?.groom?.photo || null
   const blocks = [
     { label: 'Hari', v: countdown?.d || 0 },
     { label: 'Jam', v: countdown?.h || 0 },
@@ -322,41 +315,41 @@ const Couple = ({ data }) => {
 
 // ─── EVENTS (tabbed akad / resepsi) ──────────────────────────────
 const Events = ({ akad, resepsi }) => {
-  const tabs = [{ key: 0, label: 'Akad Nikah', ev: akad }, { key: 1, label: 'Resepsi', ev: resepsi }].filter(t => t.ev)
+  const list = [akad, resepsi].filter(Boolean)
   const [tab, setTab] = useState(0)
-  if (!tabs.length) return null
-  const active = tabs.find(t => t.key === tab) || tabs[0]
-  const ev = active.ev
+  if (!list.length) return null
+  const ev = list[tab] || list[0]
   const { day, mon, yr, dayName } = fmtEventDate(ev.date)
+  const timeStr = [ev.start, ev.end].filter(Boolean).join(' – ')
   return (
     <section className="relative overflow-hidden" style={{ padding: '96px 28px', background: c.bgAlt, borderTop: `1px solid ${c.brd14}`, borderBottom: `1px solid ${c.brd14}` }}>
       <div className="text-center flex flex-col items-center" style={{ marginBottom: 40 }}>
         <Eyebrow style={{ marginBottom: 14 }}>Schedule</Eyebrow>
         <Heading style={{ fontSize: 34 }}>Rangkaian Acara</Heading>
       </div>
-      {tabs.length > 1 && (
+      {list.length > 1 && (
         <div className="flex justify-center gap-8" style={{ marginBottom: 36 }}>
-          {tabs.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} className="uppercase"
-              style={{ background: 'none', border: 'none', padding: '0 2px 10px', cursor: 'pointer', fontFamily: F.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.3em', color: tab === t.key ? c.goldBright : c.faint, borderBottom: tab === t.key ? `1px solid ${c.gold}` : '1px solid transparent', transition: 'all .3s ease' }}>
-              {t.label}
+          {list.map((e, i) => (
+            <button key={e.id || i} onClick={() => setTab(i)} className="uppercase"
+              style={{ background: 'none', border: 'none', padding: '0 2px 10px', cursor: 'pointer', fontFamily: F.sans, fontSize: 10, fontWeight: 600, letterSpacing: '0.3em', color: tab === i ? c.goldBright : c.faint, borderBottom: tab === i ? `1px solid ${c.gold}` : '1px solid transparent', transition: 'all .3s ease' }}>
+              {e.name || `Acara ${i + 1}`}
             </button>
           ))}
         </div>
       )}
-      <motion.div key={active.key} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+      <motion.div key={tab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
         className="text-center" style={{ maxWidth: 340, margin: '0 auto', border: `1px solid ${c.brd22}`, background: `linear-gradient(180deg, ${c.card}, ${c.bgAlt})`, padding: '44px 30px' }}>
-        <Eyebrow style={{ color: c.gold, marginBottom: 20 }}>{active.label}</Eyebrow>
+        <Eyebrow style={{ color: c.gold, marginBottom: 20 }}>{ev.name || 'Acara'}</Eyebrow>
         <p className="uppercase" style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: '0.3em', color: c.text3 }}>{dayName}</p>
         <p style={{ margin: '2px 0', fontFamily: F.serif, fontWeight: 300, fontSize: 78, lineHeight: 1, color: c.goldBright }}>{day}</p>
         <p className="uppercase" style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: '0.3em', color: c.text3 }}>{mon} {yr}</p>
-        {ev.time && <p style={{ margin: '18px 0 0', fontFamily: F.sans, fontSize: 13, fontWeight: 500, color: c.text }}>{ev.time}</p>}
+        {timeStr && <p style={{ margin: '18px 0 0', fontFamily: F.sans, fontSize: 13, fontWeight: 500, color: c.text }}>{timeStr}{ev.tz ? ` ${ev.tz}` : ''}</p>}
         <div style={{ width: 60, height: 1, background: c.brd40, margin: '26px auto' }} />
         <Eyebrow style={{ color: c.muted, marginBottom: 6 }}>Venue</Eyebrow>
-        <p style={{ fontFamily: F.sans, fontSize: 14, fontWeight: 500, color: c.text, marginBottom: 4 }}>{ev.location || '—'}</p>
+        <p style={{ fontFamily: F.sans, fontSize: 14, fontWeight: 500, color: c.text, marginBottom: 4 }}>{ev.venue || '—'}</p>
         {ev.address && <p style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 300, color: c.body, lineHeight: 1.6, marginBottom: 26 }}>{ev.address}</p>}
-        {ev.mapUrl && (
-          <GhostButton as="a" href={ev.mapUrl} style={{ display: 'flex', width: '100%', padding: '13px 0' }}><MapPin size={11} /> Petunjuk Arah</GhostButton>
+        {ev.maps && (
+          <GhostButton as="a" href={ev.maps} style={{ display: 'flex', width: '100%', padding: '13px 0' }}><MapPin size={11} /> Petunjuk Arah</GhostButton>
         )}
       </motion.div>
     </section>
@@ -379,11 +372,17 @@ const LoveStory = ({ data }) => {
           {stories.map((s, i) => (
             <motion.div key={s.id || i} className="relative" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
               <div className="absolute rotate-45" style={{ left: -27, top: 8, width: 9, height: 9, background: i === stories.length - 1 ? c.gold : c.bg, border: `1px solid ${c.gold}` }} />
-              <p className="uppercase" style={{ marginBottom: 6, fontFamily: F.sans, fontSize: 10, letterSpacing: '0.35em', color: c.gold }}>{fmtShortDate(s.date || s.year) || s.title}</p>
-              {(s.date || s.year) && s.title && (
-                <h4 style={{ fontFamily: F.serif, fontSize: 18, color: c.text, marginBottom: 4 }}>{s.title}</h4>
+              {(s.year || s.title) && (
+                <p className="uppercase" style={{ marginBottom: 6, fontFamily: F.sans, fontSize: 10, letterSpacing: '0.35em', color: c.gold }}>
+                  {[s.year, s.title].filter(Boolean).join(' — ')}
+                </p>
               )}
-              <p style={{ fontFamily: F.sans, fontSize: 13, fontWeight: 300, color: c.body, lineHeight: 1.75 }}>{s.story}</p>
+              {s.photo && (
+                <div className="overflow-hidden mb-3" style={{ borderRadius: 2, border: `1px solid ${c.brd22}` }}>
+                  <img src={s.photo} alt={s.title || ''} className="w-full object-cover" style={{ aspectRatio: '3 / 2' }} />
+                </div>
+              )}
+              <p style={{ fontFamily: F.sans, fontSize: 13, fontWeight: 300, color: c.body, lineHeight: 1.75 }}>{s.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -394,21 +393,17 @@ const LoveStory = ({ data }) => {
 
 // ─── DRESSCODE (optional) ────────────────────────────────────────
 const Dresscode = ({ data }) => {
-  if (!data?.dresscode) return null
-  const dc = data.dresscode
-  const title = typeof dc === 'string' ? dc : (dc.title || 'Dress Code')
-  const note = typeof dc === 'object' ? dc.note : null
+  const dc = data?.dresscode
+  if (!dc || !dc.name) return null
   return (
     <section className="text-center" style={{ padding: '88px 28px', background: c.bgAlt, borderTop: `1px solid ${c.brd14}`, borderBottom: `1px solid ${c.brd14}` }}>
       <div style={{ maxWidth: 320, margin: '0 auto' }} className="flex flex-col items-center">
         <Eyebrow style={{ marginBottom: 14 }}>Dress Code</Eyebrow>
-        <h3 style={{ fontFamily: F.serif, fontWeight: 400, fontSize: 26, color: c.text, marginBottom: 20 }}>{title}</h3>
-        <div className="flex justify-center gap-3.5" style={{ marginBottom: 22 }}>
-          {['#111111', c.gold, '#f0e6d2'].map((sw, i) => (
-            <div key={i} className="rounded-full" style={{ width: 36, height: 36, background: sw, border: `1px solid ${c.brd40}` }} />
-          ))}
-        </div>
-        {note && <p style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 300, color: c.body, lineHeight: 1.7 }}>{note}</p>}
+        <h3 style={{ fontFamily: F.serif, fontWeight: 400, fontSize: 26, color: c.text, marginBottom: 20 }}>{dc.name}</h3>
+        {dc.color && (
+          <div className="rounded-full" style={{ width: 44, height: 44, background: dc.color, border: `1px solid ${c.brd40}`, boxShadow: `0 0 0 6px rgba(212,169,106,0.06)`, marginBottom: 22 }} />
+        )}
+        {dc.notes && <p style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 300, color: c.body, lineHeight: 1.7 }}>{dc.notes}</p>}
       </div>
     </section>
   )
@@ -552,10 +547,15 @@ const Gift = ({ data }) => {
 }
 
 // ─── FOOTER ──────────────────────────────────────────────────────
-const Footer = ({ bride, groom, primaryEvent }) => (
+const Footer = ({ bride, groom, primaryEvent, footerPhoto }) => (
   <footer className="relative text-center overflow-hidden" style={{ padding: '96px 28px 140px', borderTop: `1px solid ${c.brd14}`, background: `radial-gradient(circle at 50% 0%, ${c.card} 0%, ${c.bg} 65%)` }}>
     <Particles count={12} />
     <div className="relative flex flex-col items-center" style={{ zIndex: 2, maxWidth: 340, margin: '0 auto' }}>
+      {footerPhoto && (
+        <div className="rounded-full overflow-hidden" style={{ width: 128, height: 128, border: `1px solid ${c.brd40}`, marginBottom: 30 }}>
+          <img src={footerPhoto} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
       <p style={{ fontFamily: F.script, fontSize: 52, color: c.goldBright, lineHeight: 1.2, marginBottom: 6 }}>{groom} &amp; {bride}</p>
       <p className="uppercase" style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '0.35em', color: c.muted, marginBottom: 28 }}>{fmtCoverDate(primaryEvent?.date)}</p>
       <p style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 300, color: c.body, lineHeight: 1.8, marginBottom: 32 }}>
@@ -666,7 +666,7 @@ export default function AurumNoirTheme({
             <div id="aurum-galeri"><Gallery data={data} /></div>
             <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
-            <Footer bride={bride} groom={groom} primaryEvent={primary} />
+            <Footer bride={bride} groom={groom} primaryEvent={primary} footerPhoto={data?.meta?.footerPhoto} />
 
             <BottomNav />
           </motion.div>
