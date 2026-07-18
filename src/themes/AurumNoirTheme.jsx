@@ -152,10 +152,13 @@ const Particles = ({ count = 18 }) => {
 const KenBurnsBg = ({ src, scrim }) => (
   <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
     {src
-      ? <div className="w-full h-full" style={{ animation: 'aurum-kenburns 24s ease-in-out infinite alternate' }}>
+      // Rendered 116% of the frame (inset -8%) so a translate-only pan stays
+      // within bounds. Panning (not scaling) means the raster is never
+      // upscaled → the photo stays as sharp as a static background.
+      ? <div className="absolute" style={{ inset: '-8%', animation: 'aurum-pan 28s ease-in-out infinite alternate' }}>
           <img src={src} alt="" className="w-full h-full object-cover" />
         </div>
-      : <div className="w-full h-full" style={{ background: `radial-gradient(circle at 50% 30%, #151009 0%, ${c.bg} 70%)` }} />}
+      : <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 30%, #151009 0%, ${c.bg} 70%)` }} />}
     <div className="absolute inset-0 pointer-events-none" style={{ background: scrim }} />
   </div>
 )
@@ -424,7 +427,7 @@ const Gallery = ({ data }) => {
           <motion.div key={i} className={`relative overflow-hidden ${i === 0 ? 'col-span-2' : ''}`}
             style={{ aspectRatio: i === 0 ? '16 / 10' : '1', border: `1px solid ${c.brd14}` }}
             initial={{ opacity: 0, scale: 0.92 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: (i % 4) * 0.05 }}>
-            <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" style={i === 0 ? { animation: 'aurum-kenburns 26s ease-in-out infinite alternate' } : undefined} />
+            <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
           </motion.div>
         ))}
       </div>
@@ -627,7 +630,7 @@ export default function AurumNoirTheme({
     <InvitationLayout layout={THEMES.AURUM_NOIR} data={data} bgUrl="">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Pinyon+Script&family=Jost:wght@200;300;400;500;600&display=swap');
-        @keyframes aurum-kenburns { 0% { transform: scale(1) translate(0,0) } 100% { transform: scale(1.06) translate(-1%,-1%) } }
+        @keyframes aurum-pan { 0% { transform: translate(0,0) } 100% { transform: translate(-4%,-3%) } }
         @keyframes aurum-spin { 0% { transform: rotate(0deg) } 100% { transform: rotate(360deg) } }
         @keyframes aurum-shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
         @keyframes aurum-breathe { 0%,100% { opacity: .5; transform: scale(1) } 50% { opacity: 1; transform: scale(1.06) } }
