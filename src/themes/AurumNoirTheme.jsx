@@ -627,7 +627,7 @@ export default function AurumNoirTheme({
     <InvitationLayout layout={THEMES.AURUM_NOIR} data={data} bgUrl="">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Pinyon+Script&family=Jost:wght@200;300;400;500;600&display=swap');
-        @keyframes aurum-kenburns { 0% { transform: scale(1) translate(0,0) } 100% { transform: scale(1.18) translate(-2%,-2%) } }
+        @keyframes aurum-kenburns { 0% { transform: scale(1) translate(0,0) } 100% { transform: scale(1.06) translate(-1%,-1%) } }
         @keyframes aurum-spin { 0% { transform: rotate(0deg) } 100% { transform: rotate(360deg) } }
         @keyframes aurum-shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
         @keyframes aurum-breathe { 0%,100% { opacity: .5; transform: scale(1) } 50% { opacity: 1; transform: scale(1.06) } }

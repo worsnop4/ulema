@@ -265,8 +265,9 @@ export function PremiumPhotoUploadBox({ label, value, onChange, helperText }) {
       const blob = await res.blob()
       
       // Compress first — full-bleed photos (cover, slide, couple, footer)
-      // need enough resolution for full-screen + Ken Burns, so keep this high.
-      const compressedBase64 = await compressImage(blob, 1280, 0.72)
+      // fill the whole screen, so keep resolution + quality high. Smooth
+      // gradients (studio backdrops) band badly below q~0.8, hence 0.8.
+      const compressedBase64 = await compressImage(blob, 1600, 0.8)
       const finalRes = await fetch(compressedBase64)
       const finalBlob = await finalRes.blob()
       
