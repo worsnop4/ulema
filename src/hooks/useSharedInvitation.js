@@ -20,44 +20,69 @@ if (typeof window !== 'undefined') {
   window.addEventListener('local-storage-update', () => { themesCache = null })
 }
 
+// Ids of DEFAULT_THEMES the admin has explicitly deleted. Kept as a tombstone
+// list so the merge below never resurrects them on the next load/login.
+export function getDeletedThemeIds() {
+  return storageService.getItem(STORAGE_KEYS.DELETED_THEMES) || []
+}
+
 export function getThemes() {
   if (themesCache) return themesCache
 
+  const deleted = getDeletedThemeIds()
   const stored = storageService.getItem(STORAGE_KEYS.THEMES)
   if (stored) {
-    // Find missing themes that are in DEFAULT_THEMES but not in stored
-    const missingThemes = DEFAULT_THEMES.filter(dt => !stored.some(st => st.id === dt.id))
+    // Re-add DEFAULT_THEMES missing from storage — but NOT ones the admin
+    // deleted (otherwise a deleted default reappears every session).
+    const missingThemes = DEFAULT_THEMES.filter(dt => !deleted.includes(dt.id) && !stored.some(st => st.id === dt.id))
 
-    const merged = [...stored, ...missingThemes].map(t => {
-      const matched = DEFAULT_THEMES.find(d => d.id === t.id)
-      if (matched) {
-        return {
-          ...t,
-          name: t.name || matched.name,
-          code: t.code || matched.code,
-          thumbnail: t.thumbnail || matched.thumbnail,
-          layout: t.layout || matched.layout || 'watercolor-floral',
-          category: t.category || matched.category || 'Special'
+    const merged = [...stored, ...missingThemes]
+      .filter(t => !deleted.includes(t.id))
+      .map(t => {
+        const matched = DEFAULT_THEMES.find(d => d.id === t.id)
+        if (matched) {
+          return {
+            ...t,
+            name: t.name || matched.name,
+            code: t.code || matched.code,
+            thumbnail: t.thumbnail || matched.thumbnail,
+            layout: t.layout || matched.layout || 'watercolor-floral',
+            category: t.category || matched.category || 'Special'
+          }
         }
-      }
-      return t
-    })
+        return t
+      })
 
-    if (missingThemes.length > 0) {
+    // Persist whenever the merge changed what's stored (missing added or a
+    // tombstoned theme pruned) so the cleanup sticks.
+    if (missingThemes.length > 0 || merged.length !== stored.length) {
       storageService.setItem(STORAGE_KEYS.THEMES, merged, false)
     }
 
     themesCache = merged
     return themesCache
   }
-  storageService.setItem(STORAGE_KEYS.THEMES, DEFAULT_THEMES, false)
-  themesCache = DEFAULT_THEMES
+  const seeded = DEFAULT_THEMES.filter(dt => !deleted.includes(dt.id))
+  storageService.setItem(STORAGE_KEYS.THEMES, seeded, false)
+  themesCache = seeded
   return themesCache
 }
 
 export function saveThemes(themesList) {
   storageService.setItem(STORAGE_KEYS.THEMES, themesList)
   themesCache = themesList
+}
+
+// Delete a theme AND remember it (tombstone) so the DEFAULT_THEMES merge in
+// getThemes() doesn't bring it back after re-login. Returns the new list.
+export function deleteTheme(id) {
+  const deleted = getDeletedThemeIds()
+  if (!deleted.includes(id)) {
+    storageService.setItem(STORAGE_KEYS.DELETED_THEMES, [...deleted, id])
+  }
+  const remaining = getThemes().filter(t => t.id !== id)
+  saveThemes(remaining)
+  return remaining
 }
 
 export function getPricing() {

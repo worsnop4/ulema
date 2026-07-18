@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getThemes, saveThemes } from '../../hooks/useSharedInvitation'
+import { getThemes, saveThemes, deleteTheme } from '../../hooks/useSharedInvitation'
 import { storageService } from '../../services/storageService'
 import { PhotoUploadBox } from '../common/FormHelpers'
 import { Edit, Trash2, Check, Palette, Layout } from 'lucide-react'
@@ -99,8 +99,7 @@ export default function AdminThemes() {
   }
 
   const handleDeleteTheme = (id) => {
-    const updated = themes.filter(t => t.id !== id)
-    saveThemes(updated)
+    const updated = deleteTheme(id)
     setThemes(updated)
     setMessage('🗑️ Tema berhasil dihapus.')
     setTimeout(() => setMessage(''), 3000)

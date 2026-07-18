@@ -83,6 +83,7 @@ export const SYNC_EVENTS = {
 export const STORAGE_KEYS = {
   ADMIN_DEMO_MODE: 'inviter_admin_demo_mode',
   THEMES: 'inviter_themes',
+  DELETED_THEMES: 'inviter_deleted_themes',
   PRICING: 'inviter_pricing',
   VOUCHERS: 'inviter_vouchers',
   TRANSACTIONS: 'inviter_transactions',
