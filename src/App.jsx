@@ -21,6 +21,7 @@ const GuestsPage = lazy(() => import('./pages/GuestsPage'))
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { AuthContext, useAuth } from './hooks/useAuth'
+import { refreshThemes } from './hooks/useSharedInvitation'
 
 // Re-export useAuth so legacy imports from App.jsx still work
 export { useAuth }
@@ -76,6 +77,10 @@ export default function App() {
       subscription.unsubscribe()
     }
   }, [])
+
+  // Pull the shared theme presets from Supabase so admin edits/deletions are
+  // visible to everyone (not just the browser that made them).
+  useEffect(() => { refreshThemes() }, [])
 
   const logout = async () => {
     await supabase.auth.signOut()

@@ -3,6 +3,7 @@ import { storageService } from '../services/storageService'
 import { defaultInvitationData, DEFAULT_THEMES, DEFAULT_ILLUSTRATIONS } from '../data/defaultData'
 import { useAuth } from '../App'
 import { STORAGE_KEYS, SYNC_EVENTS } from '../config/constants'
+import { fetchThemesDB } from '../services/themesService'
 
 import { useInvitationData } from './useInvitationData'
 import { useInvitationSync } from './useInvitationSync'
@@ -16,6 +17,10 @@ export { defaultInvitationData, DEFAULT_THEMES, DEFAULT_ILLUSTRATIONS }
 // each time. Invalidated on any local-storage-update (own tab writes go
 // through saveThemes below; other tabs' writes are picked up via the event).
 let themesCache = null
+// Once the Supabase `themes` table has been read successfully, it becomes the
+// source of truth: getThemes() returns the stored DB list verbatim (no
+// DEFAULT_THEMES merge / tombstones — those are only the offline fallback).
+let dbAuthoritative = false
 if (typeof window !== 'undefined') {
   window.addEventListener('local-storage-update', () => { themesCache = null })
 }
@@ -28,6 +33,13 @@ export function getDeletedThemeIds() {
 
 export function getThemes() {
   if (themesCache) return themesCache
+
+  // DB mode: the Supabase list (persisted to localStorage on refresh) is
+  // authoritative — return it as-is, no DEFAULT_THEMES merge or tombstones.
+  if (dbAuthoritative) {
+    const dbStored = storageService.getItem(STORAGE_KEYS.THEMES)
+    if (dbStored) { themesCache = dbStored; return themesCache }
+  }
 
   const deleted = getDeletedThemeIds()
   const stored = storageService.getItem(STORAGE_KEYS.THEMES)
@@ -83,6 +95,20 @@ export function deleteTheme(id) {
   const remaining = getThemes().filter(t => t.id !== id)
   saveThemes(remaining)
   return remaining
+}
+
+// Pull the authoritative theme list from Supabase into the sync cache +
+// localStorage, then notify listeners (landing catalog, editor) to re-render.
+// Falls back silently to the local list if the table isn't reachable yet
+// (pre-migration / offline). Call on app mount and after admin writes.
+export async function refreshThemes() {
+  const { data, error } = await fetchThemesDB()
+  if (error || !data || data.length === 0) return themesCache || getThemes()
+  dbAuthoritative = true
+  themesCache = data
+  storageService.setItem(STORAGE_KEYS.THEMES, data, false)
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('local-storage-update'))
+  return data
 }
 
 export function getPricing() {

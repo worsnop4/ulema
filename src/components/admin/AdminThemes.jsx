@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getThemes, saveThemes, deleteTheme } from '../../hooks/useSharedInvitation'
+import { getThemes, saveThemes, deleteTheme, refreshThemes } from '../../hooks/useSharedInvitation'
+import { upsertThemeDB, deleteThemeDB } from '../../services/themesService'
 import { storageService } from '../../services/storageService'
 import { PhotoUploadBox } from '../common/FormHelpers'
 import { Edit, Trash2, Check, Palette, Layout } from 'lucide-react'
@@ -30,48 +31,46 @@ export default function AdminThemes() {
     return () => window.removeEventListener('local-storage-update', handleUpdate)
   }, [])
 
+  // Persist a single theme to Supabase, then re-sync the shared list. If the
+  // DB write fails (e.g. table not migrated yet) the local save above still
+  // applies, so the admin isn't blocked.
+  const syncThemeToDB = (theme) => {
+    upsertThemeDB(theme).then(({ error }) => {
+      if (error) { setMessage('⚠️ Tersimpan lokal — gagal sync ke server: ' + error.message); return }
+      refreshThemes().then(list => setThemes(list))
+    })
+  }
+
   const handleSaveTheme = (e) => {
     e.preventDefault()
     if (!themeName.trim()) return
 
     const themeColors = [themeColor1, themeColor2, themeColor3]
 
-    if (editingThemeId) {
-      const updated = themes.map(t => {
-        if (t.id === editingThemeId) {
-          return {
-            ...t,
-            name: themeName.trim(),
-            emoji: themeEmoji.trim(),
-            layout: themeLayout,
-            colors: themeColors,
-            desc: themeDesc.trim(),
-            category: themeCategory,
-            thumbnail: themeThumbnail
-          }
-        }
-        return t
-      })
-      saveThemes(updated)
-      setThemes(updated)
-      setMessage('🎉 Tema berhasil diperbarui!')
-      setEditingThemeId(null)
-    } else {
-      const newTheme = {
-        id: Date.now(),
-        name: themeName.trim(),
-        emoji: themeEmoji.trim(),
-        layout: themeLayout,
-        colors: themeColors,
-        desc: themeDesc.trim(),
-        category: themeCategory,
-        thumbnail: themeThumbnail
-      }
-      const updated = [...themes, newTheme]
-      saveThemes(updated)
-      setThemes(updated)
-      setMessage('🎉 Tema baru berhasil ditambahkan!')
+    // Build the full theme object, preserving code/themeType of an edited theme.
+    const existing = editingThemeId ? themes.find(t => t.id === editingThemeId) : null
+    const themeObj = {
+      id: editingThemeId || Date.now(),
+      name: themeName.trim(),
+      emoji: themeEmoji.trim(),
+      layout: themeLayout,
+      colors: themeColors,
+      desc: themeDesc.trim(),
+      category: themeCategory,
+      thumbnail: themeThumbnail
     }
+    if (existing?.code) themeObj.code = existing.code
+    if (existing?.themeType) themeObj.themeType = existing.themeType
+
+    const updated = editingThemeId
+      ? themes.map(t => (t.id === editingThemeId ? themeObj : t))
+      : [...themes, themeObj]
+
+    saveThemes(updated)          // instant local update + offline fallback
+    setThemes(updated)
+    syncThemeToDB(themeObj)      // persist to Supabase so everyone sees it
+    setMessage(editingThemeId ? '🎉 Tema berhasil diperbarui!' : '🎉 Tema baru berhasil ditambahkan!')
+    setEditingThemeId(null)
 
     setThemeName('')
     setThemeEmoji('🌿')
@@ -99,8 +98,11 @@ export default function AdminThemes() {
   }
 
   const handleDeleteTheme = (id) => {
-    const updated = deleteTheme(id)
+    const updated = deleteTheme(id)   // instant local + tombstone fallback
     setThemes(updated)
+    deleteThemeDB(id).then(({ error }) => {
+      if (!error) refreshThemes().then(list => setThemes(list))
+    })
     setMessage('🗑️ Tema berhasil dihapus.')
     setTimeout(() => setMessage(''), 3000)
     if (editingThemeId === id) {
