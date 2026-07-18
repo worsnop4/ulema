@@ -500,7 +500,7 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
               <div style={{ minWidth: 0 }}>
                 <div className="flex items-baseline gap-2.5 flex-wrap" style={{ marginBottom: 4 }}>
                   <span style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 500, color: c.text }}>{w.name}</span>
-                  {w.attendance && <span className="uppercase" style={{ fontFamily: F.sans, fontSize: 8, letterSpacing: '0.25em', color: c.gold }}>{w.attendance === 'hadir' ? 'Hadir' : 'Berhalangan'}</span>}
+                  {w.rsvp && <span className="uppercase" style={{ fontFamily: F.sans, fontSize: 8, letterSpacing: '0.25em', color: c.gold }}>{w.rsvp === 'hadir' ? 'Hadir' : 'Berhalangan'}</span>}
                 </div>
                 <p style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 300, fontStyle: 'italic', color: c.body, lineHeight: 1.6 }}>&ldquo;{w.message || w.wish}&rdquo;</p>
               </div>
