@@ -42,7 +42,7 @@ export default function FotoVideoForm() {
     const results = []
     for (const file of files) {
       try {
-        const compressedBase64 = await compressImage(file, 550, 0.5)
+        const compressedBase64 = await compressImage(file, 900, 0.7)
         
         // Convert compressed base64 back to Blob
         const res = await fetch(compressedBase64)

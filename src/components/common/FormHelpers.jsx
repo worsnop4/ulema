@@ -83,8 +83,9 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
       const res = await fetch(croppedBase64)
       const blob = await res.blob()
       
-      // Compress first
-      const compressedBase64 = await compressImage(blob)
+      // Compress first — used by love-story photos & the OG/meta image,
+      // which want decent resolution (OG previews render ~1200px wide).
+      const compressedBase64 = await compressImage(blob, 1200, 0.72)
       const finalRes = await fetch(compressedBase64)
       const finalBlob = await finalRes.blob()
       
@@ -263,8 +264,9 @@ export function PremiumPhotoUploadBox({ label, value, onChange, helperText }) {
       const res = await fetch(croppedBase64)
       const blob = await res.blob()
       
-      // Compress first
-      const compressedBase64 = await compressImage(blob, 550, 0.5)
+      // Compress first — full-bleed photos (cover, slide, couple, footer)
+      // need enough resolution for full-screen + Ken Burns, so keep this high.
+      const compressedBase64 = await compressImage(blob, 1280, 0.72)
       const finalRes = await fetch(compressedBase64)
       const finalBlob = await finalRes.blob()
       
