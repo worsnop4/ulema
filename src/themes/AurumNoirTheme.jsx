@@ -557,6 +557,47 @@ const Gift = ({ data }) => {
   )
 }
 
+// ─── LIVE STREAMING (optional) ───────────────────────────────────
+const LiveStream = ({ data }) => {
+  const platforms = data?.livestreamEnabled ? (data?.livestreamPlatforms || []).filter(p => p.url) : []
+  if (!platforms.length) return null
+  return (
+    <section style={{ padding: '96px 28px', background: c.bgAlt, borderTop: `1px solid ${c.brd14}`, borderBottom: `1px solid ${c.brd14}` }}>
+      <div className="text-center flex flex-col items-center" style={{ marginBottom: 32 }}>
+        <Eyebrow style={{ marginBottom: 14 }}>Live Streaming</Eyebrow>
+        <Heading style={{ fontSize: 34 }}>Saksikan Bersama</Heading>
+        <p style={{ maxWidth: 300, marginTop: 14, fontFamily: F.sans, fontSize: 12, fontWeight: 300, color: c.body, lineHeight: 1.7 }}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
+      </div>
+      <div className="flex flex-col items-center gap-3">
+        {platforms.map((p, i) => (<GhostButton key={i} as="a" href={p.url}>{p.type || 'Tonton Live'}</GhostButton>))}
+      </div>
+    </section>
+  )
+}
+
+// ─── TURUT MENGUNDANG (optional) ─────────────────────────────────
+const TurutMengundang = ({ data }) => {
+  if (!data?.turutMengundangEnabled) return null
+  const families = (data?.families || []).map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) })).filter(f => f.members.length)
+  if (!families.length) return null
+  return (
+    <section style={{ padding: '96px 28px', background: c.bg }}>
+      <div className="text-center flex flex-col items-center" style={{ marginBottom: 40 }}>
+        <Eyebrow style={{ marginBottom: 14 }}>Turut Mengundang</Eyebrow>
+        <Heading style={{ fontSize: 34 }}>Keluarga Besar</Heading>
+      </div>
+      <div className="flex flex-col gap-8" style={{ maxWidth: 340, margin: '0 auto' }}>
+        {families.map((fam, i) => (
+          <div key={fam.id || i} className="text-center">
+            {fam.side && <p style={{ fontFamily: F.serif, fontSize: 20, color: c.goldBright, marginBottom: 10 }}>{fam.side}</p>}
+            {fam.members.map((m, j) => (<p key={j} style={{ fontFamily: F.sans, fontSize: 14, fontWeight: 300, color: c.text2, lineHeight: 1.9 }}>{m}</p>))}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 // ─── FOOTER ──────────────────────────────────────────────────────
 const Footer = ({ bride, groom, primaryEvent, footerPhoto }) => (
   <footer className="relative text-center overflow-hidden" style={{ padding: '96px 28px 140px', borderTop: `1px solid ${c.brd14}`, background: `radial-gradient(circle at 50% 0%, ${c.card} 0%, ${c.bg} 65%)` }}>
@@ -677,6 +718,8 @@ export default function AurumNoirTheme({
             <div id="aurum-galeri"><Gallery data={data} /></div>
             <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
+            <LiveStream data={data} />
+            <TurutMengundang data={data} />
             <Footer bride={bride} groom={groom} primaryEvent={primary} footerPhoto={data?.meta?.footerPhoto} />
 
             <BottomNav />

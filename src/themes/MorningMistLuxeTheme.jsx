@@ -457,6 +457,42 @@ const Gift = ({ data }) => {
   )
 }
 
+// ─── LIVE STREAMING (optional) ───────────────────────────────────
+const LiveStream = ({ data }) => {
+  const platforms = data?.livestreamEnabled ? (data?.livestreamPlatforms || []).filter(p => p.url) : []
+  if (!platforms.length) return null
+  return (
+    <section style={{ background: c.bgBase, padding: '88px 24px' }}>
+      <SectionHead eyebrow="Live Streaming" title="Saksikan Bersama" />
+      <div className="flex flex-col items-center gap-3">
+        {platforms.map((p, i) => (
+          <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" className="uppercase" style={{ padding: '13px 34px', borderRadius: 999, border: '1px solid rgba(220,230,237,.4)', color: c.ink2, fontFamily: F.sans, fontSize: 11, letterSpacing: '0.24em' }}>{p.type || 'Tonton Live'}</a>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ─── TURUT MENGUNDANG (optional) ─────────────────────────────────
+const TurutMengundang = ({ data }) => {
+  if (!data?.turutMengundangEnabled) return null
+  const families = (data?.families || []).map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) })).filter(f => f.members.length)
+  if (!families.length) return null
+  return (
+    <section style={{ background: c.bgRaised, padding: '88px 24px' }}>
+      <SectionHead eyebrow="Turut Mengundang" title="Keluarga Besar" />
+      <div className="flex flex-col gap-8" style={{ maxWidth: 340, margin: '0 auto' }}>
+        {families.map((fam, i) => (
+          <div key={fam.id || i} className="text-center">
+            {fam.side && <p style={{ fontFamily: F.serif, fontSize: 20, color: c.soft, marginBottom: 10 }}>{fam.side}</p>}
+            {fam.members.map((m, j) => (<p key={j} style={{ fontFamily: F.sans, fontSize: 14, fontWeight: 300, color: c.soft2, lineHeight: 1.9 }}>{m}</p>))}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 // ─── 10. FOOTER ──────────────────────────────────────────────────
 const Footer = ({ data, groomNick, brideNick, dateLabel }) => (
   <section className="relative overflow-hidden flex items-end justify-center" style={{ height: '78vh', minHeight: 540 }}>
@@ -533,6 +569,8 @@ export default function MorningMistLuxeTheme({
             <Gallery data={data} />
             <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
+            <LiveStream data={data} />
+            <TurutMengundang data={data} />
             <Footer data={data} groomNick={groomNick} brideNick={brideNick} dateLabel={dateLabel} />
 
             {/* Music toggle (equalizer) */}

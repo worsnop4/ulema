@@ -33,12 +33,14 @@ yang di-hardcode.
 | 2 | **Quote / Ayat** | `quote` |
 | 3 | **Couple / Mempelai** | `groom`, `bride` |
 | 4 | **Acara** (tab akad/resepsi) | `events[]` |
-| 5 | **Love Story / Perjalanan Cinta** | `loveStory[]` |
+| 5 | **Love Story / Perjalanan Cinta** (opsional) | `loveStory[]` (termasuk foto per momen) |
 | 6 | **Dresscode** (opsional) | `dresscode` |
-| 7 | **Gallery / Galeri** | `gallery[]` |
-| 8 | **RSVP & Ucapan** | form + `rsvps[]` |
-| 9 | **Gift / Hadiah** | `accounts[]` |
-| 10 | **Footer / Penutup** | `meta.footerPhoto`, nama, tanggal |
+| 7 | **Gallery / Galeri** (opsional) | `gallery[]` |
+| 8 | **Live Streaming** (opsional) | `livestreamPlatforms[]` |
+| 9 | **RSVP & Ucapan** | form + `rsvps[]` |
+| 10 | **Gift / Hadiah** (opsional) | `accounts[]` |
+| 11 | **Turut Mengundang** (opsional) | `families[]` |
+| 12 | **Footer / Penutup** | `meta.footerPhoto`, nama, tanggal |
 
 Elemen tetap (muncul setelah cover dibuka): **tombol musik** & **bottom-nav** (Home · Couple · Acara · Galeri · RSVP · Hadiah).
 
@@ -117,6 +119,23 @@ Menampilkan ucapan tamu, tiap item:
 
 Form kirim ucapan: sediakan input **Nama**, pilihan **Hadir/Berhalangan**, **textarea ucapan**,
 dan tombol kirim. (Runtime menyediakan fungsi submit — lihat bagian 5.)
+
+### Live Streaming — `data.livestreamPlatforms` (array, opsional)
+Tampilkan section ini **hanya jika** `data.livestreamEnabled === true`. Tiap item:
+| Field | Isi |
+|-------|-----|
+| `type` | Nama platform (cth: "YouTube Live", "Instagram Live") |
+| `url` | Tautan siaran langsung |
+
+Sediakan tombol "Saksikan / Tonton Live" yang membuka `url`. Untuk yang berhalangan hadir.
+
+### Turut Mengundang — `data.families` (array, opsional)
+Tampilkan section ini **hanya jika** `data.turutMengundangEnabled === true` dan ada anggota terisi.
+Tiap item:
+| Field | Isi |
+|-------|-----|
+| `side` | Nama pihak keluarga (cth: "Keluarga Pria") |
+| `members` | Array nama anggota keluarga (string[]) — abaikan yang kosong |
 
 ### Meta & foto — `data.meta`
 | Field | Isi |

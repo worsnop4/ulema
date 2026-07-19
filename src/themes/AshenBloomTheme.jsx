@@ -391,7 +391,27 @@ const Gift = ({ data }) => {
   )
 }
 
-// ─── 10. TURUT MENGUNDANG (optional) ─────────────────────────────
+// ─── LIVE STREAMING (optional) ───────────────────────────────────
+const LiveStream = ({ data }) => {
+  const platforms = data?.livestreamEnabled ? (data?.livestreamPlatforms || []).filter(p => p.url) : []
+  if (!platforms.length) return null
+  return (
+    <section style={{ padding: '78px 28px 88px', background: c.paper }}>
+      <Reveal className="text-center">
+        <Kicker>Live Streaming</Kicker>
+        <Script style={{ fontSize: 40, marginTop: 10 }}>Saksikan Bersama</Script>
+        <p style={{ margin: '14px auto 0', maxWidth: 330, fontFamily: F.sans, fontSize: 13.5, fontWeight: 300, lineHeight: 1.75, color: c.muted }}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
+      </Reveal>
+      <div className="flex flex-col items-center" style={{ gap: 12, marginTop: 24 }}>
+        {platforms.map((p, i) => (
+          <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" className="inline-block uppercase" style={{ ...btnPill, fontSize: 11.5, letterSpacing: '0.2em', padding: '12px 26px' }}>{p.type || 'Tonton Live'}</a>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ─── 11. TURUT MENGUNDANG (optional) ─────────────────────────────
 const TurutMengundang = ({ data }) => {
   if (!data?.turutMengundangEnabled) return null
   const families = (data?.families || [])
@@ -486,6 +506,7 @@ export default function AshenBloomTheme({
             <LoveStory data={data} />
             <Dresscode data={data} />
             <Gallery data={data} />
+            <LiveStream data={data} />
             <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
             <TurutMengundang data={data} />

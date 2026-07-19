@@ -703,6 +703,26 @@ export default function BaseThemeEngine({
               </section>
             )}
 
+            {/* ══════════  LIVE STREAMING  ══════════ */}
+            {data.livestreamEnabled && data.livestreamPlatforms && data.livestreamPlatforms.some(p => p.url) && (
+              <section id="livestream" className={`py-20 px-6 border-t ${config.global.borderClass} ${config.global.sectionBg}`}>
+                <Reveal className="max-w-md mx-auto text-center">
+                  <span className={config.global.labelClass}>LIVE STREAMING</span>
+                  <h2 className={`${config.global.headingClass} mb-4`}>Saksikan Bersama</h2>
+                  <p className={`${config.global.textSecondary} text-sm font-light leading-relaxed mb-7 max-w-xs mx-auto`}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
+                  <div className="flex flex-col gap-3 items-center">
+                    {data.livestreamPlatforms.filter(p => p.url).map((p, i) => (
+                      <a key={i} href={p.url} target="_blank" rel="noopener noreferrer"
+                        className={`inline-flex items-center justify-center gap-2 py-3 px-8 ${config.global.rounded} font-medium text-[10px] tracking-widest uppercase transition-all border ${config.global.borderClass} ${config.global.textPrimary} hover:opacity-80`}
+                        style={config.global.primaryButtonColor ? { background: config.global.primaryButtonColor, color: '#fff', borderColor: config.global.primaryButtonColor, borderRadius: '12px' } : { background: 'transparent' }}>
+                        {p.type || 'Tonton Live'}
+                      </a>
+                    ))}
+                  </div>
+                </Reveal>
+              </section>
+            )}
+
             {/* ══════════  TURUT MENGUNDANG  ══════════ */}
             {data.turutMengundangEnabled && data.families && data.families.some(f => f.members.some(m => m.trim() !== '')) && (
               <section id="turut-mengundang" className={`py-20 px-6 border-t ${config.global.borderClass} ${config.global.sectionAltBg}`}>
