@@ -48,6 +48,12 @@ const glass = (alpha = 0.08) => ({
   WebkitBackdropFilter: 'blur(14px)',
 })
 
+// Frosted-glass "condensation" texture overlay (real ornament asset).
+const A = { condensation: '/themes/glass-condensation.png' }
+const GlassTexture = ({ opacity = 0.12 }) => (
+  <div className="absolute inset-0 pointer-events-none" style={{ background: `url("${A.condensation}") center/cover`, opacity, mixBlendMode: 'screen' }} />
+)
+
 // ─── DATE HELPERS ────────────────────────────────────────────────
 const ID_DAYS = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 const ID_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -153,9 +159,12 @@ const Cover = ({ data, groomNick, brideNick, dateLabel, guestName, handleOpen, a
           <div style={{ fontFamily: F.serif, fontSize: 15, letterSpacing: '0.3em', color: c.soft }}>{dateLabel}</div>
         </motion.div>
         <motion.div {...beat(1.6)} className="flex flex-col items-center">
-          <div style={{ margin: '34px auto 26px', maxWidth: 300, borderRadius: 20, padding: '18px 22px', ...glass(0.09) }}>
-            <div className="uppercase" style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '0.34em', color: 'rgba(238,242,245,0.6)' }}>Kepada Yth.</div>
-            <div style={{ fontFamily: F.serif, fontSize: 24, marginTop: 8, color: c.ink }}>{guestName}</div>
+          <div className="relative overflow-hidden" style={{ margin: '34px auto 26px', maxWidth: 300, borderRadius: 20, padding: '18px 22px', ...glass(0.09) }}>
+            <GlassTexture opacity={0.14} />
+            <div className="relative" style={{ zIndex: 1 }}>
+              <div className="uppercase" style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '0.34em', color: 'rgba(238,242,245,0.6)' }}>Kepada Yth.</div>
+              <div style={{ fontFamily: F.serif, fontSize: 24, marginTop: 8, color: c.ink }}>{guestName}</div>
+            </div>
           </div>
           <button onClick={handleOpen} style={{ ...PILL, fontSize: 12, letterSpacing: '0.28em', padding: '15px 38px', border: '1px solid rgba(220,230,237,0.5)', background: 'linear-gradient(120deg, rgba(233,239,244,.16), rgba(233,239,244,.05))', color: c.ink, backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
             Buka Undangan
@@ -375,16 +384,19 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
   return (
     <section id="mm-rsvp" className="relative overflow-hidden" style={{ background: c.bgDeep, padding: '88px 24px 80px' }}>
       <SectionHead eyebrow="RSVP & Ucapan" title="Doa & restu Anda" />
-      <Reveal style={{ borderRadius: 22, padding: '26px 22px', ...glass(0.06) }}>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder="Nama Anda" style={field} />
-        <div className="flex gap-2.5" style={{ margin: '14px 0' }}>
-          <button type="button" onClick={() => setAtt('hadir')} style={toggle(att === 'hadir')}>Hadir</button>
-          <button type="button" onClick={() => setAtt('tidak_hadir')} style={toggle(att === 'tidak_hadir')}>Berhalangan</button>
+      <Reveal className="relative overflow-hidden" style={{ borderRadius: 22, padding: '26px 22px', ...glass(0.06) }}>
+        <GlassTexture opacity={0.1} />
+        <div className="relative" style={{ zIndex: 1 }}>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Nama Anda" style={field} />
+          <div className="flex gap-2.5" style={{ margin: '14px 0' }}>
+            <button type="button" onClick={() => setAtt('hadir')} style={toggle(att === 'hadir')}>Hadir</button>
+            <button type="button" onClick={() => setAtt('tidak_hadir')} style={toggle(att === 'tidak_hadir')}>Berhalangan</button>
+          </div>
+          <textarea value={wish} onChange={e => setWish(e.target.value)} rows={4} placeholder="Tulis doa & ucapan untuk kedua mempelai…" style={{ ...field, lineHeight: 1.6, resize: 'vertical' }} />
+          <button onClick={submit} disabled={busy} className="uppercase" style={{ width: '100%', marginTop: 14, padding: '15px 0', borderRadius: 999, border: 'none', background: `linear-gradient(120deg, ${c.silver1}, ${c.silver2})`, color: c.btnText, fontFamily: F.sans, fontSize: 12, letterSpacing: '0.26em', fontWeight: 500, cursor: 'pointer', opacity: busy ? 0.7 : 1 }}>
+            {busy ? 'Mengirim…' : 'Kirim Ucapan'}
+          </button>
         </div>
-        <textarea value={wish} onChange={e => setWish(e.target.value)} rows={4} placeholder="Tulis doa & ucapan untuk kedua mempelai…" style={{ ...field, lineHeight: 1.6, resize: 'vertical' }} />
-        <button onClick={submit} disabled={busy} className="uppercase" style={{ width: '100%', marginTop: 14, padding: '15px 0', borderRadius: 999, border: 'none', background: `linear-gradient(120deg, ${c.silver1}, ${c.silver2})`, color: c.btnText, fontFamily: F.sans, fontSize: 12, letterSpacing: '0.26em', fontWeight: 500, cursor: 'pointer', opacity: busy ? 0.7 : 1 }}>
-          {busy ? 'Mengirim…' : 'Kirim Ucapan'}
-        </button>
       </Reveal>
       {list.length > 0 && (
         <Reveal style={{ marginTop: 34 }}>
