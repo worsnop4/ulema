@@ -159,7 +159,7 @@ const Quote = ({ data }) => {
     <Reveal className="text-center" style={{ padding: '0 34px 92px', background: c.paper }}>
       <Kicker>02 · Kalam</Kicker>
       <p style={{ margin: '22px 0 0', fontFamily: F.serif, fontSize: 19, lineHeight: 1.75, color: '#57534b' }}>&ldquo;{data.quote}&rdquo;</p>
-      <img src={A.ornamentTerra} alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 190, marginTop: 26, opacity: 0.92 }} />
+      <img src={A.ornamentTerra} alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} style={{ width: 190, margin: '26px auto 0', display: 'block', opacity: 0.92 }} />
     </Reveal>
   )
 }
@@ -256,6 +256,11 @@ const LoveStory = ({ data }) => {
             {st.year && <Script style={{ fontSize: 26, color: c.terra, lineHeight: 1 }}>{st.year}</Script>}
             {st.title && <div style={{ fontFamily: F.serif, fontSize: 18, marginTop: 6 }}>{st.title}</div>}
             <p style={{ margin: '7px 0 0', fontFamily: F.sans, fontSize: 13.5, fontWeight: 300, lineHeight: 1.75, color: c.muted }}>{st.desc}</p>
+            {st.photo && (
+              <div style={{ marginTop: 12, borderRadius: 14, overflow: 'hidden', border: `1px solid ${c.line2}`, maxWidth: 250 }}>
+                <img src={st.photo} alt={st.title || ''} className="w-full object-cover" style={{ aspectRatio: '4 / 3', display: 'block' }} />
+              </div>
+            )}
           </Reveal>
         ))}
       </div>
@@ -386,9 +391,41 @@ const Gift = ({ data }) => {
   )
 }
 
-// ─── 10. FOOTER ──────────────────────────────────────────────────
-const Footer = ({ groomNick, brideNick, heroDate }) => (
+// ─── 10. TURUT MENGUNDANG (optional) ─────────────────────────────
+const TurutMengundang = ({ data }) => {
+  if (!data?.turutMengundangEnabled) return null
+  const families = (data?.families || [])
+    .map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) }))
+    .filter(f => f.members.length)
+  if (!families.length) return null
+  return (
+    <section style={{ padding: '78px 28px 88px', background: c.paper }}>
+      <Reveal className="text-center">
+        <Kicker>10 · Turut Mengundang</Kicker>
+        <Script style={{ fontSize: 38, marginTop: 10 }}>Keluarga Besar</Script>
+      </Reveal>
+      <Reveal style={{ marginTop: 30, display: 'flex', flexDirection: 'column', gap: 26 }}>
+        {families.map((fam, i) => (
+          <div key={fam.id || i} className="text-center">
+            {fam.side && <div style={{ fontFamily: F.serif, fontSize: 17, color: c.terra }}>{fam.side}</div>}
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {fam.members.map((m, j) => (
+                <div key={j} style={{ fontFamily: F.sans, fontSize: 14, fontWeight: 300, color: c.muted }}>{m}</div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </Reveal>
+    </section>
+  )
+}
+
+// ─── 11. FOOTER ──────────────────────────────────────────────────
+const Footer = ({ data, groomNick, brideNick, heroDate }) => (
   <section className="relative overflow-hidden text-center" style={{ padding: '84px 30px 130px', background: `${c.paper} url("${A.footerBg}") center/cover no-repeat` }}>
+    {data?.meta?.footerPhoto && (
+      <Framed src={data.meta.footerPhoto} radius="50%" inner="50%" style={{ width: 150, height: 150, margin: '0 auto 28px' }} />
+    )}
     <p style={{ margin: '0 auto', maxWidth: 330, fontFamily: F.sans, fontSize: 13.5, fontWeight: 300, lineHeight: 1.8, color: '#57534b' }}>Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu.</p>
     <Script style={{ marginTop: 26, fontSize: 30, color: c.terra }}>Wassalamu&rsquo;alaikum Wr. Wb.</Script>
     <div className="uppercase" style={{ marginTop: 22, fontFamily: F.sans, fontSize: 11, letterSpacing: '0.32em', color: c.ash }}>Kami yang berbahagia</div>
@@ -451,7 +488,8 @@ export default function AshenBloomTheme({
             <Gallery data={data} />
             <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
-            <Footer groomNick={groomNick} brideNick={brideNick} heroDate={heroDate} />
+            <TurutMengundang data={data} />
+            <Footer data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate} />
 
             {/* Music toggle */}
             {data?.music !== false && (
