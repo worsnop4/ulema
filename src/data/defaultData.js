@@ -58,6 +58,7 @@ export const DEFAULT_THEMES = [
   { id: 15, name: 'Botanical Ivory', code: 'SPL-004', emoji: '🌿', thumbnail: '/themes/Special/theme-10/bg2.jpg', layout: 'botanical-ivory', colors: ['#3d4a3a', '#c9a24b', '#faf7f2'], desc: 'Tema ivory-sage lembut dengan aksen emas, tipografi serif elegan, dan ornamen garis minimalis', category: 'Special' },
   { id: 16, name: 'Aurum Noir', code: 'LUX-005', emoji: '🖤', thumbnail: '', layout: 'aurum-noir', colors: ['#0a0807', '#d4a96a', '#f4ede2'], desc: 'Tema cinematic dark luxury hitam & emas: cover sinematik, Ken Burns, partikel emas, countdown flip, dan tipografi Cormorant elegan', category: 'Luxury', themeType: 'photo' },
   { id: 17, name: 'Morning Mist Luxe', code: 'LUX-006', emoji: '🌫️', thumbnail: '', layout: 'morning-mist-luxe', colors: ['#0e141b', '#c9d4dc', '#eef2f5'], desc: 'Tema luxury kabut pagi sinematik: gelap berkabut, aksen silver-champagne, panel kaca berembun, dan tipografi script Ephesis elegan', category: 'Luxury', themeType: 'photo' },
+  { id: 18, name: 'Ashen Bloom', code: 'SPL-005', emoji: '🌸', thumbnail: '', layout: 'ashen-bloom', colors: ['#eceae6', '#b07a52', '#33312d'], desc: 'Tema Special ivory-ash lembut dengan floral watercolor terracotta, foto lengkung, tipografi Marcellus & Pinyon Script yang elegan', category: 'Special', themeType: 'photo' },
 ]
 
 export const DEFAULT_ILLUSTRATIONS = [

@@ -25,6 +25,7 @@ const CinematicShadowTheme = lazy(() => import('../themes/CinematicShadowTheme')
 const BotanicalIvoryTheme = lazy(() => import('../themes/BotanicalIvoryTheme'))
 const AurumNoirTheme = lazy(() => import('../themes/AurumNoirTheme'))
 const MorningMistLuxeTheme = lazy(() => import('../themes/MorningMistLuxeTheme'))
+const AshenBloomTheme = lazy(() => import('../themes/AshenBloomTheme'))
 
 const THEME_COMPONENTS = {
   [THEMES.WATERCOLOR_FLORAL]: WatercolorFloralTheme,
@@ -42,6 +43,7 @@ const THEME_COMPONENTS = {
   [THEMES.BOTANICAL_IVORY]: BotanicalIvoryTheme,
   [THEMES.AURUM_NOIR]: AurumNoirTheme,
   [THEMES.MORNING_MIST]: MorningMistLuxeTheme,
+  [THEMES.ASHEN_BLOOM]: AshenBloomTheme,
 }
 
 // ── Countdown Hook ─────────────────────────────────────────────

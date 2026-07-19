@@ -28,6 +28,8 @@ export default function InvitationLayout({
                ? 'radial-gradient(circle, #151009 0%, #0a0807 100%)'
              : layout === THEMES.MORNING_MIST
                ? 'radial-gradient(circle, #1b232d 0%, #0e141b 100%)'
+             : layout === THEMES.ASHEN_BLOOM
+               ? '#eceae6'
                : config.global?.desktopBg
                  ? config.global.desktopBg
                : layout === THEMES.PLAYFUL_ILLUSTRATIVE
