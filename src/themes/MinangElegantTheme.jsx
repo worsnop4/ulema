@@ -743,8 +743,8 @@ const TurutMengundangSection = ({ data }) => {
             const validMembers = (fam.members || []).filter(m => m.trim() !== '')
             if (validMembers.length === 0) return null
             return (
-              <div key={fam.id || fam.title || i} className="flex flex-col items-center">
-                {fam.title && <h3 className="text-sm font-bold tracking-widest uppercase mb-3 opacity-80" style={{ color: c.maroon }}>{fam.title}</h3>}
+              <div key={fam.id || fam.side || i} className="flex flex-col items-center">
+                {fam.side && <h3 className="text-sm font-bold tracking-widest uppercase mb-3 opacity-80" style={{ color: c.maroon }}>{fam.side}</h3>}
                 <div className="flex flex-col gap-1.5">
                   {validMembers.map((m, j) => (
                     <p key={`${m}-${j}`} className="text-sm font-sans opacity-75 leading-relaxed" style={{ color: c.text }}>{m}</p>
