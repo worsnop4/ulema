@@ -706,6 +706,26 @@ const GiftSection = ({ data }) => {
   )
 }
 
+// ─── LIVE STREAMING SECTION ──────────────────────────────────────
+const LiveStreamSection = ({ data }) => {
+  const platforms = data?.livestreamEnabled ? (data?.livestreamPlatforms || []).filter(p => p.url) : []
+  if (!platforms.length) return null
+  return (
+    <section className="px-6 relative z-10">
+      <Glass className="p-10 text-center flex flex-col items-center">
+        <p className="text-[13px] tracking-[0.3em] uppercase mb-2 font-sans opacity-60" style={{ color: c.text }}>Live Streaming</p>
+        <h2 className="mb-4" style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.2rem', color: c.maroon, fontWeight: 400, fontStyle: 'italic' }}>Saksikan Bersama</h2>
+        <p className="text-sm font-sans opacity-75 leading-relaxed mb-6" style={{ color: c.text, maxWidth: 260 }}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
+        <div className="flex flex-col gap-3 items-center">
+          {platforms.map((p, i) => (
+            <a key={i} href={p.url} target="_blank" rel="noreferrer" className="text-xs tracking-[0.25em] uppercase font-sans font-semibold px-6 py-2.5 rounded-full" style={{ backgroundColor: c.maroon, color: '#fff' }}>{p.type || 'Tonton Live'}</a>
+          ))}
+        </div>
+      </Glass>
+    </section>
+  )
+}
+
 // ─── TURUT MENGUNDANG SECTION ────────────────────────────────────
 const TurutMengundangSection = ({ data }) => {
   if (!data?.turutMengundangEnabled || !data?.families || !data.families.some(f => f.members?.some(m => m.trim() !== ''))) return null
@@ -843,6 +863,7 @@ export default function MinangElegantTheme({
               <GallerySection data={data} />
               <GiftSection data={data} />
               <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
+              <LiveStreamSection data={data} />
               <TurutMengundangSection data={data} />
               <FooterSection bride={bride} groom={groom} />
             </div>

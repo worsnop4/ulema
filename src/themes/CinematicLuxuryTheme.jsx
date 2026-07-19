@@ -359,6 +359,40 @@ export default function CinematicLuxuryTheme({
           </div>
         </section>
 
+        {data.livestreamEnabled && (data.livestreamPlatforms || []).some(p => p.url) && (
+          <section className="py-20 px-6 text-center">
+            <FadeUp>
+              <h2 className="font-serif text-2xl mb-4" style={{ color: luxGold }}>Live Streaming</h2>
+              <p className="text-sm mb-8 max-w-sm mx-auto" style={{ color: luxMuted }}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
+              <div className="flex flex-col gap-3 items-center">
+                {(data.livestreamPlatforms || []).filter(p => p.url).map((p, i) => (
+                  <a key={i} href={p.url} target="_blank" rel="noreferrer" className="text-[11px] tracking-[0.25em] uppercase px-7 py-2.5" style={{ border: `1px solid ${luxGold}`, color: luxGold }}>{p.type || 'Tonton Live'}</a>
+                ))}
+              </div>
+            </FadeUp>
+          </section>
+        )}
+
+        {data.turutMengundangEnabled && (data.families || []).some(f => (f.members || []).some(m => m && m.trim())) && (
+          <section className="py-20 px-6 text-center">
+            <FadeUp>
+              <h2 className="font-serif text-2xl mb-8" style={{ color: luxGold }}>Turut Mengundang</h2>
+              <div className="flex flex-col gap-6 max-w-xs mx-auto">
+                {(data.families || []).map((fam, i) => {
+                  const members = (fam.members || []).filter(m => m && m.trim())
+                  if (!members.length) return null
+                  return (
+                    <div key={fam.id || i}>
+                      {fam.side && <p className="font-serif text-lg mb-2" style={{ color: luxGold }}>{fam.side}</p>}
+                      {members.map((m, j) => (<p key={j} className="text-sm" style={{ color: luxMuted, lineHeight: 1.9 }}>{m}</p>))}
+                    </div>
+                  )
+                })}
+              </div>
+            </FadeUp>
+          </section>
+        )}
+
         <section className="py-24 px-6 text-center">
           <FadeUp>
             <p className="text-sm mb-4" style={{ color: luxMuted }}>Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.</p>

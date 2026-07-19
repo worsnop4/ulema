@@ -484,6 +484,28 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
 }
 
 // ─── 12. FOOTER ──────────────────────────────────────────────────
+// ─── TURUT MENGUNDANG (optional) ─────────────────────────────────
+const TurutMengundangSection = ({ data }) => {
+  if (!data?.turutMengundangEnabled) return null
+  const families = (data?.families || []).map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) })).filter(f => f.members.length)
+  if (!families.length) return null
+  return (
+    <section style={{ background: '#ffffff', padding: '56px 28px', textAlign: 'center' }}>
+      <Diamond />
+      <Eyebrow className="mb-3">Turut Mengundang</Eyebrow>
+      <Title size="1.8rem" className="mb-8" style={{ marginTop: 6 }}>Keluarga Besar</Title>
+      <div className="flex flex-col" style={{ gap: 24, maxWidth: 320, margin: '0 auto' }}>
+        {families.map((fam, i) => (
+          <div key={fam.id || i}>
+            {fam.side && <p className="font-serif" style={{ fontSize: 17, color: c.gold, marginBottom: 8 }}>{fam.side}</p>}
+            {fam.members.map((m, j) => (<p key={j} className="font-sans" style={{ fontSize: 14, color: c.muted, lineHeight: 1.9, margin: 0 }}>{m}</p>))}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 const FooterSection = ({ bride, groom }) => (
   <section className="relative text-center" style={{ padding: '56px 28px', color: c.cream, background: `linear-gradient(180deg, ${c.sage}, ${c.sageDeep})` }}>
     <Corners opacity={0.5} />
@@ -596,6 +618,7 @@ export default function BotanicalIvoryTheme({
             <GallerySection data={data} />
             <GiftSection data={data} />
             <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
+            <TurutMengundangSection data={data} />
             <FooterSection bride={bride} groom={groom} />
             <StickyNav musicEnabled={musicEnabled} musicPlaying={musicPlaying} setMusicPlaying={setMusicPlaying} />
           </motion.div>

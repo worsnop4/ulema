@@ -554,6 +554,49 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
 }
 
 // ─── 10. FOOTER ──────────────────────────────────────────────────
+// ─── LIVE STREAMING (optional) ───────────────────────────────────
+const LiveStreamSection = ({ data }) => {
+  const platforms = data?.livestreamEnabled ? (data?.livestreamPlatforms || []).filter(p => p.url) : []
+  if (!platforms.length) return null
+  return (
+    <section className="w-full py-6 px-4">
+      <Glass className="p-8 flex flex-col items-center text-center">
+        <Label>Live Streaming</Label>
+        <Heading className="mb-4" style={{ fontSize: '2.2rem' }}>Saksikan Bersama</Heading>
+        <p className="text-[13px] leading-relaxed font-sans mb-6" style={{ color: c.text, opacity: 0.75, maxWidth: 260 }}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
+        <div className="flex flex-col gap-3 items-center">
+          {platforms.map((p, i) => (
+            <a key={i} href={p.url} target="_blank" rel="noreferrer" className="text-[12px] tracking-[0.25em] uppercase font-sans font-semibold px-6 py-2.5 rounded-full" style={{ background: `linear-gradient(135deg, ${c.gold}, ${c.goldSoft})`, color: c.wineDeep }}>{p.type || 'Tonton Live'}</a>
+          ))}
+        </div>
+      </Glass>
+    </section>
+  )
+}
+
+// ─── TURUT MENGUNDANG (optional) ─────────────────────────────────
+const TurutMengundangSection = ({ data }) => {
+  if (!data?.turutMengundangEnabled) return null
+  const families = (data?.families || []).map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) })).filter(f => f.members.length)
+  if (!families.length) return null
+  return (
+    <section className="w-full py-6 px-4">
+      <Glass className="p-8">
+        <div className="text-center"><Label>Turut Mengundang</Label></div>
+        <Heading className="text-center mb-8" style={{ fontSize: '2.2rem' }}>Keluarga Besar</Heading>
+        <div className="flex flex-col gap-6">
+          {families.map((fam, i) => (
+            <div key={fam.id || i} className="text-center">
+              {fam.side && <p className="font-semibold text-sm mb-2 font-sans" style={{ color: c.gold }}>{fam.side}</p>}
+              {fam.members.map((m, j) => (<p key={j} className="text-[13px] font-sans" style={{ color: c.text, opacity: 0.8, lineHeight: 1.9 }}>{m}</p>))}
+            </div>
+          ))}
+        </div>
+      </Glass>
+    </section>
+  )
+}
+
 const FooterSection = ({ bride, groom }) => (
   <section className="w-full px-4 pb-10 pt-6 relative">
     <Glass className="p-10 flex flex-col items-center text-center">
@@ -658,6 +701,8 @@ export default function BordeauxLuxeTheme({
               <GallerySection data={data} />
               <GiftSection data={data} />
               <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
+              <LiveStreamSection data={data} />
+              <TurutMengundangSection data={data} />
               <FooterSection bride={bride} groom={groom} />
             </div>
           </motion.div>

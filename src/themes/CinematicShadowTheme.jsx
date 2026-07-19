@@ -466,7 +466,8 @@ const EventsSection = ({ akad, resepsi }) => (
 
 // ─── 6. LIVE STREAMING ───────────────────────────────────────────
 const LiveStreamingSection = ({ data }) => {
-  if (!data?.streamingUrl) return null
+  const platforms = data?.livestreamEnabled ? (data?.livestreamPlatforms || []).filter(p => p.url) : []
+  if (!platforms.length) return null
   return (
     <section className="w-full py-16 px-6 text-center" style={{ background: c.bgDark }}>
       <Reveal variant="inv-fade-up" className="flex flex-col items-center">
@@ -477,11 +478,37 @@ const LiveStreamingSection = ({ data }) => {
           style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, color: `${c.textLight}bb` }}>
           Bagi Bapak/Ibu/Saudara/i yang berhalangan hadir, kami mengundang untuk menyaksikan jalannya acara secara langsung melalui tautan berikut.
         </p>
-        <a href={data.streamingUrl} target="_blank" rel="noreferrer"
-          className="text-[11px] tracking-[0.25em] uppercase px-7 py-2.5"
-          style={{ fontFamily: "'Lato', sans-serif", border: `1px solid ${c.gold}`, color: c.gold }}>
-          Tonton Live Streaming
-        </a>
+        <div className="flex flex-col gap-3 items-center">
+          {platforms.map((p, i) => (
+            <a key={i} href={p.url} target="_blank" rel="noreferrer"
+              className="text-[11px] tracking-[0.25em] uppercase px-7 py-2.5"
+              style={{ fontFamily: "'Lato', sans-serif", border: `1px solid ${c.gold}`, color: c.gold }}>
+              {p.type || 'Tonton Live Streaming'}
+            </a>
+          ))}
+        </div>
+      </Reveal>
+    </section>
+  )
+}
+
+// ─── TURUT MENGUNDANG (optional) ─────────────────────────────────
+const TurutMengundangSection = ({ data }) => {
+  if (!data?.turutMengundangEnabled) return null
+  const families = (data?.families || []).map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) })).filter(f => f.members.length)
+  if (!families.length) return null
+  return (
+    <section className="w-full py-16 px-6 text-center" style={{ background: c.bgDark }}>
+      <Reveal variant="inv-fade-up" className="flex flex-col items-center">
+        <h2 className="mb-8" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.15em', fontSize: '1.5rem', color: c.textLight }}>Turut Mengundang</h2>
+        <div className="flex flex-col gap-6" style={{ maxWidth: 320 }}>
+          {families.map((fam, i) => (
+            <div key={fam.id || i}>
+              {fam.side && <p className="mb-2" style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.05rem', color: c.gold }}>{fam.side}</p>}
+              {fam.members.map((m, j) => (<p key={j} className="text-sm leading-relaxed" style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, color: `${c.textLight}cc` }}>{m}</p>))}
+            </div>
+          ))}
+        </div>
       </Reveal>
     </section>
   )
@@ -1057,6 +1084,7 @@ export default function CinematicShadowTheme({
             <GallerySection data={data} />
             <GiftSection data={data} />
             <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
+            <TurutMengundangSection data={data} />
             <ClosingSection data={data} bride={bride} groom={groom} />
 
             {data?.music !== false && <MusicToggleButton audioRef={audioRef} />}
