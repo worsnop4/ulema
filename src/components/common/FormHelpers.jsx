@@ -116,13 +116,15 @@ export function PhotoUploadBox({ label, value, onChange, accept = 'image/*' }) {
           <div className="relative w-full">
             <img src={value} alt="preview" className="w-full h-32 object-cover rounded-xl" />
             <div className="absolute inset-0 rounded-xl bg-black/0 hover:bg-black/50 transition-all flex items-center justify-center gap-2 opacity-0 hover:opacity-100">
-              <button 
+              <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); inputRef.current.click(); }}
                 className="text-white text-[10px] font-bold bg-slate-800/80 hover:bg-brand-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
               >
                 <Upload size={12} /> Ganti
               </button>
-              <button 
+              <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); setCropFileUrl(value); }}
                 className="text-white text-[10px] font-bold bg-slate-800/80 hover:bg-brand-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
               >
@@ -207,6 +209,7 @@ export function VideoUploadBox({ label, value, onChange, helperText }) {
           <video src={value} autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80" />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
             <button
+              type="button"
               onClick={() => onChange('')}
               className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold tracking-wider uppercase rounded-xl transition-transform hover:scale-105"
             >
@@ -377,7 +380,7 @@ export function SaveButton({ onClick }) {
     setTimeout(() => setSaved(false), 2000)
   }
   return (
-    <button onClick={handle} className={`btn-primary ${saved ? 'bg-green-600 hover:bg-green-600' : ''}`}>
+    <button type="button" onClick={handle} className={`btn-primary ${saved ? 'bg-green-600 hover:bg-green-600' : ''}`}>
       {saved ? <><Check size={14} /> Tersimpan!</> : <><Save size={14} /> Simpan Perubahan</>}
     </button>
   )
