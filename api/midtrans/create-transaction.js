@@ -10,6 +10,7 @@
 // Environment is controlled by MIDTRANS_IS_PRODUCTION ("true" = production).
 
 import { createClient } from '@supabase/supabase-js'
+import { sendEmail, emailShell, emailButton, emailHeading } from '../_lib/resend.js'
 
 // Mirror of src/config/constants.js (functions can't import from src on Vercel).
 const REFERRAL_DISCOUNT_AMOUNT = 10000 // Rp discount for the buyer
@@ -120,6 +121,29 @@ export default async function handler(req, res) {
     if (!snapResp.ok) {
       await supabase.from('transactions').update({ status: 'rejected', rejection_reason: 'Gagal membuat sesi pembayaran' }).eq('id', tx.id)
       return res.status(snapResp.status).json({ error: snap?.error_messages || 'Gagal membuat pembayaran.' })
+    }
+
+    // Invoice/tagihan email — best-effort, must never block the checkout response.
+    try {
+      const fmtRp = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`
+      const html = emailShell({
+        preheader: `Tagihan undangan Ulema kategori ${packageName} — ${fmtRp(amount)}`,
+        bodyHtml: `
+          ${emailHeading('Tagihan Undangan Anda')}
+          <p style="margin:0 0 20px; font-family:Arial, sans-serif; font-size:14px; line-height:1.7; color:#334155;">Halo ${user.user_metadata?.name || 'Sahabat Ulema'}, berikut rincian tagihan untuk melanjutkan pembuatan undangan digitalmu di Ulema.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial, sans-serif; font-size:13px; color:#334155; border-collapse:collapse;">
+            <tr><td style="padding:8px 0; color:#94a3b8;">Kategori Paket</td><td style="padding:8px 0; text-align:right;">${packageName}</td></tr>
+            <tr><td style="padding:8px 0; color:#94a3b8;">Harga Paket</td><td style="padding:8px 0; text-align:right;">${fmtRp(basePrice)}</td></tr>
+            ${discount > 0 ? `<tr><td style="padding:8px 0; color:#94a3b8;">Diskon${appliedVoucher ? ` (${appliedVoucher})` : ''}</td><td style="padding:8px 0; text-align:right; color:#0d9488;">- ${fmtRp(discount)}</td></tr>` : ''}
+            <tr><td style="padding:12px 0 0; border-top:1px solid #F5E6DA; font-weight:700; color:#1C232E;">Total Bayar</td><td style="padding:12px 0 0; border-top:1px solid #F5E6DA; text-align:right; font-weight:700; color:#1C232E;">${fmtRp(amount)}</td></tr>
+          </table>
+          <div style="margin:28px 0 8px;">${emailButton('Bayar Sekarang', snap.redirect_url || `${origin}/dashboard/transactions`)}</div>
+          <p style="margin:0; font-family:Arial, sans-serif; font-size:12px; line-height:1.6; color:#94a3b8;">No. Order: ${tx.id}</p>
+        `,
+      })
+      await sendEmail({ to: user.email, subject: `Tagihan Undangan Ulema — ${fmtRp(amount)}`, html })
+    } catch (emailErr) {
+      console.error('[email] gagal mengirim tagihan:', emailErr)
     }
 
     return res.status(200).json({ token: snap.token, orderId: tx.id, amount })

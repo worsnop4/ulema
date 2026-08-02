@@ -128,6 +128,13 @@ export default function LoginPage() {
 
         // Temporary fallback for existing components that rely on local storage (Phase 4 will remove this)
         storageService.setItem(`inviter_template_data_${authData.user.email}`, initialData)
+
+        // Fire-and-forget welcome email — must never block or fail registration.
+        fetch('/api/email/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: authData.user.id, email: authData.user.email }),
+        }).catch(() => {})
       }
     } catch (err) {
       setError('Terjadi kesalahan saat pendaftaran. Coba lagi.')
