@@ -198,13 +198,13 @@ const CoverPhotoFrame = ({ src, animateClose }) => (
       width: '50%', transformOrigin: 'left center', transformStyle: 'preserve-3d',
       animation: animateClose ? 'op-doorL 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
     }}>
-      {src && <img src={src} alt="" className="absolute top-0 left-0 h-full object-cover" style={{ width: COVER_PHOTO_W }} />}
+      {src && <img src={src} alt="" className="absolute top-0 left-0 h-full object-cover" style={{ width: COVER_PHOTO_W, maxWidth: 'none' }} />}
     </div>
     <div className="absolute top-0 right-0 bottom-0 pointer-events-none overflow-hidden" style={{
       width: '50%', transformOrigin: 'right center', transformStyle: 'preserve-3d',
       animation: animateClose ? 'op-doorR 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
     }}>
-      {src && <img src={src} alt="" className="absolute top-0 right-0 h-full object-cover" style={{ width: COVER_PHOTO_W }} />}
+      {src && <img src={src} alt="" className="absolute top-0 right-0 h-full object-cover" style={{ width: COVER_PHOTO_W, maxWidth: 'none' }} />}
     </div>
   </div>
 )
