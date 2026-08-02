@@ -184,20 +184,28 @@ const Divider = () => (
   </motion.svg>
 )
 
-// Small framed photo, visible on the closed cover, that mirrors the big
-// door mechanism — its two halves rotate open in sync with animateClose.
+// Framed photo, visible on the closed cover, that mirrors the big door
+// mechanism — its two halves rotate open in sync with animateClose. Each
+// half holds a FULL-size copy of the same object-fit:cover image, shifted
+// and clipped via overflow:hidden — this keeps the photo's natural aspect
+// ratio (unlike stretching a background-size trick across two half-boxes,
+// which distorts arbitrary user photos that aren't pre-cropped for it).
+const COVER_PHOTO_W = 208
+const COVER_PHOTO_H = 272
 const CoverPhotoFrame = ({ src, animateClose }) => (
-  <div className="relative mx-auto" style={{ width: 168, height: 206, borderRadius: '84px 84px 20px 20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,.5)', boxShadow: '0 20px 44px rgba(30,20,14,.35)', perspective: 700, background: placeholderBg }}>
-    <div className="absolute top-0 bottom-0 left-0 pointer-events-none" style={{
+  <div className="relative mx-auto" style={{ width: COVER_PHOTO_W, height: COVER_PHOTO_H, borderRadius: `${COVER_PHOTO_W / 2}px ${COVER_PHOTO_W / 2}px 24px 24px`, overflow: 'hidden', border: '1px solid rgba(255,255,255,.5)', boxShadow: '0 20px 44px rgba(30,20,14,.35)', perspective: 700, background: placeholderBg }}>
+    <div className="absolute top-0 left-0 bottom-0 pointer-events-none overflow-hidden" style={{
       width: '50%', transformOrigin: 'left center', transformStyle: 'preserve-3d',
-      backgroundImage: src ? `url("${src}")` : 'none', backgroundSize: '200% 100%', backgroundPosition: 'left center', backgroundRepeat: 'no-repeat',
       animation: animateClose ? 'op-doorL 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
-    }} />
-    <div className="absolute top-0 bottom-0 right-0 pointer-events-none" style={{
+    }}>
+      {src && <img src={src} alt="" className="absolute top-0 left-0 h-full object-cover" style={{ width: COVER_PHOTO_W }} />}
+    </div>
+    <div className="absolute top-0 right-0 bottom-0 pointer-events-none overflow-hidden" style={{
       width: '50%', transformOrigin: 'right center', transformStyle: 'preserve-3d',
-      backgroundImage: src ? `url("${src}")` : 'none', backgroundSize: '200% 100%', backgroundPosition: 'right center', backgroundRepeat: 'no-repeat',
       animation: animateClose ? 'op-doorR 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
-    }} />
+    }}>
+      {src && <img src={src} alt="" className="absolute top-0 right-0 h-full object-cover" style={{ width: COVER_PHOTO_W }} />}
+    </div>
   </div>
 )
 
@@ -225,7 +233,7 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
         <Filigree mirror={true} />
       </div>
 
-      <div className="absolute inset-0 flex flex-col items-center justify-end text-center" style={{ padding: '0 36px 66px', color: '#FFF8F0' }}>
+      <div className="absolute inset-0 flex flex-col items-center justify-end text-center" style={{ padding: '0 36px 110px', color: '#FFF8F0' }}>
         <p className="uppercase" style={{ margin: '0 0 12px', fontFamily: F.sans, fontSize: 10, letterSpacing: '.45em', color: c.muted2 }}>The Wedding Of</p>
         <CoverPhotoFrame src={data?.meta?.coverPhoto} animateClose={animateClose} />
         <h1 style={{
