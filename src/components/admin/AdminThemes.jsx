@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { getThemes, saveThemes, deleteTheme, refreshThemes } from '../../hooks/useSharedInvitation'
 import { upsertThemeDB, deleteThemeDB } from '../../services/themesService'
 import { storageService } from '../../services/storageService'
-import { PhotoUploadBox } from '../common/FormHelpers'
-import { Edit, Trash2, Check, Palette, Layout } from 'lucide-react'
+import { PhotoUploadBox, ToggleSwitch } from '../common/FormHelpers'
+import { Edit, Trash2, Check, Palette, Layout, Eye, EyeOff } from 'lucide-react'
 
 export default function AdminThemes() {
   const navigate = useNavigate()
@@ -110,6 +110,17 @@ export default function AdminThemes() {
       setThemeName('')
       setThemeDesc('')
     }
+  }
+
+  // Quick toggle straight from the card — doesn't require opening the full
+  // edit form. Hides/shows the theme on the public landing-page catalog
+  // only; it stays selectable for existing customers in the editor.
+  const handleToggleVisibility = (theme) => {
+    const updated = { ...theme, visible: theme.visible === false }
+    const updatedList = themes.map(t => (t.id === theme.id ? updated : t))
+    saveThemes(updatedList)
+    setThemes(updatedList)
+    syncThemeToDB(updated)
   }
 
   const handleCancelThemeEdit = () => {
@@ -336,6 +347,13 @@ export default function AdminThemes() {
                     {theme.colors?.map((c, i) => (
                       <div key={i} className="flex-1" style={{ background: c }} title={c} />
                     ))}
+                  </div>
+                  <div className="flex items-center justify-between px-0.5">
+                    <span className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
+                      {theme.visible === false ? <EyeOff size={12} className="text-slate-400" /> : <Eye size={12} className="text-emerald-600" />}
+                      Tampil di Landing Page
+                    </span>
+                    <ToggleSwitch checked={theme.visible !== false} onChange={() => handleToggleVisibility(theme)} />
                   </div>
                   <button onClick={() => handleEditDemoClick(theme.id)} className="w-full btn-secondary py-1.5 text-[11px] justify-center gap-1.5 bg-white border border-slate-200 shadow-sm">
                     <Layout size={12} className="text-brand-500" /> Edit Konten Demo Tema

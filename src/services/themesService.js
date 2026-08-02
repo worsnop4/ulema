@@ -18,6 +18,7 @@ function toApp(r) {
     colors: Array.isArray(r.colors) ? r.colors : [],
     desc: r.description || '',
     category: r.category || 'Special',
+    visible: r.visible !== false,
   }
   if (r.code) t.code = r.code
   if (r.theme_type) t.themeType = r.theme_type
@@ -37,6 +38,7 @@ function toRow(t) {
     description: t.desc || '',
     category: t.category || 'Special',
     theme_type: t.themeType || null,
+    visible: t.visible !== false,
   }
 }
 

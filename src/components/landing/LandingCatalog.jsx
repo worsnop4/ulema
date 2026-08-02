@@ -42,7 +42,7 @@ export default function LandingCatalog() {
   }
 
   const filteredThemes = useMemo(() => {
-    return themes.filter(t => t.category === activeTab)
+    return themes.filter(t => t.category === activeTab && t.visible !== false)
   }, [themes, activeTab])
 
   // Scroll reveal logic
