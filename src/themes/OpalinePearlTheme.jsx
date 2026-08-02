@@ -185,10 +185,10 @@ const Divider = () => (
 )
 
 // ─── 0. COVER ────────────────────────────────────────────────────
-const Cover = ({ groomNick, brideNick, heroDate, guestName, handleOpen, animateClose }) => (
+const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, animateClose }) => (
   <div className="fixed inset-0 flex justify-center" style={{ zIndex: 90, background: '#2E2722', animation: animateClose ? 'op-coverOut 2.1s ease forwards' : 'none' }}>
     <div className="relative w-full h-full overflow-hidden" style={{ maxWidth: 480, perspective: 1600 }}>
-      <div className="absolute pointer-events-none" style={{ inset: '-6%', animation: 'op-pan 24s ease-in-out infinite alternate', background: placeholderBg }} />
+      <div className="absolute pointer-events-none" style={{ inset: '-6%', animation: 'op-pan 24s ease-in-out infinite alternate', background: data?.meta?.coverPhoto ? `url("${data.meta.coverPhoto}") center/cover no-repeat` : placeholderBg }} />
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(44,34,28,.35) 0%, rgba(44,34,28,.15) 40%, rgba(44,34,28,.78) 100%)' }} />
 
       <div className="absolute top-0 bottom-0 left-0 pointer-events-none" style={{
@@ -234,7 +234,7 @@ const Hero = ({ data, groomNick, brideNick, heroDate, countdown }) => {
   const parts = [['Hari', pad2(countdown?.d)], ['Jam', pad2(countdown?.h)], ['Menit', pad2(countdown?.m)], ['Detik', pad2(countdown?.s)]]
   return (
     <section id="op-home" className="relative flex flex-col justify-end overflow-hidden" style={{ zIndex: 1, height: '100svh', minHeight: 640 }}>
-      <div className="absolute pointer-events-none" style={{ inset: '-6%', animation: 'op-pan 26s ease-in-out infinite alternate', background: placeholderBg }} />
+      <div className="absolute pointer-events-none" style={{ inset: '-6%', animation: 'op-pan 26s ease-in-out infinite alternate', background: data?.meta?.photo ? `url("${data.meta.photo}") center/cover no-repeat` : placeholderBg }} />
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(252,249,247,.7) 0%, rgba(252,249,247,0) 20%, rgba(44,34,28,.34) 42%, rgba(44,34,28,.6) 62%, rgba(30,22,17,.76) 100%)' }} />
 
       <div className="relative text-center" style={{ padding: '0 34px 116px', color: '#FFF8F0' }}>
