@@ -59,6 +59,7 @@ export const DEFAULT_THEMES = [
   { id: 16, name: 'Aurum Noir', code: 'LUX-005', emoji: '🖤', thumbnail: '', layout: 'aurum-noir', colors: ['#0a0807', '#d4a96a', '#f4ede2'], desc: 'Tema cinematic dark luxury hitam & emas: cover sinematik, Ken Burns, partikel emas, countdown flip, dan tipografi Cormorant elegan', category: 'Luxury', themeType: 'photo' },
   { id: 17, name: 'Morning Mist Luxe', code: 'LUX-006', emoji: '🌫️', thumbnail: '', layout: 'morning-mist-luxe', colors: ['#0e141b', '#c9d4dc', '#eef2f5'], desc: 'Tema luxury kabut pagi sinematik: gelap berkabut, aksen silver-champagne, panel kaca berembun, dan tipografi script Ephesis elegan', category: 'Luxury', themeType: 'photo' },
   { id: 18, name: 'Ashen Bloom', code: 'SPL-005', emoji: '🌸', thumbnail: '', layout: 'ashen-bloom', colors: ['#eceae6', '#b07a52', '#33312d'], desc: 'Tema Special ivory-ash lembut dengan floral watercolor terracotta, foto lengkung, tipografi Marcellus & Pinyon Script yang elegan', category: 'Special', themeType: 'photo' },
+  { id: 19, name: 'Blanc Lumière', code: 'SPL-006', emoji: '🤍', thumbnail: '/themes/Special/theme-11/background.jpg', layout: 'blanc-lumiere', colors: ['#FEFDFB', '#A98A4E', '#3C3931'], desc: 'Tema Special putih ivory & champagne gold: floral watercolor, foto arch mempelai, petal berjatuhan, dan tipografi Pinyon Script & Cormorant yang elegan', category: 'Special', themeType: 'photo' },
 ]
 
 export const DEFAULT_ILLUSTRATIONS = [
