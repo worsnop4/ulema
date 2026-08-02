@@ -207,17 +207,26 @@ export function useSharedInvitation() {
   // 3. Compose Save Hook
   const { save, isSaving } = useInvitationSave()
 
-  // Apply fetched data
+  // Apply fetched data. The version guard (`_v`) only protects against a
+  // stale fetch clobbering newer local edits for the SAME record — it must
+  // never block switching to a DIFFERENT record (e.g. an admin jumping from
+  // editing one theme's demo content to another's), since `_v` timestamps
+  // aren't comparable across unrelated invitations. Track the fetch target's
+  // identity and always apply when it changes.
+  const targetKeyRef = useRef(null)
   useEffect(() => {
     if (fetchedData) {
+      const targetKey = `${user?.id || ''}|${isPublicInvite ? publicSlug : ''}|${adminDemo || ''}`
+      const targetChanged = targetKeyRef.current !== null && targetKeyRef.current !== targetKey
       const currentVersion = dataRef.current?._v || 0
       const fetchedVersion = fetchedData?._v || 0
-      if (currentVersion <= fetchedVersion || !dataRef.current?.id) {
+      if (targetChanged || currentVersion <= fetchedVersion || !dataRef.current?.id) {
         applyData(fetchedData)
         broadcastUpdate(fetchedData)
       }
+      targetKeyRef.current = targetKey
     }
-  }, [fetchedData, applyData, broadcastUpdate])
+  }, [fetchedData, applyData, broadcastUpdate, user, isPublicInvite, publicSlug, adminDemo])
 
   const updateData = useCallback(async (updater, onError, skipSave = false) => {
     const prev = dataRef.current
