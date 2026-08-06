@@ -170,6 +170,40 @@ const Couple = ({ data }) => (
   </section>
 )
 
+// ─── 4. ACARA ─────────────────────────────────────────────────────
+const EventCard = ({ ev }) => {
+  if (!ev) return null
+  const dateLabel = ev.dateLabel || fmtDate(ev.date)
+  return (
+    <div style={{ border: `1px solid rgba(185,154,107,0.35)`, padding: '26px 22px', textAlign: 'center', marginBottom: 16 }}>
+      <Eyebrow style={{ marginBottom: 10 }}>{ev.name || 'Acara'}</Eyebrow>
+      <p style={{ fontFamily: F.display, fontSize: '1.4rem', color: c.ink, margin: '0 0 6px' }}>{dateLabel}</p>
+      <p style={{ fontFamily: F.sans, fontSize: 13, color: c.muted, margin: '0 0 14px' }}>
+        {ev.start || '—'}{ev.end ? ` – ${ev.end}` : ''} {ev.tz || ''}
+      </p>
+      <p style={{ fontFamily: F.sans, fontSize: 14, fontWeight: 600, color: c.ink, margin: '0 0 4px' }}>{ev.venue || '—'}</p>
+      {ev.address && <p style={{ fontFamily: F.sans, fontSize: 12, lineHeight: 1.6, color: c.muted, maxWidth: 260, margin: '0 auto 16px' }}>{ev.address}</p>}
+      {ev.maps && (
+        <a href={ev.maps} target="_blank" rel="noreferrer"
+          style={{ display: 'inline-block', fontFamily: F.sans, padding: '10px 24px', border: `1px solid ${c.gold}`, borderRadius: 30, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', color: c.goldDeep }}>
+          Petunjuk Arah
+        </a>
+      )}
+    </div>
+  )
+}
+
+const Acara = ({ data }) => {
+  const events = data?.events || []
+  if (!events.length) return null
+  return (
+    <section id="acara" style={{ background: c.ivory, padding: '56px 28px' }}>
+      <p className="text-center" style={{ marginBottom: 28 }}><Eyebrow>Waktu &amp; Tempat</Eyebrow></p>
+      {events.map((ev, i) => <EventCard key={ev.id || i} ev={ev} />)}
+    </section>
+  )
+}
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function DraftTheme({
   data, countdown, opened, setOpened,
@@ -218,8 +252,9 @@ export default function DraftTheme({
             <Hero data={data} brideNick={brideNick} groomNick={groomNick} heroDate={heroDate} countdown={countdown} />
             <Quote data={data} />
             <Couple data={data} />
-            {/* Acara, RSVP & Ucapan, Footer, nav — added in the following
-                build parts (see TodoWrite / conversation). */}
+            <Acara data={data} />
+            {/* RSVP & Ucapan, Footer, nav — added in the following build
+                parts (see TodoWrite / conversation). */}
             <div style={{ padding: '40px 28px', textAlign: 'center', color: c.muted, fontFamily: F.sans, fontSize: 13 }}>
               wishes: {wishes?.length ?? 0}
             </div>
