@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import InvitationLayout from './components/InvitationLayout'
 import { MUSIC_URLS } from '../pages/InvitationTemplate'
@@ -204,12 +205,120 @@ const Acara = ({ data }) => {
   )
 }
 
+// ─── 5. RSVP & UCAPAN ────────────────────────────────────────────────
+const WishRsvp = ({ wishes, onSubmitWish }) => {
+  const [name, setName] = useState('')
+  const [message, setMessage] = useState('')
+  const [attendance, setAttendance] = useState('hadir')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (busy || !name.trim() || !message.trim()) return
+    setBusy(true)
+    try {
+      if (onSubmitWish) await onSubmitWish({ name, message, attendance })
+      setName(''); setMessage(''); setAttendance('hadir')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const list = (wishes || []).slice(0, 6)
+  const inputStyle = { fontFamily: F.sans, padding: '12px 14px', border: `1px solid rgba(185,154,107,0.4)`, background: '#fff', fontSize: 13, color: c.ink, outline: 'none', width: '100%' }
+
+  return (
+    <section id="ucapan" style={{ background: c.ivoryDeep, padding: '56px 28px' }}>
+      <p className="text-center" style={{ marginBottom: 28 }}><Eyebrow>RSVP &amp; Ucapan</Eyebrow></p>
+
+      <form onSubmit={submit} className="flex flex-col gap-3" style={{ marginBottom: 32 }}>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="Nama Anda" required style={inputStyle} />
+        <textarea value={message} onChange={e => setMessage(e.target.value)} rows={3} placeholder="Tuliskan doa dan ucapan..." required style={{ ...inputStyle, resize: 'none' }} />
+        <div className="flex gap-5">
+          {[['hadir', 'Hadir'], ['tidak_hadir', 'Tidak Hadir']].map(([v, l]) => (
+            <label key={v} className="flex items-center gap-2 cursor-pointer" style={{ fontFamily: F.sans, fontSize: 13, color: c.ink }}>
+              <input type="radio" name="att" checked={attendance === v} onChange={() => setAttendance(v)} style={{ accentColor: c.gold }} /> {l}
+            </label>
+          ))}
+        </div>
+        <button type="submit" disabled={busy}
+          style={{ fontFamily: F.sans, marginTop: 4, padding: 13, background: c.gold, border: 'none', borderRadius: 30, fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, color: '#fff', cursor: 'pointer', opacity: busy ? 0.7 : 1 }}>
+          {busy ? 'Mengirim…' : 'Sampaikan Doa'}
+        </button>
+      </form>
+
+      {list.length > 0 && (
+        <div className="flex flex-col gap-3">
+          {list.map((w, i) => (
+            <div key={w.id || i} style={{ background: '#fff', borderLeft: `3px solid ${c.gold}`, padding: '14px 16px' }}>
+              <div className="flex justify-between" style={{ marginBottom: 4 }}>
+                <span style={{ fontFamily: F.sans, fontSize: 13, fontWeight: 600, color: c.goldDeep }}>{w.name}</span>
+                <span style={{ fontFamily: F.sans, fontSize: 10, color: c.muted }}>{w.rsvp === 'tidak_hadir' ? 'Tidak Hadir' : 'Hadir'}</span>
+              </div>
+              <p style={{ fontFamily: F.sans, fontSize: 13, lineHeight: 1.6, color: c.muted, margin: 0 }}>{w.wish}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ─── 6. FOOTER ────────────────────────────────────────────────────
+const Footer = ({ data, brideNick, groomNick }) => {
+  const footerPhoto = data?.meta?.footerPhoto
+  return (
+    <section className="text-center" style={{ padding: '56px 28px', background: c.ink, color: c.ivory }}>
+      {footerPhoto && (
+        <div className="overflow-hidden mx-auto" style={{ width: 88, height: 88, borderRadius: '50%', border: `1px solid ${c.gold}`, marginBottom: 22 }}>
+          <img src={footerPhoto} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
+      <Eyebrow style={{ marginBottom: 14 }}>Terima Kasih</Eyebrow>
+      <p style={{ fontFamily: F.sans, fontSize: 13, lineHeight: 1.7, color: 'rgba(247,245,241,0.7)', maxWidth: 260, margin: '0 auto 26px' }}>
+        Kehadiran serta doa restu Bapak/Ibu/Saudara/i merupakan kebahagiaan dan kehormatan besar bagi kami.
+      </p>
+      <p style={{ fontFamily: F.display, fontSize: '1.5rem', margin: '0 0 22px' }}>{brideNick} &amp; {groomNick}</p>
+      <Eyebrow style={{ color: 'rgba(247,245,241,0.4)', fontSize: 10 }}>Dibuat dengan Ulema</Eyebrow>
+    </section>
+  )
+}
+
+// ─── NAV + MUSIK ───────────────────────────────────────────────────
+const BottomNav = ({ musicEnabled, musicPlaying, setMusicPlaying }) => {
+  const links = [
+    { href: 'top', label: 'Cover' },
+    { href: 'mempelai', label: 'Mempelai' },
+    { href: 'acara', label: 'Acara' },
+    { href: 'ucapan', label: 'Ucapan' },
+  ]
+  const go = (e, id) => {
+    e.preventDefault()
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  return (
+    <div className="sticky bottom-0 left-0 right-0 flex justify-around items-center z-20"
+      style={{ background: 'rgba(247,245,241,0.94)', backdropFilter: 'blur(10px)', borderTop: `1px solid rgba(185,154,107,0.3)`, padding: '12px 6px' }}>
+      {links.map(l => (
+        <a key={l.href} href={`#${l.href}`} onClick={(e) => go(e, l.href)}
+          style={{ fontFamily: F.sans, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: c.ink }}>{l.label}</a>
+      ))}
+      {musicEnabled && (
+        <button onClick={() => setMusicPlaying(!musicPlaying)}
+          style={{ fontFamily: F.sans, background: 'none', border: 'none', fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: c.goldDeep, cursor: 'pointer' }}>
+          {musicPlaying ? 'Musik: On' : 'Musik: Off'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function DraftTheme({
   data, countdown, opened, setOpened,
   animateClose, setAnimateClose,
-  setMusicPlaying, audioRef,
-  wishes, guestName,
+  musicPlaying, setMusicPlaying, audioRef,
+  wishes, onSubmitWish, guestName,
 }) {
   const brideNick = data?.bride?.nickname || 'Mempelai Wanita'
   const groomNick = data?.groom?.nickname || 'Mempelai Pria'
@@ -253,11 +362,9 @@ export default function DraftTheme({
             <Quote data={data} />
             <Couple data={data} />
             <Acara data={data} />
-            {/* RSVP & Ucapan, Footer, nav — added in the following build
-                parts (see TodoWrite / conversation). */}
-            <div style={{ padding: '40px 28px', textAlign: 'center', color: c.muted, fontFamily: F.sans, fontSize: 13 }}>
-              wishes: {wishes?.length ?? 0}
-            </div>
+            <WishRsvp wishes={wishes} onSubmitWish={onSubmitWish} />
+            <Footer data={data} brideNick={brideNick} groomNick={groomNick} />
+            <BottomNav musicEnabled={musicEnabled} musicPlaying={musicPlaying} setMusicPlaying={setMusicPlaying} />
           </motion.div>
         )}
       </div>
