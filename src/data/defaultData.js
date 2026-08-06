@@ -61,6 +61,7 @@ export const DEFAULT_THEMES = [
   { id: 18, name: 'Ashen Bloom', code: 'SPL-005', emoji: '🌸', thumbnail: '', layout: 'ashen-bloom', colors: ['#eceae6', '#b07a52', '#33312d'], desc: 'Tema Special ivory-ash lembut dengan floral watercolor terracotta, foto lengkung, tipografi Marcellus & Pinyon Script yang elegan', category: 'Special', themeType: 'photo' },
   { id: 19, name: 'Blanc Lumière', code: 'SPL-006', emoji: '🤍', thumbnail: '/themes/Special/theme-11/background.jpg', layout: 'blanc-lumiere', colors: ['#FEFDFB', '#A98A4E', '#3C3931'], desc: 'Tema Special putih ivory & champagne gold: floral watercolor, foto arch mempelai, petal berjatuhan, dan tipografi Pinyon Script & Cormorant yang elegan', category: 'Special', themeType: 'photo' },
   { id: 20, name: 'Opaline Pearl', code: 'SPL-007', emoji: '🤍', thumbnail: '/themes/Special/theme-12/cover-relief.jpg', layout: 'opaline-pearl', colors: ['#FCF9F7', '#C3A15D', '#2E2722'], desc: 'Tema Special pearl-ivory dengan shimmer opal, pintu ornamen 3D yang membuka saat undangan dibuka, filigree emas yang menggambar sendiri, dan tipografi Parisienne & Cormorant yang elegan', category: 'Special', themeType: 'photo' },
+  { id: 21, name: 'Tema Draft', emoji: '📝', thumbnail: '', layout: 'draft', colors: ['#F7F5F1', '#B99A6B', '#2A2A28'], desc: 'Skeleton dasar: cover, doa, data mempelai, acara, RSVP & ucapan. Belum didesain final — siap direstyle sesuai referensi visual.', category: 'Special', themeType: 'photo', visible: false },
 ]
 
 export const DEFAULT_ILLUSTRATIONS = [
