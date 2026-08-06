@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import InvitationLayout from './components/InvitationLayout'
 import { MUSIC_URLS } from '../pages/InvitationTemplate'
@@ -238,19 +238,103 @@ const SlideAwal = ({ groomNick, brideNick, heroDate, countdown, countdownEnabled
   )
 }
 
+// Which optional babak actually have content — drives both the rail dot
+// count/order and each section's own render-or-null. Keep in sync with the
+// sections themselves as they're built out in later parts.
+function getBabakList(data) {
+  const hasStory = (data?.loveStory || []).length > 0
+  const hasGallery = (data?.gallery || []).length > 0
+  const hasDresscode = Boolean(data?.dresscode?.name || data?.dresscode?.color || data?.dresscode?.notes)
+  const hasLive = Boolean(data?.livestreamEnabled) && (data?.livestreamPlatforms || []).some(p => p.url)
+  const hasGift = (data?.accounts || []).length > 0
+  const hasFamilies = Boolean(data?.turutMengundangEnabled) && (data?.families || []).some(f => (f.members || []).filter(m => m && m.trim()).length)
+  const hasInfo = hasDresscode || hasLive || hasGift || hasFamilies
+  return [
+    { id: 'vo-mulai' },
+    { id: 'vo-quote' },
+    { id: 'vo-mempelai' },
+    { id: 'vo-acara' },
+    hasStory && { id: 'vo-story' },
+    hasGallery && { id: 'vo-galeri' },
+    hasInfo && { id: 'vo-info' },
+    { id: 'vo-rsvp' },
+    { id: 'vo-penutup' },
+  ].filter(Boolean)
+}
+
+// ─── RAIL BABAK ──────────────────────────────────────────────────
+const Rail = ({ babakList, active, visible }) => {
+  const go = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  return (
+    <div className="absolute flex flex-col" style={{
+      right: 12, top: '50%', transform: 'translateY(-50%)', gap: 12, zIndex: 30,
+      opacity: visible ? 1 : 0, pointerEvents: visible ? 'auto' : 'none',
+      transition: 'opacity .8s ease .3s',
+    }}>
+      {babakList.map((b, i) => {
+        const isActive = i === active
+        return (
+          <button key={b.id} onClick={() => go(b.id)} aria-label={b.id}
+            style={{
+              width: isActive ? 9 : 6, height: isActive ? 9 : 6, borderRadius: '50%',
+              background: isActive ? c.champagne : 'transparent',
+              border: `1px solid ${isActive ? c.champagne : 'rgba(244,239,230,.45)'}`,
+              boxShadow: isActive ? `0 0 12px ${c.champagne}` : 'none',
+              transition: 'all .35s', padding: 0, cursor: 'pointer',
+            }} />
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── TOMBOL MUSIK ────────────────────────────────────────────────
+const MusicButton = ({ musicPlaying, setMusicPlaying, visible }) => (
+  <button onClick={() => setMusicPlaying(!musicPlaying)} aria-label="Toggle musik"
+    className="absolute flex items-center justify-center gap-1"
+    style={{
+      left: 16, bottom: 18, width: 42, height: 42, borderRadius: 999, zIndex: 30, border: 'none',
+      background: `linear-gradient(135deg, ${c.champagne}, ${c.champagneDeep})`, cursor: 'pointer',
+      opacity: visible ? 1 : 0, pointerEvents: visible ? 'auto' : 'none',
+      transition: 'opacity .8s ease .3s',
+    }}>
+    {[0.6, 0.75, 0.9].map((dur, i) => (
+      <span key={i} style={{
+        width: 2, height: 12, background: c.ink, borderRadius: 1,
+        animation: musicPlaying ? `vo-eq ${dur}s ease-in-out infinite` : 'none',
+        transform: musicPlaying ? undefined : 'scaleY(.45)',
+      }} />
+    ))}
+  </button>
+)
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function VelourOliveTheme({
   data, countdown, opened, setOpened,
   animateClose, setAnimateClose,
-  setMusicPlaying, audioRef,
+  musicPlaying, setMusicPlaying, audioRef,
   wishes, guestName,
 }) {
   const [petals] = useState(() => genPetals(12))
+  const [active, setActive] = useState(0)
+  const scrollRef = useRef(null)
   const groomNick = data?.groom?.nickname || 'Mempelai Pria'
   const brideNick = data?.bride?.nickname || 'Mempelai Wanita'
   const primaryEvent = data?.events?.[0]
   const heroDate = primaryEvent?.dateLabel || fmtDate(primaryEvent?.date)
   const musicEnabled = data?.music !== false
+  const babakList = getBabakList(data)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const onScroll = () => {
+      const idx = Math.round(el.scrollTop / el.clientHeight)
+      setActive(Math.max(0, Math.min(idx, babakList.length - 1)))
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [babakList.length])
 
   const handleOpen = () => {
     setAnimateClose(true)
@@ -287,7 +371,7 @@ export default function VelourOliveTheme({
         <VideoBackdrop />
         <Petals petals={petals} />
 
-        <div className="vo-scroll absolute inset-0 overflow-y-auto" style={{ zIndex: 10 }}>
+        <div ref={scrollRef} className="vo-scroll absolute inset-0 overflow-y-auto" style={{ zIndex: 10 }}>
           <SlideAwal groomNick={groomNick} brideNick={brideNick} heroDate={heroDate}
             countdown={countdown} countdownEnabled={data?.countdownEnabled ?? true} />
           {/* Quote, Mempelai, Acara, babak opsional, RSVP, Penutup — ditambahkan
@@ -297,6 +381,9 @@ export default function VelourOliveTheme({
             wishes: {wishes?.length ?? 0}
           </div>
         </div>
+
+        <Rail babakList={babakList} active={active} visible={opened} />
+        {musicEnabled && <MusicButton musicPlaying={musicPlaying} setMusicPlaying={setMusicPlaying} visible={opened} />}
 
         <Cover data={data} groomNick={groomNick} brideNick={brideNick}
           heroDate={heroDate} guestName={guestName} handleOpen={handleOpen}
