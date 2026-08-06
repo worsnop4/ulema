@@ -1,14 +1,18 @@
-# Ulema — Panduan Desain Tema (Handoff untuk Claude Design)
+# Ulema — Panduan Desain Tema
 
-Dokumen ini menjelaskan **standar variabel & struktur** tema undangan Ulema. Tujuannya:
-saat kamu (Claude Design) membuat prototipe desain HTML tema baru, desain itu **langsung
-nyambung** ke data asli aplikasi — tidak perlu menebak nama field, dan tidak ada bagian
-yang di-hardcode.
+Dokumen ini menjelaskan **standar variabel & struktur** tema undangan Ulema. Tujuannya: tema baru
+apa pun **langsung nyambung** ke data asli aplikasi — tidak perlu menebak nama field, dan tidak ada
+bagian yang di-hardcode. Ini berlaku terlepas dari siapa yang mendesain.
 
-> **Alur kerja:** kamu membuat **prototipe desain HTML** (seperti file "Aurum Noir Wedding.dc.html").
-> Prototipe itu BUKAN kode produksi. Nanti developer (Claude Code) yang menerjemahkannya menjadi
-> komponen React bespoke di `src/themes/NamaTema.jsx`, mengikuti pola tema yang sudah ada
-> (`BordeauxLuxeTheme.jsx`, `AurumNoirTheme.jsx`).
+> **Dua alur kerja yang didukung:**
+> 1. **Handoff eksternal** — kamu (atau desainer lain / Claude Design) membuat prototipe desain HTML
+>    lebih dulu (seperti file "Aurum Noir Wedding.dc.html" / "Opaline Pearl"), lalu developer
+>    (Claude Code) menerjemahkannya jadi komponen React di `src/themes/NamaTema.jsx`. Lihat §8.
+> 2. **Desain langsung oleh Claude Code** — tanpa prototipe HTML terpisah; Claude Code merancang
+>    *dan* membangun temanya sekaligus di React, berbekal brief singkat dari kamu. Lihat §9.
+>
+> Section 1–7 di bawah (kontrak data, konvensi teknis) **berlaku sama** untuk kedua alur — itu yang
+> menjaga tema tetap "nyambung" ke aplikasi. Yang beda cuma proses & seberapa besar kebebasan visual.
 
 ---
 
@@ -24,25 +28,31 @@ yang di-hardcode.
 
 ---
 
-## 2. Urutan section standar
+## 2. Konten wajib & opsional
 
-| # | Section | Sumber data utama |
-|---|---------|-------------------|
-| 0 | **Cover / Sampul** (overlay fullscreen) | `meta.coverPhoto`, nama, tanggal, `guestName` |
-| 1 | **Hero / Slide Awal** | `meta.photo`, nama, tanggal, countdown |
-| 2 | **Quote / Ayat** | `quote` |
-| 3 | **Couple / Mempelai** | `groom`, `bride` |
-| 4 | **Acara** (tab akad/resepsi) | `events[]` |
-| 5 | **Love Story / Perjalanan Cinta** (opsional) | `loveStory[]` (termasuk foto per momen) |
-| 6 | **Dresscode** (opsional) | `dresscode` |
-| 7 | **Gallery / Galeri** (opsional) | `gallery[]` |
-| 8 | **Live Streaming** (opsional) | `livestreamPlatforms[]` |
-| 9 | **RSVP & Ucapan** | form + `rsvps[]` |
-| 10 | **Gift / Hadiah** (opsional) | `accounts[]` |
-| 11 | **Turut Mengundang** (opsional) | `families[]` |
-| 12 | **Footer / Penutup** | `meta.footerPhoto`, nama, tanggal |
+Ini bukan urutan yang harus diikuti kaku — lihat §9 soal kebebasan urutan/struktur di mode desain
+langsung. Tabel ini daftar **konten yang harus ADA** (di mana pun posisinya) vs yang **opsional**
+(muncul hanya kalau datanya terisi).
 
-Elemen tetap (muncul setelah cover dibuka): **tombol musik** & **bottom-nav** (Home · Couple · Acara · Galeri · RSVP · Hadiah).
+| Section | Wajib? | Sumber data utama |
+|---------|--------|-------------------|
+| **Cover / Sampul** (overlay fullscreen, tombol "Buka Undangan") | ✅ Wajib | `meta.coverPhoto`, nama, tanggal, `guestName` |
+| **Hero / Slide Awal** | ✅ Wajib | `meta.photo`, nama, tanggal, countdown |
+| **Quote / Doa / Ayat** | ✅ Wajib | `quote` |
+| **Couple / Data Mempelai** | ✅ Wajib | `groom`, `bride` |
+| **Acara** (akad/resepsi) | ✅ Wajib | `events[]` |
+| **RSVP & Ucapan** (form kirim + daftar ucapan) | ✅ Wajib | form + `rsvps[]` |
+| **Footer / Penutup** | ✅ Wajib | `meta.footerPhoto`, nama, tanggal |
+| Love Story / Perjalanan Cinta | Opsional (tampil jika ada isi) | `loveStory[]` |
+| Dresscode | Opsional | `dresscode` |
+| Gallery / Galeri | Opsional | `gallery[]` |
+| Live Streaming | Opsional (`livestreamEnabled === true`) | `livestreamPlatforms[]` |
+| Gift / Hadiah | Opsional | `accounts[]` |
+| Turut Mengundang | Opsional (`turutMengundangEnabled === true`) | `families[]` |
+
+Elemen tetap (harus selalu bisa diakses tamu setelah cover dibuka): **tombol musik** & **navigasi**
+antar-section. Bentuk navigasinya bebas (bottom-nav pill klasik, dot-nav, side menu, swipe/scroll-snap,
+dll) — yang penting tamu tidak "kejebak" di satu section tanpa jalan ke section lain.
 
 ---
 
@@ -222,7 +232,7 @@ Aturan ini lahir dari bug nyata — mohon patuhi supaya hasil tajam & halus:
 
 ---
 
-## 8. Yang perlu kamu serahkan (deliverable)
+## 8. Mode 1 — Handoff eksternal: yang perlu diserahkan (deliverable)
 
 1. **Prototipe HTML** desain lengkap (semua section, bisa dibuka di browser) — seperti format
    "Aurum Noir Wedding.dc.html".
@@ -232,3 +242,41 @@ Aturan ini lahir dari bug nyata — mohon patuhi supaya hasil tajam & halus:
 
 Referensi tema yang sudah jadi di codebase (pola yang diikuti): `AurumNoirTheme.jsx` (dark luxury),
 `BordeauxLuxeTheme.jsx` (wine luxury), `BotanicalIvoryTheme.jsx` (ivory/sage).
+
+---
+
+## 9. Mode 2 — Desain langsung oleh Claude Code (bebas berekspresi)
+
+Di mode ini **tidak ada prototipe HTML terpisah**. Claude Code merancang konsep *dan* langsung
+membangunnya jadi komponen React bespoke. Kebebasannya lebih luas dari mode 1 — bukan cuma warna
+& tipografi, tapi juga **struktur & urutan**. Batasnya cuma §1–§7 di atas (kontrak data, elemen
+wajib ada, dan konvensi motion/kualitas) — itu yang menjaga tema tetap berfungsi dan konsisten
+dengan sistem, bukan pembatas kreatif.
+
+**Yang boleh dieksplorasi bebas (tidak wajib meniru tema-tema sebelumnya):**
+- **Urutan & pengelompokan section** — tidak harus linear top-to-bottom seperti tabel §2. Boleh
+  gabung beberapa section jadi satu "chapter", boleh taruh Love Story sebelum Couple, boleh bikin
+  navigasi non-linear (scroll-snap per bagian, tab, dsb) — asal semua konten **wajib** (§2) tetap
+  ada dan bisa dijangkau tamu.
+- **Paradigma interaksi/navigasi** — bottom-nav pill itu kebiasaan lama, bukan aturan. Boleh diganti
+  bentuk lain selama tetap jelas & mudah dipakai satu tangan di HP.
+- **Bahasa visual & motion** — pilih sendiri gaya (maksimalis/minimalis, playful/formal, dsb),
+  termasuk teknik ornamen/animasi baru selama tetap sat set di HP (hindari animasi berat yang bikin
+  scroll patah-patah) dan menghormati konvensi wajib di §6 (jangan `scale()` di foto, partikel harus
+  seeded, dsb).
+- **Aset**: kalau butuh foto/tekstur/video loop dekoratif yang belum ada, bisa dibuatkan lewat MCP
+  Kling AI (bahas dulu briefnya sebelum generate — tiap job berbayar) atau vector/SVG buatan tangan
+  (untuk ornamen presisi seperti garis emas/filigree, vector tetap lebih pas — lihat §6).
+
+**Alur kerja yang dipakai:**
+1. **Brief singkat dari kamu** — mood/vibe yang diinginkan, ada referensi visual atau tidak, dan
+   kategori (Special / Luxury / Motion / Adat).
+2. **Claude Code mengajukan design plan singkat** sebelum ngoding: nama tema, palet warna (4–6 hex
+   bernama), pasangan font (display + body, + script kalau perlu), dan konsep layout/struktur
+   1–2 kalimat (termasuk kalau urutannya beda dari standar). Kamu approve/koreksi dulu sebelum lanjut.
+3. **Build part-by-part** (tetap ikuti kebiasaan: jangan sekaligus semua section) langsung ke
+   `src/themes/NamaTema.jsx`, sambil didaftarkan ke titik-titik registrasi standar: `constants.js`
+   (`THEMES` + `THEME_CATEGORY_MAP`), `defaultData.js` (`DEFAULT_THEMES`), `InvitationTemplate.jsx`
+   (lazy import + `THEME_COMPONENTS`), dan migration seed `themes` table.
+4. Verifikasi tiap bagian dengan `npm run build` + `eslint`, commit + push — sama seperti alur tema
+   lainnya (tidak ada langkah tambahan khusus mode ini).
