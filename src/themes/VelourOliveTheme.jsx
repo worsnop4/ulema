@@ -197,6 +197,47 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
   )
 }
 
+// ─── 1. SLIDE AWAL ───────────────────────────────────────────────
+const SlideAwal = ({ groomNick, brideNick, heroDate, countdown, countdownEnabled }) => {
+  const blocks = [
+    { label: 'Hari', v: countdown?.d ?? 0 },
+    { label: 'Jam', v: countdown?.h ?? 0 },
+    { label: 'Menit', v: countdown?.m ?? 0 },
+    { label: 'Detik', v: countdown?.s ?? 0 },
+  ]
+  return (
+    <div id="vo-mulai" className="vo-babak relative flex flex-col items-center justify-center text-center"
+      style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+      <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: '5px', color: 'rgba(244,239,230,.7)', margin: '0 0 16px' }}>THE WEDDING OF</p>
+      <div style={{ width: 1, height: 34, background: `linear-gradient(${c.champagne}, transparent)`, marginBottom: 16 }} />
+
+      <h1 style={{ fontFamily: F.script, fontSize: 74, color: c.ivory, margin: 0, lineHeight: 1.05 }}>{groomNick}</h1>
+      <span style={{ fontFamily: F.serif, fontStyle: 'italic', fontSize: 26, color: c.champagne, margin: '4px 0' }}>&amp;</span>
+      <h1 style={{ fontFamily: F.script, fontSize: 74, color: c.ivory, margin: '0 0 20px', lineHeight: 1.05 }}>{brideNick}</h1>
+
+      <img src={A.ornamentDivider} alt="" style={{ width: 240, marginBottom: 20 }} />
+
+      <p style={{ fontFamily: F.serif, fontSize: 19, letterSpacing: '2px', color: 'rgba(244,239,230,.85)', margin: '0 0 26px' }}>{heroDate}</p>
+
+      {countdownEnabled && (
+        <div className="flex gap-2.5">
+          {blocks.map(b => (
+            <div key={b.label} className="flex flex-col items-center justify-center" style={{
+              width: 66, padding: '12px 0', borderRadius: 18,
+              background: 'rgba(244,239,230,.10)', border: '1px solid rgba(217,188,122,.28)', backdropFilter: 'blur(9px)',
+            }}>
+              <span style={{ fontFamily: F.serif, fontSize: 28, color: c.ivory, lineHeight: 1 }}>{b.v.toString().padStart(2, '0')}</span>
+              <span style={{ fontFamily: F.sans, fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(244,239,230,.6)' }}>{b.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p style={{ position: 'absolute', bottom: 22, fontFamily: F.sans, fontSize: 10, letterSpacing: '4px', color: 'rgba(244,239,230,.5)' }}>GESER</p>
+    </div>
+  )
+}
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function VelourOliveTheme({
   data, countdown, opened, setOpened,
@@ -247,11 +288,13 @@ export default function VelourOliveTheme({
         <Petals petals={petals} />
 
         <div className="vo-scroll absolute inset-0 overflow-y-auto" style={{ zIndex: 10 }}>
-          {/* Babak (Slide Awal, Quote, Mempelai, Acara, opsional, RSVP, Penutup)
-              ditambahkan di bagian build berikutnya — lihat TodoWrite/percakapan. */}
+          <SlideAwal groomNick={groomNick} brideNick={brideNick} heroDate={heroDate}
+            countdown={countdown} countdownEnabled={data?.countdownEnabled ?? true} />
+          {/* Quote, Mempelai, Acara, babak opsional, RSVP, Penutup — ditambahkan
+              di bagian build berikutnya (lihat TodoWrite/percakapan). */}
           <div className="vo-babak flex flex-col items-center justify-center text-center"
             style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', color: 'rgba(244,239,230,.6)', fontFamily: F.sans, fontSize: 13 }}>
-            countdown: {countdown?.d ?? 0}h {countdown?.h ?? 0}j {countdown?.m ?? 0}m {countdown?.s ?? 0}d — wishes: {wishes?.length ?? 0}
+            wishes: {wishes?.length ?? 0}
           </div>
         </div>
 
