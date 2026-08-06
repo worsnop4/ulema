@@ -377,6 +377,48 @@ const Mempelai = ({ data }) => (
   </div>
 )
 
+// ─── 4. ACARA ─────────────────────────────────────────────────────
+const EventCard = ({ ev }) => {
+  if (!ev) return null
+  const dateLabel = ev.dateLabel || fmtDate(ev.date)
+  return (
+    <div style={{
+      padding: 22, borderRadius: 22, background: 'rgba(20,21,15,.46)',
+      border: '1px solid rgba(217,188,122,.24)', backdropFilter: 'blur(12px)', textAlign: 'center',
+    }}>
+      <h3 style={{ fontFamily: F.serif, fontSize: 24, color: c.champagne, margin: '0 0 8px' }}>{ev.name || 'Acara'}</h3>
+      <p style={{ fontFamily: F.sans, fontSize: 12.5, color: 'rgba(244,239,230,.75)', margin: '0 0 10px' }}>{dateLabel}</p>
+      <p style={{ fontFamily: F.serif, fontSize: 20, color: c.ivory, margin: 0 }}>
+        {ev.start || '—'}{ev.end ? ` – ${ev.end}` : ''} {ev.tz || ''}
+      </p>
+      <div style={{ height: 1, background: 'rgba(217,188,122,.24)', margin: '14px 0' }} />
+      <p style={{ fontFamily: F.sans, fontSize: 14, fontWeight: 500, color: c.ivory, margin: '0 0 4px' }}>{ev.venue || '—'}</p>
+      {ev.address && <p style={{ fontFamily: F.sans, fontSize: 12, lineHeight: 1.6, color: 'rgba(244,239,230,.65)', margin: '0 0 16px' }}>{ev.address}</p>}
+      {ev.maps && (
+        <a href={ev.maps} target="_blank" rel="noreferrer" className="inline-block"
+          style={{
+            padding: '10px 22px', borderRadius: 999, border: '1px solid rgba(217,188,122,.55)',
+            fontFamily: F.sans, fontSize: 11, letterSpacing: '2px', color: c.champagne,
+          }}>
+          PETUNJUK ARAH
+        </a>
+      )}
+    </div>
+  )
+}
+
+const Acara = ({ data }) => {
+  // Wajib per babak table — always rendered so it stays in sync with
+  // getBabakList()'s unconditional 'vo-acara' entry, even before the couple
+  // has filled any event in yet.
+  const events = data?.events?.length ? data.events : [null]
+  return (
+    <div id="vo-acara" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', gap: 18 }}>
+      {events.map((ev, i) => <EventCard key={ev?.id || i} ev={ev || {}} />)}
+    </div>
+  )
+}
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function VelourOliveTheme({
   data, countdown, opened, setOpened,
@@ -445,8 +487,9 @@ export default function VelourOliveTheme({
             countdown={countdown} countdownEnabled={data?.countdownEnabled ?? true} />
           <Quote data={data} />
           <Mempelai data={data} />
-          {/* Acara, babak opsional, RSVP, Penutup — ditambahkan di bagian
-              build berikutnya (lihat TodoWrite/percakapan). */}
+          <Acara data={data} />
+          {/* Babak opsional, RSVP, Penutup — ditambahkan di bagian build
+              berikutnya (lihat TodoWrite/percakapan). */}
           <div className="vo-babak flex flex-col items-center justify-center text-center"
             style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', color: 'rgba(244,239,230,.6)', fontFamily: F.sans, fontSize: 13 }}>
             wishes: {wishes?.length ?? 0}
