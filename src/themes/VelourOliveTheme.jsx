@@ -563,12 +563,93 @@ const Informasi = ({ data, flags }) => {
   )
 }
 
+// ─── 8. RSVP & UCAPAN ────────────────────────────────────────────
+const rsvpInputStyle = {
+  padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(217,188,122,.28)',
+  background: 'rgba(244,239,230,.06)', color: c.ivory, fontSize: 13, fontFamily: F.sans, outline: 'none', width: '100%',
+}
+
+const RsvpUcapan = ({ wishes, onSubmitWish }) => {
+  const [name, setName] = useState('')
+  const [message, setMessage] = useState('')
+  const [attendance, setAttendance] = useState('hadir')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (busy || !name.trim() || !message.trim()) return
+    setBusy(true)
+    try {
+      if (onSubmitWish) await onSubmitWish({ name, message, attendance })
+      setName(''); setMessage(''); setAttendance('hadir')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const list = (wishes || []).slice(0, 6)
+  const choiceStyle = (active) => ({
+    flex: 1, padding: '10px 0', borderRadius: 999, textAlign: 'center', cursor: 'pointer',
+    fontFamily: F.sans, fontSize: 10, letterSpacing: '2px',
+    border: `1px solid ${active ? c.champagne : 'rgba(217,188,122,.3)'}`,
+    background: active ? 'rgba(217,188,122,.18)' : 'transparent',
+    color: active ? c.champagne : 'rgba(244,239,230,.7)',
+  })
+
+  return (
+    <div id="vo-rsvp" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+      <form onSubmit={submit} className="flex flex-col" style={{
+        gap: 10, padding: 22, borderRadius: 22, background: 'rgba(20,21,15,.5)',
+        border: '1px solid rgba(217,188,122,.24)', backdropFilter: 'blur(12px)', marginBottom: 22,
+      }}>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="Nama kamu" required style={rsvpInputStyle} />
+        <div className="flex" style={{ gap: 8 }}>
+          {[['hadir', 'HADIR'], ['tidak_hadir', 'BERHALANGAN']].map(([v, label]) => (
+            <div key={v} role="button" tabIndex={0} onClick={() => setAttendance(v)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setAttendance(v) }}
+              style={choiceStyle(attendance === v)}>
+              {label}
+            </div>
+          ))}
+        </div>
+        <textarea value={message} onChange={e => setMessage(e.target.value)} rows={3} placeholder="Tuliskan doa dan ucapan..." required
+          style={{ ...rsvpInputStyle, resize: 'none' }} />
+        <button type="submit" disabled={busy}
+          style={{
+            marginTop: 4, padding: 13, borderRadius: 999, border: 'none',
+            background: `linear-gradient(135deg, ${c.champagne}, ${c.champagneDeep})`,
+            color: c.ink, fontFamily: F.sans, fontSize: 11, letterSpacing: '3px', cursor: 'pointer', opacity: busy ? 0.7 : 1,
+          }}>
+          {busy ? 'MENGIRIM…' : 'KIRIM UCAPAN'}
+        </button>
+      </form>
+
+      {list.length > 0 && (
+        <div className="flex flex-col" style={{ gap: 10, maxHeight: 190, overflowY: 'auto' }}>
+          {list.map((w, i) => (
+            <div key={w.id || i} style={{ padding: '14px 16px', borderRadius: 16, background: 'rgba(20,21,15,.42)', border: '1px solid rgba(217,188,122,.16)' }}>
+              <div className="flex justify-between items-center" style={{ marginBottom: 4 }}>
+                <span style={{ fontFamily: F.serif, fontSize: 16, color: c.ivory }}>{w.name}</span>
+                <span style={{ fontFamily: F.sans, fontSize: 10, color: w.rsvp === 'tidak_hadir' ? 'rgba(244,239,230,.45)' : c.champagne }}>
+                  {w.rsvp === 'tidak_hadir' ? 'BERHALANGAN' : 'HADIR'}
+                </span>
+              </div>
+              <p style={{ fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.65, color: 'rgba(244,239,230,.75)', margin: '0 0 4px' }}>{w.wish}</p>
+              {w.time && <span style={{ fontFamily: F.sans, fontSize: 10, color: 'rgba(244,239,230,.4)' }}>{w.time}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function VelourOliveTheme({
   data, countdown, opened, setOpened,
   animateClose, setAnimateClose,
   musicPlaying, setMusicPlaying, audioRef,
-  wishes, guestName,
+  wishes, onSubmitWish, guestName,
 }) {
   const [petals] = useState(() => genPetals(12))
   const [active, setActive] = useState(0)
@@ -636,12 +717,9 @@ export default function VelourOliveTheme({
           <LoveStory data={data} />
           <Galeri data={data} />
           <Informasi data={data} flags={flags} />
-          {/* RSVP, Penutup — ditambahkan di bagian build berikutnya (lihat
+          <RsvpUcapan wishes={wishes} onSubmitWish={onSubmitWish} />
+          {/* Penutup — ditambahkan di bagian build berikutnya (lihat
               TodoWrite/percakapan). */}
-          <div className="vo-babak flex flex-col items-center justify-center text-center"
-            style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', color: 'rgba(244,239,230,.6)', fontFamily: F.sans, fontSize: 13 }}>
-            wishes: {wishes?.length ?? 0}
-          </div>
         </div>
 
         <Rail babakList={babakList} active={active} visible={opened} />
