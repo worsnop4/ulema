@@ -308,6 +308,75 @@ const MusicButton = ({ musicPlaying, setMusicPlaying, visible }) => (
   </button>
 )
 
+// ─── 2. QUOTE ────────────────────────────────────────────────────
+const Quote = ({ data }) => {
+  const quote = data?.quote || 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup agar kamu cenderung dan merasa tenteram kepadanya, serta dijadikan-Nya di antaramu rasa kasih dan sayang.'
+  return (
+    <div id="vo-quote" className="vo-babak flex items-center justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+      <div className="relative" style={{
+        padding: '52px 30px', borderRadius: 22, background: 'rgba(20,21,15,.42)',
+        border: '1px solid rgba(217,188,122,.25)', backdropFilter: 'blur(14px)', textAlign: 'center',
+      }}>
+        <img src={A.floralCorner} alt="" style={{
+          position: 'absolute', left: -26, top: -58, width: 168, pointerEvents: 'none',
+          filter: 'drop-shadow(0 10px 22px rgba(0,0,0,.5))',
+        }} />
+        <p style={{
+          fontFamily: F.serif, fontStyle: 'italic', fontSize: 23, lineHeight: 1.65, color: c.ivory,
+          margin: '0 0 22px', position: 'relative', textWrap: 'pretty',
+        }}>&ldquo;{quote}&rdquo;</p>
+        <img src={A.ornamentDivider} alt="" style={{ width: 160, margin: '0 auto' }} />
+      </div>
+    </div>
+  )
+}
+
+// ─── 3. MEMPELAI ─────────────────────────────────────────────────
+const PersonCard = ({ person }) => (
+  <div className="flex" style={{
+    gap: 16, padding: 16, borderRadius: 22, background: 'rgba(20,21,15,.44)',
+    border: '1px solid rgba(217,188,122,.22)', backdropFilter: 'blur(12px)', overflow: 'hidden',
+  }}>
+    <div className="relative flex-shrink-0 overflow-hidden" style={{ width: 138, height: 164, borderRadius: 16, background: 'rgba(20,21,15,.6)' }}>
+      {person?.photo
+        ? <img src={person.photo} alt={person?.nickname} className="w-full h-full object-cover" />
+        : <span className="absolute inset-0 flex items-center justify-center" style={{ fontFamily: F.sans, fontSize: 10, color: 'rgba(244,239,230,.5)' }}>Foto</span>}
+      <img src={A.velvetDrape} alt="" className="absolute top-0 left-0 h-full object-cover"
+        style={{ width: 17, filter: 'brightness(.5)', boxShadow: '6px 0 14px rgba(0,0,0,.55)' }} />
+      <img src={A.velvetDrape} alt="" className="absolute top-0 right-0 h-full object-cover"
+        style={{ width: 17, filter: 'brightness(.5)', boxShadow: '-6px 0 14px rgba(0,0,0,.55)' }} />
+    </div>
+    <div className="flex flex-col justify-center" style={{ minWidth: 0 }}>
+      <h3 style={{ fontFamily: F.script, fontSize: 38, color: c.ivory, margin: 0, lineHeight: 1 }}>{person?.nickname}</h3>
+      <p style={{ fontFamily: F.serif, fontSize: 17, color: 'rgba(244,239,230,.9)', margin: '4px 0 8px' }}>{person?.name || person?.nickname || '—'}</p>
+      <p style={{ fontFamily: F.sans, fontSize: 12, lineHeight: 1.6, color: 'rgba(244,239,230,.65)', margin: '0 0 6px' }}>
+        Putra dari {person?.father || '—'} &amp; {person?.mother || '—'}
+      </p>
+      {person?.instagram && (
+        <a href={`https://instagram.com/${person.instagram.replace('@', '')}`} target="_blank" rel="noreferrer"
+          style={{ fontFamily: F.sans, fontSize: 11, color: c.champagne }}>
+          @{person.instagram.replace('@', '')}
+        </a>
+      )}
+    </div>
+  </div>
+)
+
+const Mempelai = ({ data }) => (
+  <div id="vo-mempelai" className="vo-babak flex flex-col items-center justify-center text-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+    <p style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '5px', color: 'rgba(244,239,230,.7)', margin: '0 0 14px' }}>MEMPELAI</p>
+    <h2 style={{ fontFamily: F.serif, fontSize: 30, color: c.ivory, margin: '0 0 14px' }}>Assalamualaikum Wr. Wb.</h2>
+    <p style={{ fontFamily: F.sans, fontSize: 13, lineHeight: 1.75, color: 'rgba(244,239,230,.7)', maxWidth: 320, margin: '0 0 30px' }}>
+      Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud menyelenggarakan pernikahan putra-putri kami.
+    </p>
+    <div className="w-full flex flex-col" style={{ gap: 20, maxWidth: 360 }}>
+      <PersonCard person={data?.groom} />
+      <span style={{ fontFamily: F.serif, fontStyle: 'italic', fontSize: 24, color: c.champagne }}>&amp;</span>
+      <PersonCard person={data?.bride} />
+    </div>
+  </div>
+)
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function VelourOliveTheme({
   data, countdown, opened, setOpened,
@@ -374,8 +443,10 @@ export default function VelourOliveTheme({
         <div ref={scrollRef} className="vo-scroll absolute inset-0 overflow-y-auto" style={{ zIndex: 10 }}>
           <SlideAwal groomNick={groomNick} brideNick={brideNick} heroDate={heroDate}
             countdown={countdown} countdownEnabled={data?.countdownEnabled ?? true} />
-          {/* Quote, Mempelai, Acara, babak opsional, RSVP, Penutup — ditambahkan
-              di bagian build berikutnya (lihat TodoWrite/percakapan). */}
+          <Quote data={data} />
+          <Mempelai data={data} />
+          {/* Acara, babak opsional, RSVP, Penutup — ditambahkan di bagian
+              build berikutnya (lihat TodoWrite/percakapan). */}
           <div className="vo-babak flex flex-col items-center justify-center text-center"
             style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', color: 'rgba(244,239,230,.6)', fontFamily: F.sans, fontSize: 13 }}>
             wishes: {wishes?.length ?? 0}
