@@ -114,12 +114,18 @@ const Petals = ({ petals }) => (
 )
 
 // ─── VIDEO BACKDROP (persistent, does not scroll with content) ─────
-const VideoBackdrop = () => (
+// Both videos stay mounted always; only opacity crossfades when the Penutup
+// babak becomes active, so neither ever reloads (per spec).
+const VideoBackdrop = ({ footerActive }) => (
   <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0, background: c.nightOlive }}>
     <div className="absolute" style={{ top: '-6%', left: '-6%', width: '112%', height: '112%', animation: 'vo-sway 26s ease-in-out infinite' }}>
       <video autoPlay muted loop playsInline poster={A.bgHeroPoster} preload="auto"
-        className="w-full h-full" style={{ objectFit: 'cover' }}>
+        className="absolute inset-0 w-full h-full" style={{ objectFit: 'cover', opacity: footerActive ? 0 : 1, transition: 'opacity 1.2s' }}>
         <source src={A.bgHero} type="video/mp4" />
+      </video>
+      <video autoPlay muted loop playsInline poster={A.bgFooterPoster} preload="metadata"
+        className="absolute inset-0 w-full h-full" style={{ objectFit: 'cover', opacity: footerActive ? 1 : 0, transition: 'opacity 1.2s' }}>
+        <source src={A.bgFooter} type="video/mp4" />
       </video>
     </div>
     <LightOverlay kind="chandelier" opacity={0.16} height="34%" />
@@ -644,6 +650,32 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
   )
 }
 
+// ─── 9. PENUTUP ──────────────────────────────────────────────────
+const Penutup = ({ data, groomNick, brideNick, heroDate }) => {
+  const footerPhoto = data?.meta?.footerPhoto
+  return (
+    <div id="vo-penutup" className="vo-babak flex flex-col items-center justify-center text-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 30px' }}>
+      <div className="overflow-hidden flex items-center justify-center" style={{
+        width: 180, height: 220, borderRadius: '110px 110px 16px 16px', border: '1px solid rgba(217,188,122,.3)',
+        background: 'rgba(20,21,15,.5)', marginBottom: 26,
+      }}>
+        {footerPhoto
+          ? <img src={footerPhoto} alt="" className="w-full h-full object-cover" />
+          : <span style={{ fontFamily: F.sans, fontSize: 10, color: 'rgba(244,239,230,.5)' }}>Foto Penutup</span>}
+      </div>
+
+      <p style={{ fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.8, color: 'rgba(244,239,230,.75)', maxWidth: 330, margin: '0 0 26px' }}>
+        Terima kasih atas doa dan restu yang telah diberikan. Kehadiran serta doa Bapak/Ibu/Saudara/i merupakan kebahagiaan dan kehormatan besar bagi kami.
+      </p>
+
+      <img src={A.ornamentDivider} alt="" style={{ width: 210, marginBottom: 22 }} />
+
+      <h2 style={{ fontFamily: F.script, fontSize: 52, color: c.ivory, margin: '0 0 10px', lineHeight: 1 }}>{groomNick} &amp; {brideNick}</h2>
+      <p style={{ fontFamily: F.serif, fontSize: 16, letterSpacing: '2px', color: 'rgba(244,239,230,.75)', margin: 0 }}>{heroDate}</p>
+    </div>
+  )
+}
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function VelourOliveTheme({
   data, countdown, opened, setOpened,
@@ -661,6 +693,7 @@ export default function VelourOliveTheme({
   const musicEnabled = data?.music !== false
   const flags = getBabakFlags(data)
   const babakList = getBabakList(data)
+  const footerActive = babakList[active]?.id === 'vo-penutup'
 
   useEffect(() => {
     const el = scrollRef.current
@@ -705,7 +738,7 @@ export default function VelourOliveTheme({
           <audio ref={audioRef} src={data?.musicUrl || MUSIC_URLS[data?.musicId || 1] || MUSIC_URLS[1]} loop />
         )}
 
-        <VideoBackdrop />
+        <VideoBackdrop footerActive={footerActive} />
         <Petals petals={petals} />
 
         <div ref={scrollRef} className="vo-scroll absolute inset-0 overflow-y-auto" style={{ zIndex: 10 }}>
@@ -718,8 +751,7 @@ export default function VelourOliveTheme({
           <Galeri data={data} />
           <Informasi data={data} flags={flags} />
           <RsvpUcapan wishes={wishes} onSubmitWish={onSubmitWish} />
-          {/* Penutup — ditambahkan di bagian build berikutnya (lihat
-              TodoWrite/percakapan). */}
+          <Penutup data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate} />
         </div>
 
         <Rail babakList={babakList} active={active} visible={opened} />
