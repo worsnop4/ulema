@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import InvitationLayout from './components/InvitationLayout'
 import { MUSIC_URLS } from '../pages/InvitationTemplate'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import { THEMES } from '../config/constants'
 
 // ─── "Velour Olive" — panggung pelaminan: video latar tetap diam, konten
@@ -241,14 +242,18 @@ const SlideAwal = ({ groomNick, brideNick, heroDate, countdown, countdownEnabled
 // Which optional babak actually have content — drives both the rail dot
 // count/order and each section's own render-or-null. Keep in sync with the
 // sections themselves as they're built out in later parts.
-function getBabakList(data) {
+function getBabakFlags(data) {
   const hasStory = (data?.loveStory || []).length > 0
   const hasGallery = (data?.gallery || []).length > 0
   const hasDresscode = Boolean(data?.dresscode?.name || data?.dresscode?.color || data?.dresscode?.notes)
   const hasLive = Boolean(data?.livestreamEnabled) && (data?.livestreamPlatforms || []).some(p => p.url)
   const hasGift = (data?.accounts || []).length > 0
   const hasFamilies = Boolean(data?.turutMengundangEnabled) && (data?.families || []).some(f => (f.members || []).filter(m => m && m.trim()).length)
-  const hasInfo = hasDresscode || hasLive || hasGift || hasFamilies
+  return { hasStory, hasGallery, hasDresscode, hasLive, hasGift, hasFamilies, hasInfo: hasDresscode || hasLive || hasGift || hasFamilies }
+}
+
+function getBabakList(data) {
+  const { hasStory, hasGallery, hasInfo } = getBabakFlags(data)
   return [
     { id: 'vo-mulai' },
     { id: 'vo-quote' },
@@ -419,6 +424,145 @@ const Acara = ({ data }) => {
   )
 }
 
+// ─── 5. LOVE STORY (opsional) ────────────────────────────────────
+const LoveStory = ({ data }) => {
+  const stories = data?.loveStory || []
+  if (!stories.length) return null
+  return (
+    <div id="vo-story" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', gap: 14 }}>
+      {stories.map((s, i) => (
+        <div key={s.id || i} className="flex" style={{
+          gap: 14, padding: '16px 18px', borderRadius: 20, background: 'rgba(20,21,15,.42)',
+          border: '1px solid rgba(217,188,122,.2)', backdropFilter: 'blur(10px)',
+        }}>
+          <div style={{ width: 52, flexShrink: 0, fontFamily: F.serif, fontSize: 22, color: c.champagne }}>{s.year}</div>
+          <div>
+            <h4 style={{ fontFamily: F.serif, fontSize: 18, color: c.ivory, margin: '0 0 4px' }}>{s.title}</h4>
+            <p style={{ fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: 'rgba(244,239,230,.7)', margin: 0 }}>{s.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── 6. GALERI (opsional) ────────────────────────────────────────
+const Galeri = ({ data }) => {
+  const photos = data?.gallery || []
+  if (!photos.length) return null
+  return (
+    <div id="vo-galeri" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+      <div className="grid grid-cols-2" style={{ gap: 10 }}>
+        {photos.map((ph, i) => {
+          const src = typeof ph === 'string' ? ph : ph?.src
+          if (!src) return null
+          return (
+            <div key={ph?.id || src} className="overflow-hidden" style={{ aspectRatio: '3/4', borderRadius: 16, border: '1px solid rgba(217,188,122,.18)' }}>
+              <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─── 7. INFORMASI (opsional — dresscode / live / hadiah / turut mengundang) ──
+const InfoLabel = ({ children }) => (
+  <p style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '3px', color: 'rgba(244,239,230,.6)', margin: '0 0 12px' }}>{children}</p>
+)
+
+const infoCardStyle = {
+  borderRadius: 20, background: 'rgba(20,21,15,.44)', border: '1px solid rgba(217,188,122,.2)',
+  backdropFilter: 'blur(10px)', padding: 18,
+}
+
+const DresscodeBlock = ({ data }) => (
+  <div style={infoCardStyle}>
+    <InfoLabel>DRESSCODE</InfoLabel>
+    <div className="flex items-center" style={{ gap: 12 }}>
+      <div style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: data?.dresscode?.color || c.velvetOlive, border: '1px solid rgba(244,239,230,.35)' }} />
+      <div>
+        <p style={{ fontFamily: F.serif, fontSize: 19, color: c.ivory, margin: 0 }}>{data?.dresscode?.name || '—'}</p>
+        {data?.dresscode?.notes && <p style={{ fontFamily: F.sans, fontSize: 12, color: 'rgba(244,239,230,.65)', margin: '2px 0 0' }}>{data.dresscode.notes}</p>}
+      </div>
+    </div>
+  </div>
+)
+
+const LiveStreamBlock = ({ data }) => (
+  <div style={infoCardStyle}>
+    <InfoLabel>LIVE STREAMING</InfoLabel>
+    <div className="flex flex-wrap" style={{ gap: 8 }}>
+      {(data?.livestreamPlatforms || []).filter(p => p.url).map((p, i) => (
+        <a key={p.id || i} href={p.url} target="_blank" rel="noreferrer" className="inline-block"
+          style={{ padding: '9px 18px', borderRadius: 999, border: '1px solid rgba(217,188,122,.5)', fontFamily: F.sans, fontSize: 12, color: c.ivory }}>
+          {p.type}
+        </a>
+      ))}
+    </div>
+  </div>
+)
+
+const GiftBlock = ({ data }) => {
+  const { copiedKey, copy } = useCopyToClipboard(1600)
+  return (
+    <div style={infoCardStyle}>
+      <InfoLabel>HADIAH</InfoLabel>
+      <div className="flex flex-col" style={{ gap: 10 }}>
+        {(data?.accounts || []).map((acc, i) => {
+          const key = acc.id || acc.number || i
+          const isCopied = copiedKey === key
+          return (
+            <div key={key} style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(244,239,230,.06)' }}>
+              <p style={{ fontFamily: F.serif, fontSize: 17, color: c.ivory, margin: 0 }}>{acc.bank}</p>
+              <p style={{ fontFamily: F.sans, fontSize: 12, letterSpacing: '1px', color: 'rgba(244,239,230,.85)', margin: '4px 0' }}>{acc.number}</p>
+              <p style={{ fontFamily: F.sans, fontSize: 11, color: 'rgba(244,239,230,.6)', margin: '0 0 10px' }}>a.n. {acc.holder}</p>
+              <button onClick={() => copy(acc.number, key)}
+                style={{
+                  padding: '7px 16px', borderRadius: 999, border: `1px solid ${c.champagne}`,
+                  background: isCopied ? c.champagne : 'transparent', color: isCopied ? c.ink : c.champagne,
+                  fontFamily: F.sans, fontSize: 10, letterSpacing: '1.5px', cursor: 'pointer',
+                }}>
+                {isCopied ? 'TERSALIN' : 'SALIN'}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const FamiliesBlock = ({ data }) => {
+  const families = (data?.families || []).map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) })).filter(f => f.members.length)
+  return (
+    <div style={infoCardStyle}>
+      <InfoLabel>TURUT MENGUNDANG</InfoLabel>
+      <div className="flex flex-col" style={{ gap: 10 }}>
+        {families.map((fam, i) => (
+          <div key={fam.id || i}>
+            {fam.side && <p style={{ fontFamily: F.serif, fontSize: 16, color: c.champagne, margin: '0 0 3px' }}>{fam.side}</p>}
+            <p style={{ fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: 'rgba(244,239,230,.75)', margin: 0 }}>{fam.members.join(', ')}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const Informasi = ({ data, flags }) => {
+  if (!flags.hasInfo) return null
+  return (
+    <div id="vo-info" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', gap: 14 }}>
+      {flags.hasDresscode && <DresscodeBlock data={data} />}
+      {flags.hasLive && <LiveStreamBlock data={data} />}
+      {flags.hasGift && <GiftBlock data={data} />}
+      {flags.hasFamilies && <FamiliesBlock data={data} />}
+    </div>
+  )
+}
+
 // ─── MAIN EXPORT ────────────────────────────────────────────────────
 export default function VelourOliveTheme({
   data, countdown, opened, setOpened,
@@ -434,6 +578,7 @@ export default function VelourOliveTheme({
   const primaryEvent = data?.events?.[0]
   const heroDate = primaryEvent?.dateLabel || fmtDate(primaryEvent?.date)
   const musicEnabled = data?.music !== false
+  const flags = getBabakFlags(data)
   const babakList = getBabakList(data)
 
   useEffect(() => {
@@ -488,8 +633,11 @@ export default function VelourOliveTheme({
           <Quote data={data} />
           <Mempelai data={data} />
           <Acara data={data} />
-          {/* Babak opsional, RSVP, Penutup — ditambahkan di bagian build
-              berikutnya (lihat TodoWrite/percakapan). */}
+          <LoveStory data={data} />
+          <Galeri data={data} />
+          <Informasi data={data} flags={flags} />
+          {/* RSVP, Penutup — ditambahkan di bagian build berikutnya (lihat
+              TodoWrite/percakapan). */}
           <div className="vo-babak flex flex-col items-center justify-center text-center"
             style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', color: 'rgba(244,239,230,.6)', fontFamily: F.sans, fontSize: 13 }}>
             wishes: {wishes?.length ?? 0}
