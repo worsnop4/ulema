@@ -3,6 +3,9 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useSharedInvitation } from '../../hooks/useSharedInvitation'
 import { ToggleSwitch } from '../common/FormHelpers'
 
+const BANK_OPTIONS = ['BCA', 'Mandiri', 'BNI', 'BRI', 'BSI', 'CIMB']
+const EWALLET_OPTIONS = ['GoPay', 'OVO', 'Dana', 'ShopeePay', 'LinkAja']
+
 export default function RekeningForm() {
   const [data, updateData] = useSharedInvitation()
   const accounts = data.accounts || []
@@ -14,12 +17,22 @@ export default function RekeningForm() {
   }
 
   const add = () => updateData({
-    accounts: [...accounts, { id: Date.now(), type: 'bank', bank: 'BCA', holder: '', number: '' }]
+    accounts: [...accounts, { id: Date.now(), type: 'bank', bank: BANK_OPTIONS[0], holder: '', number: '' }]
   })
   const remove = (id) => updateData({ accounts: accounts.filter(x => x.id !== id) })
   const update = (id, key, val) => updateData({
     accounts: accounts.map(x => x.id === id ? { ...x, [key]: val } : x)
   })
+  // Changing the type must also reset `bank` to a value valid for the new
+  // type's option list — otherwise it keeps the old type's value (e.g. still
+  // "BCA" after switching to E-Wallet), which then shows up wrong in the
+  // guest-facing invitation since that raw value is what themes render.
+  const updateType = (id, type) => {
+    const options = type === 'bank' ? BANK_OPTIONS : EWALLET_OPTIONS
+    updateData({
+      accounts: accounts.map(x => x.id === id ? { ...x, type, bank: options[0] } : x)
+    })
+  }
 
   const updateGiftAddress = (key, val) => {
     updateData({
@@ -43,7 +56,7 @@ export default function RekeningForm() {
           <div className="space-y-3">
             <div>
               <label className="form-label">Tipe</label>
-              <select className="form-select" value={acc.type} onChange={e => update(acc.id, 'type', e.target.value)}>
+              <select className="form-select" value={acc.type} onChange={e => updateType(acc.id, e.target.value)}>
                 <option value="bank">Bank Transfer</option>
                 <option value="ewallet">E-Wallet</option>
               </select>
@@ -52,9 +65,7 @@ export default function RekeningForm() {
               <div>
                 <label className="form-label">{acc.type === 'bank' ? 'Nama Bank' : 'Platform'}</label>
                 <select className="form-select" value={acc.bank} onChange={e => update(acc.id, 'bank', e.target.value)}>
-                  {acc.type === 'bank'
-                    ? ['BCA', 'Mandiri', 'BNI', 'BRI', 'BSI', 'CIMB'].map(b => <option key={b}>{b}</option>)
-                    : ['GoPay', 'OVO', 'Dana', 'ShopeePay', 'LinkAja'].map(b => <option key={b}>{b}</option>)}
+                  {(acc.type === 'bank' ? BANK_OPTIONS : EWALLET_OPTIONS).map(b => <option key={b}>{b}</option>)}
                 </select>
               </div>
               <div>

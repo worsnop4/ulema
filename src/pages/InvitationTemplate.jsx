@@ -105,13 +105,6 @@ export function Reveal({ children, className = '', delay = 0 }) {
   )
 }
 
-// ── RSVP & Wishes state ────────────────────────────────────────
-const SAMPLE_WISHES = [
-  { name: 'Ahmad Fariz', wish: 'Selamat ya, semoga langgeng dan bahagia selalu! 🎉', rsvp: 'hadir', time: '2 jam lalu' },
-  { name: 'Sinta Dewi', wish: 'Bahagia selalu kalian berdua ❤️', rsvp: 'hadir', time: '5 jam lalu' },
-  { name: 'Maya Putri', wish: 'Congrats! God bless your marriage 🙏', rsvp: 'hadir', time: '1 hari lalu' },
-]
-
 export const MUSIC_URLS = {
   1: '/music/song1.mp3',
   2: '/music/song2.mp3',
@@ -212,7 +205,7 @@ export default function InvitationTemplate() {
     }
   }, [data.slug, data.id])
 
-  const wishes = data.rsvps && data.rsvps.length > 0 ? data.rsvps : SAMPLE_WISHES
+  const wishes = data.rsvps || []
   const primaryEvent = data.events?.find(ev => ev.date && ev.date.length === 10) || data.events?.[0]
 
   const handleScroll = (e) => {
