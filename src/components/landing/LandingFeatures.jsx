@@ -181,7 +181,7 @@ export default function LandingFeatures() {
               <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom,transparent,#DDC497,transparent)' }}></div>
               <div className="text-center">
                 <span className="block text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight font-serif">
-                  <AnimatedCounter target={2305000} start={statsStarted} />
+                  <AnimatedCounter target={203050} start={statsStarted} />
                 </span>
                 <span className="block text-xs text-gray-400 font-medium mt-1">Undangan Disebar</span>
               </div>

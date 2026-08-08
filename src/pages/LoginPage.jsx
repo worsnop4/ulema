@@ -258,7 +258,7 @@ export default function LoginPage() {
                 <Send className="w-5 h-5" style={{color:'#D6BE93'}} />
               </div>
               <div className="text-left">
-                <p className="text-white font-bold text-xl leading-none">2,3jt+</p>
+                <p className="text-white font-bold text-xl leading-none">203rb+</p>
                 <p className="text-xs mt-1" style={{color:'rgba(214,190,147,0.65)'}}>Undangan Disebar</p>
               </div>
             </div>
