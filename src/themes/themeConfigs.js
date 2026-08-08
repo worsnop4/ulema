@@ -490,9 +490,15 @@ export const THEME_CONFIGS = {
       photoSize: 'w-[169px] h-[165px]',
       photoOffset: 'translate(8px, -6px)',
       fallingLeaves: false,
+      // NOTE: despite its filename, buttom-right.png's actual flower content
+      // hugs the LEFT side of its canvas (measured: content x-range 0-749 of
+      // 1024px width) — it's a bottom-left spray, not bottom-right. Mapped to
+      // `bottomLeft` here so it lands in the corner it actually visually
+      // matches (also makes it pair correctly with topRight in sections like
+      // Couple/Cover that check the topRight+bottomLeft diagonal).
       leaves: {
         topRight: '/themes/Special/theme-9/top-right.png',
-        bottomRight: '/themes/Special/theme-9/buttom-right.png',
+        bottomLeft: '/themes/Special/theme-9/buttom-right.png',
       }
     }
   }
