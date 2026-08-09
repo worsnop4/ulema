@@ -60,6 +60,25 @@ export const invitationService = {
   },
 
   /**
+   * Menambahkan satu ucapan/RSVP tamu secara atomik ke dalam JSONB `data.rsvps`,
+   * lewat RPC Postgres (bukan lewat updateInvitation, supaya kiriman tamu tidak
+   * menimpa seluruh row — dua tamu yang mengirim berdekatan bisa saling
+   * menghapus, dan editan mempelai bisa ikut ter-revert).
+   * Butuh function `append_invitation_wish` di Supabase — lihat supabase/migrations/.
+   * @param {string} id
+   * @param {object} wish
+   * @returns {Promise<{error: any}>}
+   */
+  async appendWish(id, wish) {
+    try {
+      const { error } = await supabase.rpc('append_invitation_wish', { p_id: id, p_wish: wish })
+      return { error }
+    } catch (err) {
+      return { error: err }
+    }
+  },
+
+  /**
    * Cek apakah paket pemilik undangan aktif (paid + belum kedaluwarsa), lewat
    * RPC `is_user_active` (security definer). Dipakai gate pay-to-publish di
    * halaman publik. Kalau RPC belum ada (migrasi belum dijalankan) atau error,

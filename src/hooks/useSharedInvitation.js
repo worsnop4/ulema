@@ -4,6 +4,7 @@ import { defaultInvitationData, DEFAULT_THEMES, DEFAULT_ILLUSTRATIONS } from '..
 import { useAuth } from '../App'
 import { STORAGE_KEYS, SYNC_EVENTS } from '../config/constants'
 import { fetchThemesDB } from '../services/themesService'
+import { getInviteRoute } from '../lib/inviteRoute'
 
 import { useInvitationData } from './useInvitationData'
 import { useInvitationSync } from './useInvitationSync'
@@ -168,10 +169,7 @@ export function useSharedInvitation() {
 
   const dataRef = useRef(defaultInvitationData)
 
-  const pathParts = window.location.pathname.split('/')
-  const inviteIdx = pathParts.indexOf('invite')
-  const isPublicInvite = inviteIdx !== -1 && pathParts[inviteIdx + 1]
-  const publicSlug = isPublicInvite ? pathParts[inviteIdx + 1] : null
+  const { isPublicInvite, publicSlug } = getInviteRoute()
 
   const [adminDemo, setAdminDemo] = useState(() =>
     storageService.getItem(STORAGE_KEYS.ADMIN_DEMO_MODE)

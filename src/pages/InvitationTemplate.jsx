@@ -177,7 +177,7 @@ export default function InvitationTemplate() {
     handleRsvpSubmit
   } = useRsvp(updateData)
   // Shared wish/RSVP submit used by custom themes (e.g. MinangElegantTheme) that manage their own form state
-  const { submitWish } = useWishSubmit(updateData)
+  const { submitWish } = useWishSubmit(updateData, data.id)
   const { copiedKey: copied, copy: copyAccount } = useCopyToClipboard()
 
 
