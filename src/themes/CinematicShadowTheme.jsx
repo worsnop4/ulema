@@ -235,7 +235,7 @@ const VideoHeroSection = ({ data, bride, groom, primaryEvent, countdown }) => {
   ]
 
   return (
-    <section className="relative w-full h-screen overflow-hidden" style={{ background: c.bgDark }}>
+    <section className="relative w-full h-[var(--inv-h)] overflow-hidden" style={{ background: c.bgDark }}>
       {hasVideo ? (
         <video autoPlay muted loop playsInline
           className="absolute inset-0 w-full h-full object-cover"
@@ -671,7 +671,7 @@ const GallerySection = ({ data }) => {
               <ChevronLeft size={18} />
             </button>
             <motion.img key={lightboxIndex} src={photos[lightboxIndex]} alt=""
-              className="max-w-full max-h-[80vh] object-contain"
+              className="max-w-full max-h-[calc(var(--inv-h)*0.8)] object-contain"
               onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} />
             <button onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => (i + 1) % photos.length) }}

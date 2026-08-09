@@ -144,7 +144,7 @@ const Cover = ({ groomNick, brideNick, heroDate, guestName, handleOpen, animateC
 const Hero = ({ groomNick, brideNick, heroDate, countdown }) => {
   const parts = [['Hari', pad2(countdown?.d)], ['Jam', pad2(countdown?.h)], ['Menit', pad2(countdown?.m)], ['Detik', pad2(countdown?.s)]]
   return (
-    <section id="home" className="relative flex flex-col justify-end overflow-hidden" style={{ minHeight: '100vh' }}>
+    <section id="home" className="relative flex flex-col justify-end overflow-hidden" style={{ minHeight: 'var(--inv-h)' }}>
       <div className="absolute inset-0" style={{ backgroundImage: `url("${A.background}")`, backgroundSize: 'cover', backgroundPosition: 'center 20%' }} />
       <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(254,253,251,.5) 0%, rgba(254,253,251,.05) 26%, rgba(70,64,52,.18) 62%, rgba(52,47,38,.66) 100%)' }} />
       <img src={A.bloom} alt="" className="absolute pointer-events-none" style={{ top: -38, right: -46, width: 180, opacity: 0.85, filter: 'drop-shadow(0 12px 24px rgba(120,108,86,.18))', animation: 'bl-float 11s ease-in-out infinite' }} />

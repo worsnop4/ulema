@@ -230,7 +230,7 @@ const Hero = ({ data, bride, groom, primaryEvent, countdown }) => {
     ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Pernikahan ${groom} & ${bride}`)}&dates=${primaryEvent.date.replace(/-/g, '')}T010000Z/${primaryEvent.date.replace(/-/g, '')}T070000Z`
     : null
   return (
-    <section id="aurum-hero" className="relative flex flex-col justify-end items-center text-center overflow-hidden" style={{ minHeight: '100vh', padding: '0 28px 100px' }}>
+    <section id="aurum-hero" className="relative flex flex-col justify-end items-center text-center overflow-hidden" style={{ minHeight: 'var(--inv-h)', padding: '0 28px 100px' }}>
       <KenBurnsBg src={bg} scrim={`linear-gradient(180deg, rgba(8,6,5,.6) 0%, rgba(8,6,5,.1) 38%, rgba(10,8,7,.9) 78%, ${c.bg} 98%)`} />
       <Particles />
       <div className="relative flex flex-col items-center" style={{ zIndex: 2 }}>

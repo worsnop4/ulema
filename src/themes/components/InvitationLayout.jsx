@@ -79,20 +79,35 @@ export default function InvitationLayout({
       )}
 
       <style dangerouslySetInnerHTML={{__html: `
-        /* dvh keeps the shell honest under mobile browser chrome; the vh line
-           above it is the fallback for engines without dvh support. */
+        /* --inv-w / --inv-h are the shell's own dimensions, published to every
+           theme inside it. Themes must size against these instead of vw/vh:
+           viewport units still measure the browser window, which on desktop is
+           several times wider than this column. Percentages are not a
+           substitute inside transforms, where % resolves against the animated
+           element's own box rather than its container. */
         .inv-backdrop {
-          min-height: 100vh;
-          min-height: 100dvh;
+          --inv-w: 100vw;
+          --inv-h: 100vh;
+          min-height: var(--inv-h);
+        }
+        /* dvh keeps the shell honest under mobile browser chrome. Applied via
+           @supports because a custom property would happily store an
+           unsupported value and only fail later, at use site. */
+        @supports (height: 100dvh) {
+          .inv-backdrop {
+            --inv-h: 100dvh;
+          }
         }
         .inv-shell {
           width: 100%;
-          height: 100vh;
-          height: 100dvh;
+          height: var(--inv-h);
         }
         @media (min-width: 768px) {
+          .inv-backdrop {
+            --inv-w: ${COLUMN_WIDTH}px;
+          }
           .inv-shell {
-            width: ${COLUMN_WIDTH}px;
+            width: var(--inv-w);
             box-shadow: 0 0 70px rgba(0, 0, 0, 0.3);
           }
         }

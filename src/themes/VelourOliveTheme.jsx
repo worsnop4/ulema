@@ -105,7 +105,10 @@ const Petals = ({ petals }) => (
       <img key={p.id} src={A.petal} alt=""
         style={{
           position: 'absolute', top: 0, left: `${p.left}%`, width: 22, height: 'auto',
-          '--dx': `${p.dx}vw`, '--rot': `${p.rot}deg`,
+          // dx is authored as a vw-style percentage; resolve it against the
+          // invitation column, not the browser window (on desktop the window
+          // is several times wider, which threw petals clean out of frame).
+          '--dx': `calc(var(--inv-w) * ${p.dx / 100})`, '--rot': `${p.rot}deg`,
           animation: `vo-fall ${p.duration}s linear infinite`,
           animationDelay: `${p.delay}s`,
         }} />
@@ -724,7 +727,7 @@ export default function VelourOliveTheme({
           0% { transform: translate3d(0,-12%,0) rotate(0); opacity: 0; }
           10% { opacity: .85; }
           90% { opacity: .85; }
-          100% { transform: translate3d(var(--dx),112vh,0) rotate(var(--rot)); opacity: 0; }
+          100% { transform: translate3d(var(--dx),calc(var(--inv-h) * 1.12),0) rotate(var(--rot)); opacity: 0; }
         }
         @keyframes vo-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
         .vo-scroll { scroll-snap-type: y proximity; }

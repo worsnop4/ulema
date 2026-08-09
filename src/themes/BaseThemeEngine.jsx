@@ -103,10 +103,10 @@ export default function BaseThemeEngine({
 
         {/* Scrollable Container */}
         <div className={`flex-1 w-full overflow-x-hidden scroll-smooth ${animateClose ? 'overflow-y-auto' : 'overflow-hidden'}`} onScroll={handleScroll}>
-          <div className={`min-h-screen font-sans relative pb-28 ${config.global.bgContainer}`} style={{ background: config.ornaments?.bg ? 'transparent' : bgColor }}>
+          <div className={`min-h-[var(--inv-h)] font-sans relative pb-28 ${config.global.bgContainer}`} style={{ background: config.ornaments?.bg ? 'transparent' : bgColor }}>
 
             {/* ══════════  HERO SECTION  ══════════ */}
-            <section id="hero" className={`relative min-h-screen flex flex-col items-center justify-center text-center overflow-hidden px-6 py-20 ${config.hero.bgClass}`}>
+            <section id="hero" className={`relative min-h-[var(--inv-h)] flex flex-col items-center justify-center text-center overflow-hidden px-6 py-20 ${config.hero.bgClass}`}>
               {config.ornaments?.leaves && (
                 <>
                   {config.ornaments.leaves.topLeft && (
@@ -832,7 +832,7 @@ export default function BaseThemeEngine({
               pointerEvents: animateClose ? 'none' : 'auto',
               background: coverBg
             }}>
-            <div className={`flex-1 min-h-screen flex flex-col items-center ${meta.coverStyle === 'fade' ? 'justify-end pb-12' : 'justify-center'} relative overflow-hidden`}>
+            <div className={`flex-1 min-h-[var(--inv-h)] flex flex-col items-center ${meta.coverStyle === 'fade' ? 'justify-end pb-12' : 'justify-center'} relative overflow-hidden`}>
               {/* Fade Cover Photo */}
               {meta.coverStyle === 'fade' && coverPhoto && (
                 <div className="absolute inset-x-0 top-0 h-[65%] z-0 overflow-hidden">

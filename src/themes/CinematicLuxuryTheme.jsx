@@ -109,7 +109,7 @@ export default function CinematicLuxuryTheme({
   return (
     <InvitationLayout layout={THEMES.DARK_LUXURY} data={data} primaryColor={primaryColor} accentColor={luxGold} bgColor={luxBg} primaryEvent={primaryEvent}>
       <div 
-        className="w-full relative min-h-screen flex flex-col overflow-x-hidden font-sans"
+        className="w-full relative min-h-[var(--inv-h)] flex flex-col overflow-x-hidden font-sans"
         style={{ backgroundColor: luxBg, color: luxText }}
         onScroll={handleScroll}
       >
@@ -125,7 +125,7 @@ export default function CinematicLuxuryTheme({
           {musicPlaying ? <Pause size={16} color={luxGold} /> : <Play size={16} color={luxGold} className="ml-1" />}
         </button>
 
-        <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20 text-center">
+        <section className="relative min-h-[var(--inv-h)] flex flex-col items-center justify-center px-6 py-20 text-center">
           <div className="absolute inset-0 pointer-events-none opacity-40">
             {isVideo && coverVideo ? (
               <video src={coverVideo} autoPlay loop muted playsInline className="w-full h-full object-cover" />
@@ -161,7 +161,7 @@ export default function CinematicLuxuryTheme({
               </div>
             )}
             
-            <div className="absolute bottom-[-10vh] left-1/2 -translate-x-1/2 animate-bounce">
+            <div className="absolute bottom-[calc(var(--inv-h)*-0.1)] left-1/2 -translate-x-1/2 animate-bounce">
               <ChevronDown size={24} color={luxGold} opacity={0.5} />
             </div>
           </FadeUp>

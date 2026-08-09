@@ -185,7 +185,7 @@ const Hero = ({ data, groomNick, brideNick, dateLabel, countdown }) => {
     { value: pad2(countdown?.s), label: 'Detik' },
   ]
   return (
-    <section id="mm-home" className="relative flex flex-col justify-end overflow-hidden" style={{ height: '100vh', minHeight: 640 }}>
+    <section id="mm-home" className="relative flex flex-col justify-end overflow-hidden" style={{ height: 'var(--inv-h)', minHeight: 640 }}>
       <PhotoBg src={heroPhoto} fallback="linear-gradient(150deg, #33404f 0%, #1a2430 60%, #0e141b 100%)"
         scrim={`linear-gradient(180deg, rgba(14,20,27,.5) 0%, rgba(14,20,27,.05) 30%, rgba(14,20,27,.55) 66%, ${c.bgBase} 100%)`} dur={30} />
       <Mist opacity={0.55} dur={26} reverse style={{ height: '60%', filter: 'blur(6px)', maskImage: 'radial-gradient(ellipse 62% 46% at 50% 55%, black 30%, transparent 78%)', WebkitMaskImage: 'radial-gradient(ellipse 62% 46% at 50% 55%, black 30%, transparent 78%)' }} />
@@ -495,7 +495,7 @@ const TurutMengundang = ({ data }) => {
 
 // ─── 10. FOOTER ──────────────────────────────────────────────────
 const Footer = ({ data, groomNick, brideNick, dateLabel }) => (
-  <section className="relative overflow-hidden flex items-end justify-center" style={{ height: '78vh', minHeight: 540 }}>
+  <section className="relative overflow-hidden flex items-end justify-center" style={{ height: 'calc(var(--inv-h) * 0.78)', minHeight: 540 }}>
     <PhotoBg src={data?.meta?.footerPhoto || ''} fallback="linear-gradient(200deg, #2a3644, #0e141b)"
       scrim={`linear-gradient(180deg, ${c.bgBase} 0%, rgba(16,23,32,.15) 38%, rgba(16,23,32,.85) 82%, ${c.bgCover} 100%)`} dur={32} />
     <div className="relative text-center" style={{ zIndex: 2, color: c.ink2, padding: '0 30px 110px' }}>

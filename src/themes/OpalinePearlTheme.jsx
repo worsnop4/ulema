@@ -259,7 +259,7 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
 const Hero = ({ data, groomNick, brideNick, heroDate, countdown }) => {
   const parts = [['Hari', pad2(countdown?.d)], ['Jam', pad2(countdown?.h)], ['Menit', pad2(countdown?.m)], ['Detik', pad2(countdown?.s)]]
   return (
-    <section id="op-home" className="relative flex flex-col justify-end overflow-hidden" style={{ zIndex: 1, height: '100svh', minHeight: 640 }}>
+    <section id="op-home" className="relative flex flex-col justify-end overflow-hidden" style={{ zIndex: 1, height: 'var(--inv-h)', minHeight: 640 }}>
       <div className="absolute pointer-events-none" style={{ inset: '-6%', animation: 'op-pan 26s ease-in-out infinite alternate', background: data?.meta?.photo ? `url("${data.meta.photo}") center/cover no-repeat` : placeholderBg }} />
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(252,249,247,.7) 0%, rgba(252,249,247,0) 20%, rgba(44,34,28,.34) 42%, rgba(44,34,28,.6) 62%, rgba(30,22,17,.76) 100%)' }} />
 
@@ -656,7 +656,7 @@ export default function OpalinePearlTheme({
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Parisienne&family=Jost:wght@300;400;500&display=swap');
         @keyframes op-twinkle { 0%,100% { opacity: .12; } 50% { opacity: .95; } }
         @keyframes op-float { 0% { transform: translate3d(0,0,0); } 50% { transform: translate3d(10px,-22px,0); } 100% { transform: translate3d(0,0,0); } }
-        @keyframes op-petal { 0% { transform: translate3d(0,-12vh,0) rotate(0deg); opacity: 0; } 12% { opacity: .9; } 100% { transform: translate3d(46px,112vh,0) rotate(460deg); opacity: 0; } }
+        @keyframes op-petal { 0% { transform: translate3d(0,calc(var(--inv-h) * -0.12),0) rotate(0deg); opacity: 0; } 12% { opacity: .9; } 100% { transform: translate3d(46px,calc(var(--inv-h) * 1.12),0) rotate(460deg); opacity: 0; } }
         @keyframes op-opal { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes op-pan { 0% { transform: translate3d(-3.5%,-2.5%,0); } 100% { transform: translate3d(3.5%,2.5%,0); } }
         @keyframes op-eq { 0%,100% { height: 4px; } 50% { height: 15px; } }
@@ -701,7 +701,7 @@ export default function OpalinePearlTheme({
             {/* Music toggle */}
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
-                className="fixed md:absolute flex items-center justify-center" style={{ bottom: 96, right: 'max(18px, calc(50vw - 218px))', zIndex: 70, width: 50, height: 50, borderRadius: '50%', border: `1px solid rgba(195,161,93,.45)`, background: 'rgba(255,252,249,.72)', backdropFilter: 'blur(14px)', boxShadow: '0 12px 28px rgba(94,72,50,.18)', cursor: 'pointer', gap: 3 }}>
+                className="fixed md:absolute flex items-center justify-center" style={{ bottom: 96, right: 'max(18px, calc(var(--inv-w) / 2 - 218px))', zIndex: 70, width: 50, height: 50, borderRadius: '50%', border: `1px solid rgba(195,161,93,.45)`, background: 'rgba(255,252,249,.72)', backdropFilter: 'blur(14px)', boxShadow: '0 12px 28px rgba(94,72,50,.18)', cursor: 'pointer', gap: 3 }}>
                 {[0, 1, 2].map((i) => (
                   <span key={i} style={{ display: 'block', width: 3, height: musicPlaying ? 4 : 12, borderRadius: 2, background: c.goldDeep, animation: musicPlaying ? `op-eq ${0.6 + i * 0.16}s ease-in-out infinite` : 'none' }} />
                 ))}
@@ -709,7 +709,7 @@ export default function OpalinePearlTheme({
             )}
 
             {/* Bottom nav */}
-            <nav className="fixed md:absolute left-1/2 -translate-x-1/2 flex justify-between" style={{ bottom: 22, zIndex: 70, width: 'min(432px, calc(100vw - 32px))', gap: 2, padding: '8px 10px', borderRadius: 999, background: 'rgba(255,252,249,.62)', border: '1px solid rgba(255,255,255,.75)', boxShadow: '0 16px 40px rgba(94,72,50,.18), inset 0 1px 0 rgba(255,255,255,.9)', backdropFilter: 'blur(18px) saturate(1.3)' }}>
+            <nav className="fixed md:absolute left-1/2 -translate-x-1/2 flex justify-between" style={{ bottom: 22, zIndex: 70, width: 'min(432px, calc(var(--inv-w) - 32px))', gap: 2, padding: '8px 10px', borderRadius: 999, background: 'rgba(255,252,249,.62)', border: '1px solid rgba(255,255,255,.75)', boxShadow: '0 16px 40px rgba(94,72,50,.18), inset 0 1px 0 rgba(255,255,255,.9)', backdropFilter: 'blur(18px) saturate(1.3)' }}>
               {NAV.map(([label, id]) => (
                 <button key={id} onClick={() => scrollToId(id)} style={{ flex: 1, border: 'none', cursor: 'pointer', background: 'transparent', color: c.goldDeep, fontFamily: F.sans, fontSize: 9.5, letterSpacing: '.1em', textTransform: 'uppercase', padding: '9px 2px 8px', borderRadius: 999 }}>{label}</button>
               ))}
