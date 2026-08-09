@@ -265,7 +265,14 @@ export default function BaseThemeEngine({
                   <h2 className={config.global.headingClass}>Dua Insan Bersatu</h2>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-8">
+                {/* Intrinsic sizing, not a breakpoint: `sm:grid-cols-2` keyed
+                    off the browser width, so on desktop it split this column
+                    into two ~200px halves while the widest couple frame
+                    (w-80) plus card padding needs 384px — the frame overflowed
+                    its card and `mx-auto` could no longer centre it. auto-fit
+                    measures the actual column instead, so it stays one column
+                    until there is genuinely room for two. */}
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(384px,100%),1fr))] gap-8">
                   {[data.groom, data.bride].map((person, i) => (
                     <Reveal key={i} delay={i * 150}
                       className={`${config.couple.cardClass} relative`}>
@@ -493,7 +500,7 @@ export default function BaseThemeEngine({
                     <h2 className={config.global.headingClass}>Momen Bersama</h2>
                   </div>
                   {data.gallery && data.gallery.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(120px,100%),1fr))] gap-3">
                       {data.gallery.map((photo, i) => (
                         <div key={photo.id || i}
                           className={`aspect-square ${config.gallery.itemClass}`}>
@@ -729,7 +736,7 @@ export default function BaseThemeEngine({
                 <Reveal className="max-w-xl mx-auto text-center">
                   <span className={config.global.labelClass}>TURUT MENGUNDANG</span>
                   <h2 className={`${config.global.headingClass} mb-12`}>Keluarga Besar</h2>
-                  <div className="grid sm:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(min(240px,100%),1fr))] gap-8">
                     {data.families.map((fam, i) => {
                       const validMembers = fam.members.filter(m => m.trim() !== '');
                       if (validMembers.length === 0) return null;
