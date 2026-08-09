@@ -144,8 +144,16 @@ const Petals = ({ petals }) => (
 
 // ─── FILIGREE (self-drawing gold ornament on each cover door) ────
 const strokeBase = { fill: 'none', stroke: c.gold, strokeWidth: 1, strokeLinecap: 'round' }
-const draw = (dur, delay) => ({ strokeDasharray: 900, strokeDashoffset: 900, animation: `op-draw ${dur}s cubic-bezier(.4,.1,.2,1) ${delay}s forwards` })
-const Filigree = ({ mirror }) => (
+const drawBase = (dur, delay) => ({ strokeDasharray: 900, strokeDashoffset: 900, animation: `op-draw ${dur}s cubic-bezier(.4,.1,.2,1) ${delay}s forwards` })
+// `paused` freezes the self-drawing strokes the instant the doors start
+// swinging. The filigree keeps drawing for ~3.9s after mount, so a guest who
+// taps "Buka Undangan" early leaves 14 stroke-dashoffset animations repainting
+// the door's texture on every frame of a 3D rotation — the most expensive
+// thing that can share a frame with a composited transform. Paused mid-draw is
+// imperceptible while the door is rotating away.
+const Filigree = ({ mirror, paused }) => {
+  const draw = (dur, delay) => ({ ...drawBase(dur, delay), animationPlayState: paused ? 'paused' : 'running' })
+  return (
   <svg viewBox="0 0 240 540" preserveAspectRatio="none" className="absolute inset-0 pointer-events-none"
     style={{ width: '100%', height: '100%', opacity: 0.5, transform: mirror ? 'scaleX(-1)' : 'none' }}>
     <rect x={14} y={14} width={212} height={512} rx={14} {...strokeBase} strokeOpacity={0.45} style={draw(2.6, 0.1)} />
@@ -163,7 +171,8 @@ const Filigree = ({ mirror }) => (
     <path d="M88 210 V 150" {...strokeBase} strokeOpacity={0.3} style={draw(2.4, 1.45)} />
     <path d="M88 330 V 390" {...strokeBase} strokeOpacity={0.3} style={draw(2.4, 1.45)} />
   </svg>
-)
+  )
+}
 
 // ─── DIVIDER (self-drawing, reveals on scroll) ────────────────────
 const Divider = () => (
@@ -190,28 +199,54 @@ const Divider = () => (
 // and clipped via overflow:hidden — this keeps the photo's natural aspect
 // ratio (unlike stretching a background-size trick across two half-boxes,
 // which distorts arbitrary user photos that aren't pre-cropped for it).
+//
+// Two things the first cut got wrong, both visible as "the frame gets left
+// behind while the cover opens":
+//   1. The border / drop shadow / placeholder fill lived on the OUTER box,
+//      which never animated. The halves swung away and left an empty outlined
+//      shell hanging over the photo. They now live on a separate chrome layer
+//      that fades out on the same beat as the swing.
+//   2. That outer box was `overflow: hidden` with an arch radius, so it
+//      clipped its own halves the moment they rotated out of plane — the
+//      swing read as a squeeze rather than a door. The clip now sits on each
+//      half (which is what needs it, to crop its copy of the photo), and the
+//      halves are free to swing past the frame's edge.
 const COVER_PHOTO_W = 208
 const COVER_PHOTO_H = 272
+const ARCH = COVER_PHOTO_W / 2
+const photoHalf = {
+  position: 'absolute', top: 0, bottom: 0, overflow: 'hidden',
+  background: placeholderBg, transformStyle: 'preserve-3d', backfaceVisibility: 'hidden',
+}
 const CoverPhotoFrame = ({ src, animateClose }) => (
-  <div className="relative mx-auto" style={{ width: COVER_PHOTO_W, height: COVER_PHOTO_H, borderRadius: `${COVER_PHOTO_W / 2}px ${COVER_PHOTO_W / 2}px 24px 24px`, overflow: 'hidden', border: '1px solid rgba(255,255,255,.5)', boxShadow: '0 20px 44px rgba(30,20,14,.35)', perspective: 700, background: placeholderBg }}>
-    <div className="absolute top-0 left-0 bottom-0 pointer-events-none overflow-hidden" style={{
-      width: '50%', transformOrigin: 'left center', transformStyle: 'preserve-3d',
-      animation: animateClose ? 'op-doorL 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
+  <div className="relative mx-auto" style={{ width: COVER_PHOTO_W, height: COVER_PHOTO_H, perspective: 900 }}>
+    <div className="pointer-events-none" style={{
+      ...photoHalf, left: 0, right: '50%', borderRadius: `${ARCH}px 0 0 24px`, transformOrigin: 'left center',
+      animation: animateClose ? 'op-doorL 1.35s cubic-bezier(.6,.02,.2,1) forwards, op-fadeOut .75s ease .2s forwards' : 'none',
     }}>
       {src && <img src={src} alt="" className="absolute top-0 left-0 h-full object-cover" style={{ width: COVER_PHOTO_W, maxWidth: 'none' }} />}
     </div>
-    <div className="absolute top-0 right-0 bottom-0 pointer-events-none overflow-hidden" style={{
-      width: '50%', transformOrigin: 'right center', transformStyle: 'preserve-3d',
-      animation: animateClose ? 'op-doorR 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
+    <div className="pointer-events-none" style={{
+      ...photoHalf, left: '50%', right: 0, borderRadius: `0 ${ARCH}px 24px 0`, transformOrigin: 'right center',
+      animation: animateClose ? 'op-doorR 1.35s cubic-bezier(.6,.02,.2,1) forwards, op-fadeOut .75s ease .2s forwards' : 'none',
     }}>
       {src && <img src={src} alt="" className="absolute top-0 right-0 h-full object-cover" style={{ width: COVER_PHOTO_W, maxWidth: 'none' }} />}
     </div>
+    {/* Outline + shadow only. Stays put while the halves swing, then dissolves. */}
+    <div className="absolute inset-0 pointer-events-none" style={{
+      borderRadius: `${ARCH}px ${ARCH}px 24px 24px`, border: '1px solid rgba(255,255,255,.5)',
+      boxShadow: '0 20px 44px rgba(30,20,14,.35)',
+      animation: animateClose ? 'op-fadeOut .75s ease .2s forwards' : 'none',
+    }} />
   </div>
 )
 
 // ─── 0. COVER ────────────────────────────────────────────────────
 const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, animateClose }) => (
-  <div className="fixed inset-0 flex justify-center" style={{ zIndex: 90, background: '#2E2722', animation: animateClose ? 'op-coverOut 2.1s ease forwards' : 'none' }}>
+  // touch-action: none because the invitation body is now mounted underneath
+  // the cover during the whole transition — without it a stray drag on the
+  // cover scrolls the page behind it and the reveal lands mid-invitation.
+  <div className="fixed inset-0 flex justify-center" style={{ zIndex: 90, background: '#2E2722', touchAction: 'none', animation: animateClose ? 'op-coverOut 1.6s ease forwards' : 'none' }}>
     <div className="relative w-full h-full overflow-hidden" style={{ maxWidth: 480, perspective: 1600 }}>
       <div className="absolute pointer-events-none" style={{ inset: '-6%', animation: 'op-pan 24s ease-in-out infinite alternate', background: data?.meta?.coverPhoto ? `url("${data.meta.coverPhoto}") center/cover no-repeat` : placeholderBg }} />
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(44,34,28,.35) 0%, rgba(44,34,28,.15) 40%, rgba(44,34,28,.78) 100%)' }} />
@@ -219,37 +254,43 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
       <div className="absolute top-0 bottom-0 left-0 pointer-events-none" style={{
         width: '50.4%', transformOrigin: 'left center', transformStyle: 'preserve-3d',
         backgroundColor: c.ivoryDoor, backgroundImage: `url("${A.coverRelief}")`, backgroundSize: '198.4% 100%', backgroundPosition: 'left center', backgroundRepeat: 'no-repeat',
-        boxShadow: 'inset -18px 0 40px rgba(94,72,50,.18)',
-        animation: animateClose ? 'op-doorL 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
+        boxShadow: 'inset -18px 0 40px rgba(94,72,50,.18)', backfaceVisibility: 'hidden',
+        animation: animateClose ? 'op-doorL 1.35s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
       }}>
-        <Filigree mirror={false} />
+        <Filigree mirror={false} paused={animateClose} />
       </div>
       <div className="absolute top-0 bottom-0 right-0 pointer-events-none" style={{
         width: '50.4%', transformOrigin: 'right center', transformStyle: 'preserve-3d',
         backgroundColor: c.ivoryDoor, backgroundImage: `url("${A.coverRelief}")`, backgroundSize: '198.4% 100%', backgroundPosition: 'right center', backgroundRepeat: 'no-repeat',
-        boxShadow: 'inset 18px 0 40px rgba(94,72,50,.18)',
-        animation: animateClose ? 'op-doorR 1.7s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
+        boxShadow: 'inset 18px 0 40px rgba(94,72,50,.18)', backfaceVisibility: 'hidden',
+        animation: animateClose ? 'op-doorR 1.35s cubic-bezier(.6,.02,.2,1) forwards' : 'none',
       }}>
-        <Filigree mirror={true} />
+        <Filigree mirror={true} paused={animateClose} />
       </div>
 
       <div className="absolute inset-0 flex flex-col items-center justify-end text-center" style={{ padding: '0 36px 110px', color: '#FFF8F0' }}>
-        <p className="uppercase" style={{ margin: '0 0 12px', fontFamily: F.sans, fontSize: 10, letterSpacing: '.45em', color: c.muted2 }}>The Wedding Of</p>
+        <p className="uppercase" style={{ margin: '0 0 12px', fontFamily: F.sans, fontSize: 10, letterSpacing: '.45em', color: c.muted2, animation: animateClose ? 'op-textOut .5s ease forwards' : 'none' }}>The Wedding Of</p>
         <CoverPhotoFrame src={data?.meta?.coverPhoto} animateClose={animateClose} />
-        <h1 style={{
-          margin: '18px 0 0', fontFamily: F.script, fontSize: 56, lineHeight: 1.06, fontWeight: 400,
-          background: `linear-gradient(100deg,${c.goldDeep} 18%,${c.goldMid} 34%,${c.goldLight} 46%,${c.goldDeep} 64%)`,
-          backgroundSize: '220% 100%', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          animation: 'op-shimmer 6s linear infinite',
-        }}>{groomNick} &amp; {brideNick}</h1>
-        <p style={{ margin: '14px 0 0', fontFamily: F.serif, fontSize: 16, letterSpacing: '.24em', color: c.body }}>{heroDate}</p>
+        {/* The names / date / guest card / button clear out fast so the doors
+            aren't swinging open behind copy that just sits there. The photo
+            frame above is deliberately left out of this group: it keeps
+            swinging, on its own slower fade, as the mini-door it was built as. */}
+        <div className="flex flex-col items-center" style={{ animation: animateClose ? 'op-textOut .55s ease .04s forwards' : 'none' }}>
+          <h1 style={{
+            margin: '18px 0 0', fontFamily: F.script, fontSize: 56, lineHeight: 1.06, fontWeight: 400,
+            background: `linear-gradient(100deg,${c.goldDeep} 18%,${c.goldMid} 34%,${c.goldLight} 46%,${c.goldDeep} 64%)`,
+            backgroundSize: '220% 100%', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            animation: 'op-shimmer 6s linear infinite',
+          }}>{groomNick} &amp; {brideNick}</h1>
+          <p style={{ margin: '14px 0 0', fontFamily: F.serif, fontSize: 16, letterSpacing: '.24em', color: c.body }}>{heroDate}</p>
 
-        <div style={{ marginTop: 30, padding: '16px 22px', borderRadius: 20, background: 'rgba(255,255,255,.6)', border: `1px solid rgba(195,161,93,.4)`, backdropFilter: 'blur(12px)', boxShadow: '0 12px 30px rgba(94,72,50,.12)' }}>
-          <p className="uppercase" style={{ margin: 0, fontFamily: F.sans, fontSize: 9.5, letterSpacing: '.3em', color: c.muted2 }}>Kepada Yth.</p>
-          <p style={{ margin: '8px 0 0', fontFamily: F.serif, fontSize: 21, color: c.ink }}>{guestName}</p>
+          <div style={{ marginTop: 30, padding: '16px 22px', borderRadius: 20, background: 'rgba(255,255,255,.6)', border: `1px solid rgba(195,161,93,.4)`, backdropFilter: 'blur(12px)', boxShadow: '0 12px 30px rgba(94,72,50,.12)' }}>
+            <p className="uppercase" style={{ margin: 0, fontFamily: F.sans, fontSize: 9.5, letterSpacing: '.3em', color: c.muted2 }}>Kepada Yth.</p>
+            <p style={{ margin: '8px 0 0', fontFamily: F.serif, fontSize: 21, color: c.ink }}>{guestName}</p>
+          </div>
+
+          <button onClick={handleOpen} style={{ ...btnPill, marginTop: 26, fontSize: 11, padding: '15px 34px', boxShadow: '0 16px 34px rgba(142,113,52,.32)' }}>Buka Undangan</button>
         </div>
-
-        <button onClick={handleOpen} style={{ ...btnPill, marginTop: 26, fontSize: 11, padding: '15px 34px', boxShadow: '0 16px 34px rgba(142,113,52,.32)' }}>Buka Undangan</button>
       </div>
     </div>
   </div>
@@ -642,12 +683,21 @@ export default function OpalinePearlTheme({
   const guest = guestName || 'Bapak/Ibu/Saudara/i'
   const [dust] = useState(genDust)
   const [petals] = useState(genPetals)
+  const [coverGone, setCoverGone] = useState(false)
 
   const handleOpen = () => {
     if (animateClose) return
     setAnimateClose(true)
     setMusicPlaying(true)
-    setTimeout(() => setOpened(true), 2100)
+    // Mount the body NOW, underneath the still-opaque cover, instead of at the
+    // end of the transition. Two things were wrong with mounting it last:
+    // the cover spent its final ~0.4s fading onto a blank pearl screen (the
+    // "jeda"), and then twelve sections laid out in a single commit — with
+    // every image starting to load — exactly at the reveal. Paying that cost
+    // here is free: nothing has moved yet, so a dropped frame is invisible,
+    // and the hero photo is decoded by the time the cover fades off it.
+    setOpened(true)
+    setTimeout(() => setCoverGone(true), 1700)
   }
 
   return (
@@ -664,9 +714,18 @@ export default function OpalinePearlTheme({
         @keyframes op-sheen { 0% { transform: translateX(-140%) skewX(-18deg); } 100% { transform: translateX(240%) skewX(-18deg); } }
         @keyframes op-shimmer { 0% { background-position: 220% 0; } 100% { background-position: -220% 0; } }
         @keyframes op-draw { from { stroke-dashoffset: 900; } to { stroke-dashoffset: 0; } }
-        @keyframes op-doorL { to { transform: perspective(1400px) rotateY(-96deg); } }
-        @keyframes op-doorR { to { transform: perspective(1400px) rotateY(96deg); } }
-        @keyframes op-coverOut { 0% { opacity: 1; } 55% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+        /* Explicit \`from\`, and no perspective() inside the transform. With an
+           implicit \`from: none\` the browser interpolates the perspective
+           function itself — from infinite depth down to 1400px — so the
+           projection strength changed mid-swing and the door read as wobbly.
+           Depth now comes solely from the parent's \`perspective\` property
+           (1600 on the cover, 900 on the photo frame), which is also what
+           lets one keyframe serve two very differently sized doors. */
+        @keyframes op-doorL { from { transform: rotateY(0deg); } to { transform: rotateY(-92deg); } }
+        @keyframes op-doorR { from { transform: rotateY(0deg); } to { transform: rotateY(92deg); } }
+        @keyframes op-coverOut { 0%, 50% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes op-textOut { from { opacity: 1; transform: translate3d(0,0,0); } to { opacity: 0; transform: translate3d(0,-16px,0); } }
+        @keyframes op-fadeOut { from { opacity: 1; } to { opacity: 0; } }
       `}</style>
 
       <div className="w-full relative h-full flex flex-col overflow-x-hidden" style={{ fontFamily: F.sans, color: c.ink, background: c.pearl }}>
@@ -676,10 +735,14 @@ export default function OpalinePearlTheme({
 
         <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0, background: 'linear-gradient(180deg, rgba(252,249,247,.12) 0%, rgba(252,249,247,.42) 26%, rgba(252,249,247,.52) 60%, rgba(252,249,247,.44) 100%)' }} />
         <div className="absolute pointer-events-none" style={{ inset: '-40% -40% auto -40%', height: '180%', zIndex: 0, opacity: 0.3, filter: 'blur(60px)', animation: 'op-opal 90s linear infinite', background: opalConic }} />
-        <Stardust dust={dust} />
-        <Petals petals={petals} />
+        {/* 46 dust motes + 14 petals, each an animated box-shadowed div, are
+            fully occluded by the cover — so they were burning the frame budget
+            during the one moment that needs all of it. They join once the
+            cover is gone; at these opacities nobody sees them arrive. */}
+        {coverGone && <Stardust dust={dust} />}
+        {coverGone && <Petals petals={petals} />}
 
-        {!opened && (
+        {!coverGone && (
           <Cover data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate} guestName={guest} handleOpen={handleOpen} animateClose={animateClose} />
         )}
 
