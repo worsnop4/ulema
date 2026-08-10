@@ -50,12 +50,18 @@ const fmtEventDate = (s) => {
   } catch { return { day: '28', mon: 'Desember', yr: '2027' } }
 }
 
+// Guarded for the love-story timeline, which passes a free-text "Tahun" (every
+// stored milestone carries `year`, none carries `date`). `new Date('2024')`
+// resolves to 1 Jan 2024, so the theme printed a day and month the couple never
+// entered, and "Awal 2024" lost its words the same way. The try/catch never
+// helped — `new Date` returns Invalid Date rather than throwing. Real ISO dates
+// and timestamps still format, so the wish `createdAt` caller is unaffected.
 const fmtShortDate = (s) => {
   if (!s) return ''
-  try {
-    const d = new Date(s)
-    return `${d.getDate().toString().padStart(2, '0')} ${ID_MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
-  } catch { return s }
+  if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return s
+  const d = new Date(s)
+  if (isNaN(d.getTime())) return s
+  return `${d.getDate().toString().padStart(2, '0')} ${ID_MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
 }
 
 // ─── GLASS CARD ──────────────────────────────────────────────────
@@ -390,7 +396,7 @@ const LoveStorySection = ({ data }) => {
                 <div className={`w-5/12 flex flex-col ${isL ? 'text-left' : 'text-right'}`}>
                   <span className="text-xs font-sans mb-1 tracking-widest" style={{ color: c.gold }}>{fmtShortDate(s.date || s.year)}</span>
                   <h4 className="font-semibold text-[15px] mb-1.5 font-sans leading-tight" style={{ color: c.cream }}>{s.title}</h4>
-                  <p className="text-[13px] leading-relaxed font-sans" style={{ color: c.text, opacity: 0.8 }}>{s.story}</p>
+                  <p className="text-[13px] leading-relaxed font-sans" style={{ color: c.text, opacity: 0.8 }}>{s.desc}</p>
                 </div>
               </motion.div>
             )

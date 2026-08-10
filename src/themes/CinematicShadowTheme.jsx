@@ -598,7 +598,7 @@ const LoveStorySection = ({ data }) => {
                   {s.title}
                 </h4>
                 <p className="text-[13px] leading-relaxed" style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, color: `${c.textLight}cc` }}>
-                  {s.story}
+                  {s.desc}
                 </p>
               </Reveal>
             ))}

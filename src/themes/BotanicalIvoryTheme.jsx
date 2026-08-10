@@ -345,7 +345,7 @@ const LoveStorySection = ({ data }) => {
               <div style={{ paddingTop: 4 }}>
                 <span className="font-sans" style={{ fontSize: 11, letterSpacing: '0.15em', color: c.gold, fontWeight: 600, textTransform: 'uppercase' }}>{s.date || s.year}</span>
                 <h4 className="font-sans" style={{ fontSize: 15, fontWeight: 600, color: c.charcoal, margin: '4px 0 6px' }}>{s.title}</h4>
-                <p className="font-sans" style={{ fontSize: 13, lineHeight: 1.65, color: c.muted, margin: 0 }}>{s.story}</p>
+                <p className="font-sans" style={{ fontSize: 13, lineHeight: 1.65, color: c.muted, margin: 0 }}>{s.desc}</p>
               </div>
             </div>
           </Reveal>

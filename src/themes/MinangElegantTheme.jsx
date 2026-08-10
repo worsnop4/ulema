@@ -56,13 +56,21 @@ const fmtEventDate = (s) => {
   } catch { return { day: '28', mon: 'Desember', yr: '2027' } }
 }
 
+// The love-story form collects a free-text "Tahun" (placeholder 2024) and no
+// full date at all — every stored milestone carries `year`, none carries
+// `date`. So this only ever received a bare year, and `new Date('2024')`
+// resolves to 1 Jan 2024: the theme printed a day and a month the couple never
+// entered. Free text fared worse — "Awal 2024" also became 01 Jan 2024, losing
+// the words. The try/catch never helped, because `new Date` returns Invalid
+// Date rather than throwing. Format only what really is a date; otherwise show
+// exactly what was typed.
 const fmtLSDate = (s) => {
   if (!s) return ''
-  try {
-    const d = new Date(s)
-    const M = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des']
-    return `${d.getDate().toString().padStart(2,'0')} ${M[d.getMonth()]} ${d.getFullYear()}`
-  } catch { return s }
+  if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return s
+  const d = new Date(s)
+  if (isNaN(d.getTime())) return s
+  const M = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des']
+  return `${d.getDate().toString().padStart(2,'0')} ${M[d.getMonth()]} ${d.getFullYear()}`
 }
 
 // ─── GLASS CARD ──────────────────────────────────────────────────
@@ -405,7 +413,7 @@ const LoveStorySection = ({ data }) => {
                     {s.title}
                   </h4>
                   <p className="text-[13px] opacity-80 leading-relaxed font-sans" style={{ color: c.text }}>
-                    {s.story}
+                    {s.desc}
                   </p>
                 </div>
               </motion.div>
