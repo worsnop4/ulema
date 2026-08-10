@@ -147,7 +147,58 @@ const CoverSection = ({ data, bride, groom, primaryEvent, handleOpen, animateClo
   )
 }
 
-// ─── 2. COUNTDOWN ────────────────────────────────────────────────
+// ─── 2. HERO — "Foto Slide Awal" ─────────────────────────────────
+// The editor's "Foto Slide Awal" box writes meta.photo and tells the couple it
+// is the "foto utama pasangan yang akan muncul setelah undangan dibuka (Hero)".
+// Botanical had no hero at all — opening the invitation dropped straight into
+// the countdown — so that upload had nowhere to land and was only ever read as
+// a third-choice fallback for the cover portrait. Source order matches
+// BaseThemeEngine's heroPhoto, so a couple who filled the form once sees the
+// same photo here as in every other theme.
+const HeroSection = ({ data, bride, groom, primaryEvent }) => {
+  const heroPhoto = data?.meta?.photo || data?.meta?.coverPhoto || data?.groom?.photo || data?.bride?.photo || null
+  return (
+    <section className="relative flex flex-col items-center justify-end overflow-hidden"
+      style={{
+        height: 'var(--inv-h)', minHeight: 560, padding: '0 30px 56px', textAlign: 'center',
+        backgroundColor: c.sageDeep,
+        // Falls back to the theme's own foliage plate rather than an empty
+        // frame, so a half-filled invitation still reads as designed.
+        backgroundImage: `url('${heroPhoto || A.eventsBg}')`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+      }}>
+      {/* Scrim stays light up top so the photo remains the subject, then
+          deepens to carry the type and hand off into the ivory countdown. */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'linear-gradient(180deg, rgba(44,53,42,0.16) 0%, rgba(44,53,42,0.06) 30%, rgba(44,53,42,0.56) 68%, rgba(44,53,42,0.88) 100%)',
+      }} />
+      <Corners inset={20} size={30} opacity={0.75} />
+
+      <motion.div className="relative z-10 flex flex-col items-center"
+        initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 1 }}>
+        <Eyebrow className="mb-5" color={c.goldSoft} style={{ letterSpacing: '0.42em' }}>The Wedding Of</Eyebrow>
+
+        {/* textShadow here but not on the cover: the cover sits on a known
+            bundled plate, this sits on whatever photo the couple uploaded. */}
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 500, fontSize: '2.7rem', lineHeight: 1.1, color: c.goldSoft, margin: 0, textShadow: '0 2px 18px rgba(20,26,19,0.55)' }}>{bride}</h1>
+        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: '1.7rem', color: c.gold, margin: '4px 0' }}>&amp;</span>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 500, fontSize: '2.7rem', lineHeight: 1.1, color: c.goldSoft, margin: 0, textShadow: '0 2px 18px rgba(20,26,19,0.55)' }}>{groom}</h1>
+
+        <div style={{ width: 64, height: 1, background: c.gold, opacity: 0.6, margin: '20px 0 16px' }} />
+        <p className="font-sans" style={{ fontSize: 13, letterSpacing: '0.2em', margin: 0, color: c.cream, textShadow: '0 2px 14px rgba(20,26,19,0.5)' }}>{fmtCoverDate(primaryEvent?.date)}</p>
+      </motion.div>
+
+      {/* Scroll cue. Framer rather than a keyframe so the theme keeps its one
+          <style> block to the font import. */}
+      <motion.div className="relative z-10"
+        style={{ marginTop: 32, width: 1, height: 46, background: `linear-gradient(180deg, ${c.goldSoft}, transparent)` }}
+        animate={{ opacity: [0.25, 1, 0.25] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} />
+    </section>
+  )
+}
+
+// ─── 3. COUNTDOWN ────────────────────────────────────────────────
 const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
   const blocks = [
     { label: 'Hari', v: countdown?.d || 0 },
@@ -183,7 +234,7 @@ const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
   )
 }
 
-// ─── 3. QUOTE ────────────────────────────────────────────────────
+// ─── 4. QUOTE ────────────────────────────────────────────────────
 const QuoteSection = ({ data }) => {
   const quote = data?.quote || 'Di antara tanda kebesaran-Nya, diciptakan-Nya pasangan untuk kita agar hati merasa tenteram, dan ditumbuhkan-Nya kasih sayang di antara keduanya.'
   return (
@@ -197,7 +248,7 @@ const QuoteSection = ({ data }) => {
   )
 }
 
-// ─── 4. PROFILES ─────────────────────────────────────────────────
+// ─── 5. PROFILES ─────────────────────────────────────────────────
 const ProfileSection = ({ data }) => {
   const renderPerson = (person) => (
     <Reveal>
@@ -242,7 +293,7 @@ const ProfileSection = ({ data }) => {
   )
 }
 
-// ─── 5. EVENTS ───────────────────────────────────────────────────
+// ─── 6. EVENTS ───────────────────────────────────────────────────
 const EventsSection = ({ akad, resepsi }) => {
   const renderCard = (ev, title, dir) => {
     if (!ev) return null
@@ -283,7 +334,7 @@ const EventsSection = ({ akad, resepsi }) => {
   )
 }
 
-// ─── 6. DRESSCODE ────────────────────────────────────────────────
+// ─── 7. DRESSCODE ────────────────────────────────────────────────
 const DresscodeSection = ({ data }) => {
   const dc = data?.dresscode || {}
   const swatches = [c.sage, c.gold, c.goldSoft, c.ivoryDeep]
@@ -304,7 +355,7 @@ const DresscodeSection = ({ data }) => {
   )
 }
 
-// ─── 7. LIVE STREAMING ───────────────────────────────────────────
+// ─── 8. LIVE STREAMING ───────────────────────────────────────────
 const LiveStreamSection = ({ data }) => {
   if (!data?.livestreamEnabled) return null
   const url = data?.livestreamPlatforms?.find(p => p.url)?.url
@@ -325,7 +376,7 @@ const LiveStreamSection = ({ data }) => {
   )
 }
 
-// ─── 8. LOVE STORY ───────────────────────────────────────────────
+// ─── 9. LOVE STORY ───────────────────────────────────────────────
 const LoveStorySection = ({ data }) => {
   const stories = data?.loveStory || []
   if (!stories.length) return null
@@ -355,7 +406,7 @@ const LoveStorySection = ({ data }) => {
   )
 }
 
-// ─── 9. GALLERY ──────────────────────────────────────────────────
+// ─── 10. GALLERY ──────────────────────────────────────────────────
 const GallerySection = ({ data }) => {
   const photos = data?.gallery || []
   if (!photos.length) return null
@@ -381,7 +432,7 @@ const GallerySection = ({ data }) => {
   )
 }
 
-// ─── 10. GIFT ────────────────────────────────────────────────────
+// ─── 11. GIFT ────────────────────────────────────────────────────
 const GiftSection = ({ data }) => {
   const { copiedKey: copied, copy: copyAccount } = useCopyToClipboard()
   const accounts = data?.accounts || []
@@ -415,7 +466,7 @@ const GiftSection = ({ data }) => {
   )
 }
 
-// ─── 11. RSVP / WISHES ───────────────────────────────────────────
+// ─── 12. RSVP / WISHES ───────────────────────────────────────────
 const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
@@ -483,7 +534,7 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
   )
 }
 
-// ─── 12. FOOTER ──────────────────────────────────────────────────
+// ─── 13. FOOTER ──────────────────────────────────────────────────
 // ─── TURUT MENGUNDANG (optional) ─────────────────────────────────
 const TurutMengundangSection = ({ data }) => {
   if (!data?.turutMengundangEnabled) return null
@@ -608,6 +659,7 @@ export default function BotanicalIvoryTheme({
         {opened && (
           <motion.div className="flex flex-col w-full"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9 }}>
+            <HeroSection data={data} bride={bride} groom={groom} primaryEvent={primary} />
             <CountdownSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
             <QuoteSection data={data} />
             <ProfileSection data={data} />
