@@ -847,7 +847,23 @@ export default function VelourOliveTheme({
           64% { opacity: 1; }
           96%, 100% { transform: translate3d(135%,0,0) skewX(-12deg); opacity: 0; }
         }
-        .vo-scroll { scroll-snap-type: y proximity; }
+        /* Was 'proximity', which only snaps when the scroll happens to end near
+           a snap point. Any firmer flick parked the reader between two babak —
+           and because each babak centres its content in a full-height box, that
+           parked view is the empty bottom half of one meeting the empty top
+           half of the next, which is what read as a huge gap. It was never
+           extra space in the markup; it was two half-empty screens shown at
+           once. 'mandatory' makes every rest position a babak boundary, so that
+           view stops being reachable.
+
+           The handoff spec warned against mandatory because a babak taller than
+           the screen could trap the reader, unable to stop and read its lower
+           half. That does not apply: CSS Scroll Snap §6.1 says when a snap area
+           is larger than the snapport, every scroll position in which the area
+           covers the snapport is itself a valid snap position — so overflowing
+           babak (two event cards, a long love story, RSVP above its wish list)
+           scroll freely, and only the short ones are held to their boundary. */
+        .vo-scroll { scroll-snap-type: y mandatory; }
         .vo-babak { scroll-snap-align: start; }
       `}</style>
 
