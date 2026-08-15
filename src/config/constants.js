@@ -122,8 +122,26 @@ export const PACKAGE_NAMES = ['Special', 'Adat', 'Motion', 'Luxury']
 // Kept in one place so the duration rule isn't scattered/hardcoded.
 export const PACKAGE_DURATION_MONTHS = 12
 
-// Admin WhatsApp number for manual transfers and withdrawals
-export const ADMIN_WHATSAPP = '6281234567890'
+// Admin WhatsApp, used for manual transfers, withdrawals, and every
+// "hubungi kami" link on the landing page.
+//
+// wa.me needs the number in international form with no leading +, spaces or
+// dashes, so 0851-5760-0697 is stored as 62851…: the leading 0 is the domestic
+// trunk prefix and is replaced by the country code, never kept alongside it.
+//
+// This constant already existed, but only ReferralPage imported it — the
+// landing page had the old number typed out in seven separate files, which is
+// why changing it used to mean hunting through the whole tree. Everything
+// points here now; the next change is this one line.
+export const ADMIN_WHATSAPP = '6285157600697'
+
+// Same number formatted for reading. Kept beside the dialling form so the two
+// cannot drift apart.
+export const ADMIN_WHATSAPP_DISPLAY = '+62 851-5760-0697'
+
+// Build a wa.me link, optionally with a prefilled message.
+export const waLink = (text) =>
+  `https://wa.me/${ADMIN_WHATSAPP}${text ? `?text=${encodeURIComponent(text)}` : ''}`
 
 // Referral system config
 export const REFERRAL_DISCOUNT_AMOUNT = 10000   // Rp discount for the buyer

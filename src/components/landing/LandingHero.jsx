@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { waLink } from '../../config/constants'
 
 const BLANK = '/avatars/live-order/Pasangan%20blank.jpg'
 
@@ -81,7 +82,7 @@ export default function LandingHero() {
           </p>
           <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
             <a
-              href="https://wa.me/6281234567890"
+              href={waLink()}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full inline-flex justify-center items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/40 text-white font-bold px-8 py-4 rounded-full transition-all hover:scale-[1.02] text-base backdrop-blur-md shadow-lg"

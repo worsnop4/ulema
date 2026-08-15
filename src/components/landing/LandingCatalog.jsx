@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getThemes } from '../../hooks/useSharedInvitation'
 import { fetchPricing } from '../../services/billingService'
+import { waLink } from '../../config/constants'
 
 export default function LandingCatalog() {
   const navigate = useNavigate()
@@ -145,7 +146,7 @@ export default function LandingCatalog() {
         </div>
 
         <div className="text-center mt-10">
-          <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" className="catalog-see-all-link inline-flex items-center gap-2 border-2 font-bold px-8 py-3 rounded-full transition-all text-sm" style={{ borderColor: 'rgba(221,196,151,0.5)', color: '#DDC497' }}>
+          <a href={waLink()} target="_blank" rel="noopener noreferrer" className="catalog-see-all-link inline-flex items-center gap-2 border-2 font-bold px-8 py-3 rounded-full transition-all text-sm" style={{ borderColor: 'rgba(221,196,151,0.5)', color: '#DDC497' }}>
             Konsultasi Tema &rarr;
           </a>
         </div>
