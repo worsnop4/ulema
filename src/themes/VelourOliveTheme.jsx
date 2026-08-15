@@ -68,6 +68,11 @@ function genPetals(count = 12) {
     rot: (rand() * 300 - 150).toFixed(0),
     duration: (16 + rand() * 16).toFixed(1),
     delay: (rand() * 12).toFixed(1),
+    // Sway and spin run on their own cycles, deliberately not multiples of the
+    // fall duration, so no petal ever repeats the same visible arc.
+    sway: (3.2 + rand() * 2.6).toFixed(1),
+    swayX: (7 + rand() * 7).toFixed(1),
+    spin: (7 + rand() * 9).toFixed(1),
   }))
 }
 
@@ -99,19 +104,40 @@ const LightOverlay = ({ kind, opacity, height }) => {
 }
 
 // ─── PETALS ────────────────────────────────────────────────────────
+// A petal used to be a single element carrying one `transform` animation, from
+// a start pose straight to an end pose on a `linear` timing function. One
+// transform cannot be linear and eased at the same time, so the fall, the
+// sideways drift and the spin were all forced onto the same constant-rate
+// ramp: every petal slid down a ruler-straight diagonal at unvarying speed,
+// which is what read as stiff.
+//
+// Split across two elements instead. The wrapper owns the vertical fall, which
+// genuinely is linear — gravity at terminal velocity. The image owns the
+// sideways drift on a separate eased cycle, and the spin via the independent
+// `rotate` property so it composes with that drift instead of overwriting it
+// (two animations on the same `transform` would not compose — the later one
+// simply wins). All three still animate compositor-only properties.
 const Petals = ({ petals }) => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden">
     {petals.map(p => (
-      <img key={p.id} src={A.petal} alt=""
+      <div key={p.id}
         style={{
-          position: 'absolute', top: 0, left: `${p.left}%`, width: 22, height: 'auto',
+          position: 'absolute', top: 0, left: `${p.left}%`,
           // dx is authored as a vw-style percentage; resolve it against the
           // invitation column, not the browser window (on desktop the window
           // is several times wider, which threw petals clean out of frame).
-          '--dx': `calc(var(--inv-w) * ${p.dx / 100})`, '--rot': `${p.rot}deg`,
+          '--dx': `calc(var(--inv-w) * ${p.dx / 100})`,
           animation: `vo-fall ${p.duration}s linear infinite`,
           animationDelay: `${p.delay}s`,
-        }} />
+        }}>
+        <img src={A.petal} alt=""
+          style={{
+            display: 'block', width: 22, height: 'auto',
+            '--rot': `${p.rot}deg`, '--sway': `${p.swayX}px`,
+            animation: `vo-drift ${p.sway}s ease-in-out infinite, vo-spin ${p.spin}s linear infinite`,
+            animationDelay: `${p.delay}s, ${p.delay}s`,
+          }} />
+      </div>
     ))}
   </div>
 )
@@ -119,14 +145,36 @@ const Petals = ({ petals }) => (
 // ─── VIDEO BACKDROP (persistent, does not scroll with content) ─────
 // Both videos stay mounted always; only opacity crossfades when the Penutup
 // babak becomes active, so neither ever reloads (per spec).
-const VideoBackdrop = ({ footerActive }) => (
+const VideoBackdrop = ({ footerActive }) => {
+  const heroRef = useRef(null)
+  const footerRef = useRef(null)
+
+  // A video at opacity:0 keeps decoding every single frame — browsers do not
+  // pause playback just because an element is invisible. Both of these loops
+  // are ~4.5MB, and both carried `autoPlay`, so the whole session ran two
+  // simultaneous video decodes to show one. That is the largest continuous
+  // drain in the theme, and it competes directly with the petal animation and
+  // with scrolling. Keep both mounted so neither ever reloads (per spec), but
+  // only ever let the visible one run.
+  useEffect(() => {
+    const show = footerActive ? footerRef.current : heroRef.current
+    const hide = footerActive ? heroRef.current : footerRef.current
+    hide?.pause()
+    // Muted + playsInline, so this is allowed without a gesture; the catch is
+    // for the interrupted-by-pause rejection when babak change back to back.
+    show?.play?.()?.catch(() => {})
+  }, [footerActive])
+
+  return (
   <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0, background: c.nightOlive }}>
     <div className="absolute" style={{ top: '-6%', left: '-6%', width: '112%', height: '112%', animation: 'vo-sway 26s ease-in-out infinite' }}>
-      <video autoPlay muted loop playsInline poster={A.bgHeroPoster} preload="auto"
+      <video ref={heroRef} autoPlay muted loop playsInline poster={A.bgHeroPoster} preload="auto"
         className="absolute inset-0 w-full h-full" style={{ objectFit: 'cover', opacity: footerActive ? 0 : 1, transition: 'opacity 1.2s' }}>
         <source src={A.bgHero} type="video/mp4" />
       </video>
-      <video autoPlay muted loop playsInline poster={A.bgFooterPoster} preload="metadata"
+      {/* No autoPlay: the effect above starts it only when the Penutup babak
+          is reached, so it costs nothing until then. */}
+      <video ref={footerRef} muted loop playsInline poster={A.bgFooterPoster} preload="metadata"
         className="absolute inset-0 w-full h-full" style={{ objectFit: 'cover', opacity: footerActive ? 1 : 0, transition: 'opacity 1.2s' }}>
         <source src={A.bgFooter} type="video/mp4" />
       </video>
@@ -137,7 +185,8 @@ const VideoBackdrop = ({ footerActive }) => (
       background: 'linear-gradient(180deg, rgba(12,13,8,.62) 0%, rgba(12,13,8,.30) 32%, rgba(12,13,8,.48) 66%, rgba(12,13,8,.80) 100%)',
     }} />
   </div>
-)
+  )
+}
 
 // ─── COVER / CURTAIN REVEAL ──────────────────────────────────────
 // Stays mounted the whole time (never unmounted via AnimatePresence): the
@@ -698,15 +747,31 @@ export default function VelourOliveTheme({
   const babakList = getBabakList(data)
   const footerActive = babakList[active]?.id === 'vo-penutup'
 
+  // Which babak is on screen. The old version divided scrollTop by the
+  // scroller height, which silently assumed every babak is exactly one screen
+  // tall. They are `min-height: 100%`, not `height`, so any babak whose
+  // content overflows — two event cards, a long love story, the RSVP form
+  // above its wish list — makes that division drift, and every dot below it
+  // points at the wrong babak. Observing the real elements is correct at any
+  // height, and it also stops running JS on every scroll frame.
+  //
+  // The -50%/-50% rootMargin collapses the scrollport to a single line across
+  // its middle, so exactly one babak is ever intersecting: whichever one the
+  // reader is actually looking at.
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-    const onScroll = () => {
-      const idx = Math.round(el.scrollTop / el.clientHeight)
-      setActive(Math.max(0, Math.min(idx, babakList.length - 1)))
-    }
-    el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
+    const nodes = Array.from(el.querySelectorAll('.vo-babak'))
+    if (!nodes.length) return
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return
+        const i = nodes.indexOf(e.target)
+        if (i !== -1) setActive(i)
+      })
+    }, { root: el, rootMargin: '-50% 0px -50% 0px', threshold: 0 })
+    nodes.forEach((n) => io.observe(n))
+    return () => io.disconnect()
   }, [babakList.length])
 
   const handleOpen = () => {
@@ -724,11 +789,20 @@ export default function VelourOliveTheme({
         @keyframes vo-sway { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(10px); } }
         @keyframes vo-shimmer { 0%, 100% { opacity: .34; } 50% { opacity: .62; } }
         @keyframes vo-fall {
-          0% { transform: translate3d(0,-12%,0) rotate(0); opacity: 0; }
-          10% { opacity: .85; }
-          90% { opacity: .85; }
-          100% { transform: translate3d(var(--dx),calc(var(--inv-h) * 1.12),0) rotate(var(--rot)); opacity: 0; }
+          0% { transform: translate3d(0,-40px,0); opacity: 0; }
+          8% { opacity: .85; }
+          88% { opacity: .85; }
+          100% { transform: translate3d(var(--dx),calc(var(--inv-h) * 1.12),0); opacity: 0; }
         }
+        /* Sideways drift, eased so the petal slows at each extreme the way a
+           real one does as it changes direction. */
+        @keyframes vo-drift {
+          0%, 100% { transform: translate3d(calc(var(--sway) * -1),0,0); }
+          50% { transform: translate3d(var(--sway),0,0); }
+        }
+        /* The independent rotate property, not transform:rotate(), so the spin
+           composes with the drift above instead of replacing it. */
+        @keyframes vo-spin { from { rotate: 0deg; } to { rotate: var(--rot); } }
         @keyframes vo-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
         .vo-scroll { scroll-snap-type: y proximity; }
         .vo-babak { scroll-snap-align: start; }
