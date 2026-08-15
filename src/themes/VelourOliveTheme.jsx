@@ -400,14 +400,37 @@ const PersonCard = ({ person }) => (
     gap: 16, padding: 16, borderRadius: 22, background: 'rgba(20,21,15,.44)',
     border: '1px solid rgba(217,188,122,.22)', backdropFilter: 'blur(12px)', overflow: 'hidden',
   }}>
-    <div className="relative flex-shrink-0 overflow-hidden" style={{ width: 138, height: 164, borderRadius: 16, background: 'rgba(20,21,15,.6)' }}>
-      {person?.photo
-        ? <img src={person.photo} alt={person?.nickname} className="w-full h-full object-cover" />
-        : <span className="absolute inset-0 flex items-center justify-center" style={{ fontFamily: F.sans, fontSize: 10, color: 'rgba(244,239,230,.5)' }}>Foto</span>}
-      <img src={A.velvetDrape} alt="" className="absolute top-0 left-0 h-full object-cover"
-        style={{ width: 17, filter: 'brightness(.5)', boxShadow: '6px 0 14px rgba(0,0,0,.55)' }} />
-      <img src={A.velvetDrape} alt="" className="absolute top-0 right-0 h-full object-cover"
-        style={{ width: 17, filter: 'brightness(.5)', boxShadow: '-6px 0 14px rgba(0,0,0,.55)' }} />
+    {/* Cincin cahaya. A light travels around the rim of the portrait, with a
+        soft halo bleeding onto the card behind it.
+
+        Done in CSS rather than as a generated plate for a hard reason: a ring
+        around a photo has to be transparent in the middle and feather out at
+        its edges, which needs real per-pixel alpha. Kling emits no alpha, and
+        the usual workaround for that — opaque art on black composited with
+        mix-blend-mode: screen, as LightOverlay does above — is unavailable
+        here, because this card carries backdrop-filter and blending is
+        isolated inside a backdrop root. A gradient has the alpha natively,
+        costs no bytes, and rescales with the frame. */}
+    <div className="relative flex-shrink-0" style={{
+      width: 138, height: 164, borderRadius: 18, overflow: 'hidden',
+      boxShadow: '0 0 22px rgba(217,188,122,.22)',
+    }}>
+      {/* Oversized so its corners still cover the frame as it turns. */}
+      <div className="absolute" style={{
+        top: '50%', left: '50%', width: '190%', aspectRatio: '1',
+        background: 'conic-gradient(from 0deg, transparent 0deg, rgba(217,188,122,.15) 55deg, rgba(244,239,230,.9) 82deg, rgba(217,188,122,.5) 112deg, transparent 175deg, transparent 360deg)',
+        animation: 'vo-ring 7s linear infinite',
+      }} />
+      {/* Inset by 2px, which is what leaves the rim of light showing. */}
+      <div className="absolute overflow-hidden" style={{ inset: 2, borderRadius: 16, background: 'rgba(20,21,15,.6)' }}>
+        {person?.photo
+          ? <img src={person.photo} alt={person?.nickname} className="w-full h-full object-cover" />
+          : <span className="absolute inset-0 flex items-center justify-center" style={{ fontFamily: F.sans, fontSize: 10, color: 'rgba(244,239,230,.5)' }}>Foto</span>}
+        <img src={A.velvetDrape} alt="" className="absolute top-0 left-0 h-full object-cover"
+          style={{ width: 17, filter: 'brightness(.5)', boxShadow: '6px 0 14px rgba(0,0,0,.55)' }} />
+        <img src={A.velvetDrape} alt="" className="absolute top-0 right-0 h-full object-cover"
+          style={{ width: 17, filter: 'brightness(.5)', boxShadow: '-6px 0 14px rgba(0,0,0,.55)' }} />
+      </div>
     </div>
     <div className="flex flex-col justify-center" style={{ minWidth: 0 }}>
       <h3 style={{ fontFamily: F.script, fontSize: 38, color: c.ivory, margin: 0, lineHeight: 1 }}>{person?.nickname}</h3>
@@ -515,8 +538,16 @@ const Galeri = ({ data }) => {
           const src = typeof ph === 'string' ? ph : ph?.src
           if (!src) return null
           return (
-            <div key={ph?.id || src} className="overflow-hidden" style={{ aspectRatio: '3/4', borderRadius: 16, border: '1px solid rgba(217,188,122,.18)' }}>
+            <div key={ph?.id || src} className="relative overflow-hidden" style={{ aspectRatio: '3/4', borderRadius: 16, border: '1px solid rgba(217,188,122,.18)' }}>
               <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+              {/* Pantulan cahaya menyapu ubin. Staggered by index so the grid
+                  glints one tile at a time instead of flashing as a block; the
+                  keyframe idles off-screen for most of its cycle so the sweep
+                  reads as an occasional catch of light, not a strobe. */}
+              <div className="absolute inset-0 pointer-events-none" style={{
+                background: 'linear-gradient(115deg, transparent 34%, rgba(244,239,230,.26) 46%, rgba(217,188,122,.34) 52%, transparent 66%)',
+                animation: `vo-sheen 6s ease-in-out ${(i % 4) * 0.7}s infinite`,
+              }} />
             </div>
           )
         })}
@@ -804,6 +835,18 @@ export default function VelourOliveTheme({
            composes with the drift above instead of replacing it. */
         @keyframes vo-spin { from { rotate: 0deg; } to { rotate: var(--rot); } }
         @keyframes vo-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+        /* Cincin cahaya mempelai — the translate is restated in both stops so
+           the rotation composes with the centring instead of discarding it. */
+        @keyframes vo-ring {
+          from { transform: translate(-50%,-50%) rotate(0deg); }
+          to { transform: translate(-50%,-50%) rotate(360deg); }
+        }
+        /* Pantulan cahaya galeri — idle, one sweep, idle again. */
+        @keyframes vo-sheen {
+          0%, 58% { transform: translate3d(-135%,0,0) skewX(-12deg); opacity: 0; }
+          64% { opacity: 1; }
+          96%, 100% { transform: translate3d(135%,0,0) skewX(-12deg); opacity: 0; }
+        }
         .vo-scroll { scroll-snap-type: y proximity; }
         .vo-babak { scroll-snap-align: start; }
       `}</style>
