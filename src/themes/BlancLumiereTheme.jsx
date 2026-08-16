@@ -432,7 +432,13 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
 const Gift = ({ data }) => {
   const { copiedKey, copy } = useCopyToClipboard()
   const accounts = data?.accounts || []
-  if (!accounts.length) return null
+  // "Alamat Pengiriman Kado" is its own toggle in the editor, independent of
+  // the account list. Gating the whole section on accounts alone hid it from
+  // couples who only wanted to give a shipping address, and hid the address
+  // from everyone regardless — this theme never rendered giftAddress at all.
+  const gift = data?.giftAddress
+  const hasGiftAddress = Boolean(gift?.enabled && (gift.address || gift.recipient || gift.phone))
+  if (!accounts.length && !hasGiftAddress) return null
   return (
     <section id="hadiah" className="text-center" style={{ padding: '96px 36px', background: ivoryGrad }}>
       <Kicker>Wedding gift</Kicker>
@@ -451,6 +457,18 @@ const Gift = ({ data }) => {
             </Reveal>
           )
         })}
+
+        {hasGiftAddress && (
+          <Reveal className="text-left" style={{ background: '#FFFFFF', border: `1px solid ${c.line2}`, padding: 24, boxShadow: '0 14px 34px rgba(122,110,88,.09)' }}>
+            <div className="uppercase" style={{ fontFamily: F.serif, fontSize: 15, fontWeight: 500, letterSpacing: '0.3em', color: c.gold }}>Kirim Kado</div>
+            {gift.recipient && <div style={{ fontFamily: F.serif, fontSize: 20, color: c.ink, marginTop: 12 }}>{gift.recipient}</div>}
+            {gift.phone && <div style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 300, letterSpacing: '0.08em', color: c.muted, marginTop: 6 }}>{gift.phone}</div>}
+            {gift.address && <div style={{ fontFamily: F.sans, fontSize: 12.5, fontWeight: 300, lineHeight: 1.8, color: c.body, marginTop: 12, whiteSpace: 'pre-line' }}>{gift.address}</div>}
+            {gift.address && (
+              <button onClick={() => copy(gift.address, 'bl-gift-address')} className="uppercase" style={{ marginTop: 16, fontFamily: F.sans, fontSize: 10, letterSpacing: '0.22em', cursor: 'pointer', padding: '10px 20px', transition: 'all .3s', color: copiedKey === 'bl-gift-address' ? '#FFFDF9' : c.gold, background: copiedKey === 'bl-gift-address' ? goldGrad : 'transparent', border: `1px solid ${copiedKey === 'bl-gift-address' ? 'transparent' : c.line2}` }}>{copiedKey === 'bl-gift-address' ? 'Tersalin' : 'Salin Alamat'}</button>
+            )}
+          </Reveal>
+        )}
       </div>
     </section>
   )

@@ -601,7 +601,13 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
 const Gift = ({ data }) => {
   const { copiedKey, copy } = useCopyToClipboard()
   const accounts = data?.accounts || []
-  if (!accounts.length) return null
+  // "Alamat Pengiriman Kado" is its own toggle in the editor, independent of
+  // the account list. Gating the whole section on accounts alone hid it from
+  // couples who only wanted to give a shipping address, and hid the address
+  // from everyone regardless — this theme never rendered giftAddress at all.
+  const gift = data?.giftAddress
+  const hasGiftAddress = Boolean(gift?.enabled && (gift.address || gift.recipient || gift.phone))
+  if (!accounts.length && !hasGiftAddress) return null
   return (
     <section id="op-hadiah" className="relative" style={{ zIndex: 1, padding: '0 26px 96px' }}>
       <div className="text-center" style={{ marginBottom: 24 }}>
@@ -626,6 +632,22 @@ const Gift = ({ data }) => {
             </Reveal>
           )
         })}
+
+        {hasGiftAddress && (
+          <Reveal className="relative" style={{ padding: 20, borderRadius: 20, background: 'linear-gradient(135deg,#FFFFFF,#F8F1EC)', border: `1px solid rgba(195,161,93,.3)`, boxShadow: '0 16px 38px rgba(94,72,50,.09)' }}>
+            <p className="uppercase" style={{ margin: 0, fontSize: 10, letterSpacing: '.3em', color: c.muted3 }}>Kirim Kado</p>
+            {gift.recipient && <p style={{ margin: '10px 0 0', fontFamily: F.serif, fontSize: 18, color: c.ink }}>{gift.recipient}</p>}
+            {gift.phone && <p style={{ margin: '4px 0 0', fontSize: 12.5, color: c.muted }}>{gift.phone}</p>}
+            {gift.address && (
+              <p style={{ margin: '10px 0 0', fontSize: 12.5, lineHeight: 1.75, color: c.muted, whiteSpace: 'pre-line' }}>{gift.address}</p>
+            )}
+            {gift.address && (
+              <button onClick={() => copy(gift.address, 'op-gift-address')} className="uppercase" style={{ marginTop: 14, padding: '10px 16px', borderRadius: 999, border: `1px solid rgba(195,161,93,.5)`, background: 'rgba(255,255,255,.8)', color: c.goldDeep, fontSize: 10.5, letterSpacing: '.18em', cursor: 'pointer' }}>
+                {copiedKey === 'op-gift-address' ? 'Tersalin' : 'Salin Alamat'}
+              </button>
+            )}
+          </Reveal>
+        )}
       </div>
     </section>
   )

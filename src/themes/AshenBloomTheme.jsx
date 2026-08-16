@@ -361,7 +361,13 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
 const Gift = ({ data }) => {
   const { copiedKey, copy } = useCopyToClipboard()
   const accounts = data?.accounts || []
-  if (!accounts.length) return null
+  // "Alamat Pengiriman Kado" is its own toggle in the editor, independent of
+  // the account list. Gating the whole section on accounts alone hid it from
+  // couples who only wanted to give a shipping address, and hid the address
+  // from everyone regardless — this theme never rendered giftAddress at all.
+  const gift = data?.giftAddress
+  const hasGiftAddress = Boolean(gift?.enabled && (gift.address || gift.recipient || gift.phone))
+  if (!accounts.length && !hasGiftAddress) return null
   return (
     <section id="sec-hadiah" style={{ padding: '78px 28px 90px', background: c.panel, borderTop: `1px solid ${c.linePnl}` }}>
       <Reveal className="text-center">
@@ -386,6 +392,21 @@ const Gift = ({ data }) => {
             </Reveal>
           )
         })}
+
+        {hasGiftAddress && (
+          <Reveal style={{ border: `1px solid ${c.line2}`, borderRadius: 20, background: c.paper, padding: '20px 22px' }}>
+            <div className="flex justify-between items-center" style={{ gap: 12 }}>
+              <div style={{ fontFamily: F.serif, fontSize: 19, letterSpacing: '0.06em' }}>Kirim Kado</div>
+              <div className="uppercase" style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '0.2em', color: c.ash }}>Alamat</div>
+            </div>
+            {gift.recipient && <div style={{ fontFamily: F.sans, fontSize: 15, marginTop: 10, color: c.ink }}>{gift.recipient}</div>}
+            {gift.phone && <div style={{ fontFamily: F.sans, fontSize: 12.5, fontWeight: 300, color: c.muted, marginTop: 4 }}>{gift.phone}</div>}
+            {gift.address && <div style={{ fontFamily: F.sans, fontSize: 12.5, fontWeight: 300, lineHeight: 1.75, color: c.muted, marginTop: 10, whiteSpace: 'pre-line' }}>{gift.address}</div>}
+            {gift.address && (
+              <button onClick={() => copy(gift.address, 'ab-gift-address')} className="uppercase" style={{ marginTop: 14, cursor: 'pointer', border: `1px solid ${c.copyBrd}`, background: c.copyBg, color: c.terraDk, fontFamily: F.sans, fontSize: 11, letterSpacing: '0.16em', padding: '8px 16px', borderRadius: 999 }}>{copiedKey === 'ab-gift-address' ? 'Tersalin ✓' : 'Salin Alamat'}</button>
+            )}
+          </Reveal>
+        )}
       </div>
     </section>
   )
