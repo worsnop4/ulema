@@ -30,6 +30,7 @@ const BlancLumiereTheme = lazy(() => import('../themes/BlancLumiereTheme'))
 const OpalinePearlTheme = lazy(() => import('../themes/OpalinePearlTheme'))
 const VelourOliveTheme = lazy(() => import('../themes/VelourOliveTheme'))
 const SenjaDioramaTheme = lazy(() => import('../themes/SenjaDioramaTheme'))
+const IstanaKencanaTheme = lazy(() => import('../themes/IstanaKencanaTheme'))
 
 const THEME_COMPONENTS = {
   [THEMES.WATERCOLOR_FLORAL]: WatercolorFloralTheme,
@@ -52,6 +53,7 @@ const THEME_COMPONENTS = {
   [THEMES.OPALINE_PEARL]: OpalinePearlTheme,
   [THEMES.VELOUR_OLIVE]: VelourOliveTheme,
   [THEMES.SENJA_DIORAMA]: SenjaDioramaTheme,
+  [THEMES.ISTANA_KENCANA]: IstanaKencanaTheme,
 }
 
 // ── Countdown Hook ─────────────────────────────────────────────
