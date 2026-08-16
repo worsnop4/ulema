@@ -65,9 +65,13 @@ const fmtTime = (t) => { if (!t) return ''; const [h, m] = t.split(':'); return 
 const pad2 = (n) => String(n ?? 0).padStart(2, '0')
 
 // ─── SCROLL HELPER ───────────────────────────────────────────────
+// The invitation does not scroll the window — it scrolls inside the shell
+// InvitationLayout wraps every theme in. window.scrollTo therefore aimed at a
+// page with nothing to scroll and the nav buttons did nothing at all.
+// scrollIntoView walks up to the nearest scrollable ancestor, which is the
+// right one, and is what the themes with working navs already use.
 const scrollToId = (id) => {
-  const el = document.getElementById(id)
-  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 4, behavior: 'smooth' })
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 const NAV = [['Home', 'home'], ['Mempelai', 'couple'], ['Acara', 'acara'], ['Galeri', 'galeri'], ['RSVP', 'rsvp'], ['Hadiah', 'hadiah']]
