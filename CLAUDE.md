@@ -152,12 +152,13 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
 
 ## Open tasks — known, unfixed, in rough priority order
 
-1. **`events[2]` and beyond are silently dropped** in Botanical Ivory, Bordeaux Luxe,
-   Cinematic Shadow and Minang Elegant. Each hardwires `akad = events[0]` / `resepsi =
-   events[1]` and renders only those two, but `AcaraForm` lets a couple add unlimited
-   sessions. A third session vanishes with no warning anywhere. Fixing means mapping over
-   `data.events` (Senja Diorama and BaseThemeEngine already do), which is a structural change
-   to those four sections, not a rename.
+1. ~~`events[2]` and beyond are silently dropped~~ — **done 2026-08-16.** Botanical Ivory,
+   Bordeaux Luxe, Cinematic Shadow and Minang Elegant now map over `data.events` instead of
+   hardwiring `events[0]`/`events[1]`. Unnamed sessions fall back by position ("Akad Nikah",
+   "Resepsi"/"Baralek", then numbered). Cinematic Shadow's two-up `md:flex-row` was replaced with
+   an auto-fit grid, because that breakpoint reads window width while the invitation column is
+   only 480px. Also found: its venue-photo block reads `ev.photo`, which no stored session has
+   and `AcaraForm` cannot produce — left in place with a comment, not deleted.
 2. ~~`data.giftAddress` ignored by 8 themes~~ — **done 2026-08-16.** All bespoke themes now
    render it, and each one's gift section gate was loosened from `if (!accounts.length) return
    null` so a couple who enables only the shipping address keeps the section. Fixing this also
