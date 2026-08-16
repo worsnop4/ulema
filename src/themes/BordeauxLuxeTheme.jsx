@@ -330,16 +330,25 @@ const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
 }
 
 // ─── 5. EVENTS ───────────────────────────────────────────────────
-const EventsSection = ({ akad, resepsi }) => {
-  const renderCard = (ev, title, dir) => {
+// AcaraForm membiarkan pasangan menambah sesi sebanyak yang mereka mau, dan
+// kolom namanya boleh dikosongkan. Dua sesi pertama punya nama baku; sesudah
+// itu dinomori supaya sesi tanpa nama tetap bisa dibedakan satu sama lain.
+const eventTitle = (ev, i) => ev?.name || ['Akad Nikah', 'Resepsi'][i] || `Acara ${i + 1}`
+
+const EventsSection = ({ events }) => {
+  const renderCard = (ev, i) => {
     if (!ev) return null
     const { day, mon, yr } = fmtEventDate(ev.date)
+    const title = eventTitle(ev, i)
+    // Kartu bergantian masuk dari kiri dan kanan; dengan indeks genap/ganjil
+    // dua kartu pertama tetap bergerak persis seperti sebelumnya.
+    const dir = i % 2 === 0 ? 'L' : 'R'
     return (
-      <motion.div className="w-full"
+      <motion.div key={ev.id || i} className="w-full"
         initial={{ opacity: 0, x: dir === 'L' ? -20 : 20 }} whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
         <Glass className="p-7 flex flex-col items-center text-center">
-          <Label>{ev.name || title}</Label>
+          <Label>{title}</Label>
           <div className="flex flex-col items-center justify-center mt-2 mb-4">
             <span style={{ fontFamily: "'Cormorant Upright', serif", fontSize: '2.6rem', color: c.gold, fontWeight: 600, lineHeight: 1 }}>{day}</span>
             <div className="flex items-center gap-1.5 mt-1">
@@ -367,8 +376,7 @@ const EventsSection = ({ akad, resepsi }) => {
   return (
     <section className="w-full py-4 px-4 flex flex-col gap-4">
       <p className="text-center"><Label>Waktu &amp; Tempat</Label></p>
-      {renderCard(akad, 'Akad Nikah', 'L')}
-      {renderCard(resepsi, 'Resepsi', 'R')}
+      {events.map(renderCard)}
     </section>
   )
 }
@@ -676,9 +684,9 @@ export default function BordeauxLuxeTheme({
 }) {
   const groom = data?.groom?.nickname || 'Groom'
   const bride = data?.bride?.nickname || 'Bride'
-  const akad = data?.events?.[0]
-  const resepsi = data?.events?.[1]
-  const primary = akad || {}
+  const events = data?.events || []
+  // Sesi pertama tetap jadi acuan hitung mundur dan tanggal di sampul.
+  const primary = events[0] || {}
 
   const handleOpen = () => {
     setAnimateClose(true)
@@ -733,7 +741,7 @@ export default function BordeauxLuxeTheme({
               <QuoteSection data={data} />
               <ProfileSection data={data} />
               <CountdownSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
-              <EventsSection akad={akad} resepsi={resepsi} />
+              <EventsSection events={events} />
               <LoveStorySection data={data} />
               <GallerySection data={data} />
               <GiftSection data={data} />

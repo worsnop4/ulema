@@ -326,18 +326,28 @@ const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
 }
 
 // ─── 5. EVENTS SECTION ───────────────────────────────────────────
-const EventsSection = ({ akad, baralek }) => {
-  const renderCard = (ev, title, dir) => {
+// AcaraForm membiarkan pasangan menambah sesi sebanyak yang mereka mau, dan
+// kolom namanya boleh dikosongkan. Dua sesi pertama punya nama baku — di tema
+// Minang sesi kedua adalah Baralek, bukan Resepsi — sesudah itu dinomori
+// supaya sesi tanpa nama tetap bisa dibedakan satu sama lain.
+const eventTitle = (ev, i) => ev?.name || ['Akad Nikah', 'Baralek'][i] || `Acara ${i + 1}`
+
+const EventsSection = ({ events }) => {
+  const renderCard = (ev, i) => {
     if (!ev) return null
     const { day, mon, yr } = fmtEventDate(ev.date)
+    const title = eventTitle(ev, i)
+    // Kartu bergantian masuk dari kiri dan kanan; dengan indeks genap/ganjil
+    // dua kartu pertama tetap bergerak persis seperti sebelumnya.
+    const dir = i % 2 === 0 ? 'L' : 'R'
     return (
-      <motion.div className="w-full"
+      <motion.div key={ev.id || i} className="w-full"
         initial={{ opacity: 0, x: dir === 'L' ? -20 : 20 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
         <Glass className="p-7 flex flex-col items-center text-center">
           <p className="text-xs tracking-[0.35em] uppercase mb-1 font-sans opacity-50" style={{ color: c.text }}>
-            {ev.name || title}
+            {title}
           </p>
           <div className="flex flex-col items-center justify-center mt-3 mb-5">
             <span style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.5rem', color: c.maroon, fontWeight: 600, lineHeight: 1, marginBottom: '0.2rem' }}>
@@ -374,8 +384,7 @@ const EventsSection = ({ akad, baralek }) => {
         initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
         Waktu &amp; Tempat
       </motion.p>
-      {renderCard(akad, 'Akad Nikah')}
-      {renderCard(baralek, 'Baralek')}
+      {events.map(renderCard)}
     </section>
   )
 }
@@ -803,9 +812,9 @@ export default function MinangElegantTheme({
 }) {
   const groom = data?.groom?.nickname || 'Groom'
   const bride = data?.bride?.nickname || 'Bride'
-  const akad    = data?.events?.[0]
-  const baralek = data?.events?.[1]
-  const primary = akad || {}
+  const events  = data?.events || []
+  // Sesi pertama tetap jadi acuan hitung mundur dan tanggal di sampul.
+  const primary = events[0] || {}
 
   const handleOpen = () => {
     setAnimateClose(true)
@@ -875,7 +884,7 @@ export default function MinangElegantTheme({
               <QuoteSection data={data} />
               <ProfileSection data={data} />
               <CountdownSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
-              <EventsSection akad={akad} baralek={baralek} />
+              <EventsSection events={events} />
               <DresscodeSection data={data} />
               <LoveStorySection data={data} />
               <GallerySection data={data} />

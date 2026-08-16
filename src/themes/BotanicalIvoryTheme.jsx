@@ -304,14 +304,23 @@ const ProfileSection = ({ data }) => {
 }
 
 // ─── 6. EVENTS ───────────────────────────────────────────────────
-const EventsSection = ({ akad, resepsi }) => {
-  const renderCard = (ev, title, dir) => {
+// AcaraForm membiarkan pasangan menambah sesi sebanyak yang mereka mau, dan
+// kolom namanya boleh dikosongkan. Dua sesi pertama punya nama baku; sesudah
+// itu dinomori supaya sesi tanpa nama tetap bisa dibedakan satu sama lain.
+const eventTitle = (ev, i) => ev?.name || ['Akad Nikah', 'Resepsi'][i] || `Acara ${i + 1}`
+
+const EventsSection = ({ events }) => {
+  const renderCard = (ev, i) => {
     if (!ev) return null
     const { day, monthYear } = fmtEventDate(ev.date)
+    const title = eventTitle(ev, i)
+    // Kartu bergantian masuk dari kiri dan kanan; dengan indeks genap/ganjil
+    // dua kartu pertama tetap bergerak persis seperti sebelumnya.
+    const dir = i % 2 === 0 ? 'L' : 'R'
     return (
-      <Reveal x={dir === 'L' ? -20 : 20}>
+      <Reveal key={ev.id || i} x={dir === 'L' ? -20 : 20}>
         <div style={{ border: `1px solid rgba(227,207,154,0.3)`, padding: '28px 22px', textAlign: 'center', marginBottom: 18 }}>
-          <Eyebrow color={c.gold} className="mb-3.5" style={{ fontSize: 11, letterSpacing: '0.3em' }}>{ev.name || title}</Eyebrow>
+          <Eyebrow color={c.gold} className="mb-3.5" style={{ fontSize: 11, letterSpacing: '0.3em' }}>{title}</Eyebrow>
           <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.4rem', fontWeight: 600, color: c.goldSoft, lineHeight: 1 }}>{day}</span>
           <p className="font-sans" style={{ fontSize: 14, margin: '8px 0 14px', color: c.cream }}>{monthYear}</p>
           <p className="font-sans" style={{ fontSize: 13, color: c.goldSoft, margin: '0 0 14px' }}>{fmtHours(ev) || '—'}</p>
@@ -338,8 +347,7 @@ const EventsSection = ({ akad, resepsi }) => {
     }}>
       <Corners />
       <p className="text-center mb-9"><Eyebrow color={c.goldSoft}>Waktu &amp; Tempat</Eyebrow></p>
-      {renderCard(akad, 'Akad Nikah', 'L')}
-      {renderCard(resepsi, 'Resepsi', 'R')}
+      {events.map(renderCard)}
     </section>
   )
 }
@@ -647,9 +655,9 @@ export default function BotanicalIvoryTheme({
 }) {
   const bride = data?.bride?.nickname || 'Putri'
   const groom = data?.groom?.nickname || 'Putra'
-  const akad = data?.events?.[0]
-  const resepsi = data?.events?.[1]
-  const primary = akad || {}
+  const events = data?.events || []
+  // Sesi pertama tetap jadi acuan hitung mundur dan tanggal di sampul.
+  const primary = events[0] || {}
   const musicEnabled = data?.music !== false
 
   const handleOpen = () => {
@@ -694,7 +702,7 @@ export default function BotanicalIvoryTheme({
             <CountdownSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
             <QuoteSection data={data} />
             <ProfileSection data={data} />
-            <EventsSection akad={akad} resepsi={resepsi} />
+            <EventsSection events={events} />
             <DresscodeSection data={data} />
             <LiveStreamSection data={data} />
             <LoveStorySection data={data} />

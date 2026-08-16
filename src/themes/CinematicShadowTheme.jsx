@@ -414,7 +414,7 @@ const EventCard = ({ ev, title }) => {
       <div className="bg-white p-8 flex flex-col items-center text-center h-full"
         style={{ borderTop: `2px solid ${c.gold}`, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
         <h3 className="mb-4" style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.3rem', color: c.textDark }}>
-          {ev.name || title}
+          {title}
         </h3>
         <p className="text-[11px] uppercase tracking-[0.2em] mb-2"
           style={{ fontFamily: "'Lato', sans-serif", color: `${c.textDark}88` }}>
@@ -449,30 +449,52 @@ const EventCard = ({ ev, title }) => {
   )
 }
 
-const EventsSection = ({ akad, resepsi }) => (
-  <section className="w-full py-16 px-6" style={{ background: c.bgLight }}>
-    <div className="text-center mb-10">
-      <p className="text-xs uppercase tracking-[0.3em] mb-1"
-        style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, color: `${c.textDark}88` }}>
-        Wedding
-      </p>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: '2.4rem', color: c.textDark }}>
-        Event
-      </h2>
-    </div>
-    <div className="flex flex-col md:flex-row gap-6 max-w-3xl mx-auto">
-      <EventCard ev={akad} title="Akad Nikah" />
-      <EventCard ev={resepsi} title="Resepsi" />
-    </div>
-    {resepsi?.photo && (
-      <Reveal variant="inv-zoom-in" className="w-full mt-10">
-        <div className="w-full overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
-          <img src={resepsi.photo} alt="Venue" className="w-full h-full object-cover" />
-        </div>
-      </Reveal>
-    )}
-  </section>
-)
+// AcaraForm membiarkan pasangan menambah sesi sebanyak yang mereka mau, dan
+// kolom namanya boleh dikosongkan. Dua sesi pertama punya nama baku; sesudah
+// itu dinomori supaya sesi tanpa nama tetap bisa dibedakan satu sama lain.
+const eventTitle = (ev, i) => ev?.name || ['Akad Nikah', 'Resepsi'][i] || `Acara ${i + 1}`
+
+const EventsSection = ({ events }) => {
+  // Tidak pernah terisi hari ini: tidak satu pun dari 45 sesi tersimpan punya
+  // `photo`, dan AcaraForm memang tidak punya kotak unggahnya. Dibiarkan
+  // sebagai cadangan bila kelak field itu ada, bukan sebagai fitur hidup.
+  const venuePhoto = events.find(ev => ev?.photo)?.photo
+
+  return (
+    <section className="w-full py-16 px-6" style={{ background: c.bgLight }}>
+      <div className="text-center mb-10">
+        <p className="text-xs uppercase tracking-[0.3em] mb-1"
+          style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, color: `${c.textDark}88` }}>
+          Wedding
+        </p>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: '2.4rem', color: c.textDark }}>
+          Event
+        </h2>
+      </div>
+
+      {/* Grid yang mengukur dirinya sendiri, menggantikan `md:flex-row` yang
+          dulu memaksa tepat dua kartu berdampingan. Breakpoint md membaca
+          lebar jendela, padahal kolom undangan hanya 480px di desktop — dua
+          kartu di sana sudah sempit, dan sesi ketiga akan meremas ketiganya
+          jadi 144px. Sekarang jumlah kolomnya mengikuti ruang yang benar-benar
+          ada, berapa pun jumlah sesinya. */}
+      <div className="grid gap-6 max-w-3xl mx-auto"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
+        {events.map((ev, i) => (
+          <EventCard key={ev?.id || i} ev={ev} title={eventTitle(ev, i)} />
+        ))}
+      </div>
+
+      {venuePhoto && (
+        <Reveal variant="inv-zoom-in" className="w-full mt-10">
+          <div className="w-full overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
+            <img src={venuePhoto} alt="Venue" className="w-full h-full object-cover" />
+          </div>
+        </Reveal>
+      )}
+    </section>
+  )
+}
 
 // ─── 6. LIVE STREAMING ───────────────────────────────────────────
 const LiveStreamingSection = ({ data }) => {
@@ -1024,9 +1046,9 @@ export default function CinematicShadowTheme({
 }) {
   const groom = data?.groom?.nickname || 'Groom'
   const bride = data?.bride?.nickname || 'Bride'
-  const akad = data?.events?.[0]
-  const resepsi = data?.events?.[1]
-  const primary = akad || {}
+  const events = data?.events || []
+  // Sesi pertama tetap jadi acuan hitung mundur dan tanggal di sampul.
+  const primary = events[0] || {}
 
   const handleOpen = () => {
     setAnimateClose(true)
@@ -1087,7 +1109,7 @@ export default function CinematicShadowTheme({
             <VideoHeroSection data={data} bride={bride} groom={groom} primaryEvent={primary} countdown={countdown} />
             <ProfileSection data={data} />
             <SaveTheDateSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
-            <EventsSection akad={akad} resepsi={resepsi} />
+            <EventsSection events={events} />
             <LiveStreamingSection data={data} />
             <DresscodeSection data={data} />
             <LoveStorySection data={data} />
