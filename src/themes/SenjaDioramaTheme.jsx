@@ -193,6 +193,33 @@ const Section = ({ id, children, style = {} }) => (
   </section>
 )
 
+const Title = ({ children, style = {} }) => (
+  <h2 style={{ margin: '12px 0 0', fontFamily: F.display, fontWeight: 300, fontSize: 30, lineHeight: 1.2, color: c.ivory, ...style }}>{children}</h2>
+)
+
+const Reveal = ({ children, delay = 0, y = 22, className = '', style = {} }) => (
+  <motion.div className={className} style={style}
+    initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: '-60px' }}
+    transition={{ duration: 0.85, delay, ease: [0.2, 0.7, 0.2, 1] }}>
+    {children}
+  </motion.div>
+)
+
+// Glass panel used by every content card, so the stage stays visible behind
+// the copy instead of being boxed out by it.
+const cardStyle = {
+  borderRadius: 22, padding: 22,
+  background: 'rgba(26,21,38,.44)', border: `1px solid ${c.goldSoft}2E`,
+  backdropFilter: 'blur(12px)',
+  boxShadow: '0 20px 46px rgba(26,21,38,.34)',
+}
+
+// Thin horizon rule — the recurring divider motif, echoing the skyline.
+const Horizon = ({ width = 58, style = {} }) => (
+  <div style={{ width, height: 1, background: `linear-gradient(90deg, transparent, ${c.gold}, transparent)`, opacity: 0.8, ...style }} />
+)
+
 // ─── 1. COVER ────────────────────────────────────────────────────
 const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, animateClose }) => {
   const coverPhoto = data?.meta?.coverPhoto || data?.meta?.photo || data?.bride?.photo || data?.groom?.photo || null
@@ -283,6 +310,137 @@ const Hero = ({ data, groomNick, brideNick, heroDate, countdown, countdownEnable
   )
 }
 
+// ─── 3. QUOTE / DOA ──────────────────────────────────────────────
+const Quote = ({ data }) => {
+  const quote = data?.quote
+  if (!quote) return null
+  return (
+    <Section id="sd-quote">
+      <Reveal className="flex flex-col items-center text-center">
+        <Horizon width={44} style={{ marginBottom: 26 }} />
+        <p style={{
+          margin: 0, fontFamily: F.display, fontStyle: 'italic', fontWeight: 300,
+          fontSize: 19, lineHeight: 1.9, color: c.ivory, textWrap: 'pretty', maxWidth: 340,
+        }}>{quote}</p>
+        <Horizon width={44} style={{ marginTop: 26 }} />
+      </Reveal>
+    </Section>
+  )
+}
+
+// ─── 4. MEMPELAI ─────────────────────────────────────────────────
+// The arch repeats the cover portrait's silhouette, so the two read as the
+// same object seen twice rather than two unrelated frames.
+const PersonCard = ({ person, delay }) => (
+  <Reveal delay={delay} className="flex flex-col items-center text-center" style={cardStyle}>
+    <div className="relative overflow-hidden" style={{
+      width: 152, height: 200, borderRadius: '76px 76px 18px 18px',
+      border: `1px solid ${c.goldSoft}55`, background: c.indigo,
+    }}>
+      {person?.photo
+        ? <img src={person.photo} alt={person?.nickname || ''} className="absolute object-cover"
+            style={{ width: '112%', height: '112%', left: '-6%', top: '-6%', maxWidth: 'none' }} />
+        : <span className="absolute inset-0 flex items-center justify-center" style={{ fontFamily: F.sans, fontSize: 10, color: c.faint }}>Foto</span>}
+    </div>
+
+    <h3 style={{ margin: '18px 0 0', fontFamily: F.script, fontSize: 44, lineHeight: 1, color: c.goldSoft }}>
+      {person?.nickname || '—'}
+    </h3>
+    <p style={{ margin: '6px 0 0', fontFamily: F.display, fontSize: 16, color: c.ivory }}>
+      {person?.name || person?.nickname || '—'}
+    </p>
+    <p style={{ margin: '10px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: c.muted }}>
+      Putra/Putri dari<br />
+      {person?.father || '—'} &amp; {person?.mother || '—'}
+    </p>
+
+    {person?.instagram && (
+      <a href={`https://instagram.com/${person.instagram.replace('@', '')}`} target="_blank" rel="noreferrer"
+        style={{ marginTop: 12, fontFamily: F.sans, fontSize: 11.5, color: c.gold }}>
+        @{person.instagram.replace('@', '')}
+      </a>
+    )}
+  </Reveal>
+)
+
+const Mempelai = ({ data }) => (
+  <Section id="sd-mempelai">
+    <Reveal className="flex flex-col items-center text-center" style={{ marginBottom: 34 }}>
+      <Kicker>Assalamualaikum Wr. Wb.</Kicker>
+      <Title>Mempelai</Title>
+      <p style={{ margin: '14px 0 0', fontFamily: F.sans, fontSize: 13, lineHeight: 1.8, color: c.muted, maxWidth: 320 }}>
+        Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud menyelenggarakan pernikahan putra-putri kami.
+      </p>
+    </Reveal>
+
+    <div className="flex flex-col items-center" style={{ gap: 18 }}>
+      <PersonCard person={data?.groom} delay={0} />
+      <span style={{ fontFamily: F.script, fontSize: 42, lineHeight: 1, color: c.gold }}>&amp;</span>
+      <PersonCard person={data?.bride} delay={0.08} />
+    </div>
+  </Section>
+)
+
+// ─── 5. ACARA ────────────────────────────────────────────────────
+// Field names follow §3 of the design guide: name / date / dateLabel /
+// start / end / tz / venue / address / maps. Explicitly NOT title, time,
+// location or mapUrl — those names appear nowhere in stored data, and the
+// guide carries a warning about them for exactly that reason.
+const EventCard = ({ ev, delay }) => {
+  if (!ev) return null
+  const dateLabel = ev.dateLabel || fmtDate(ev.date)
+  const hours = [ev.start, ev.end].filter(Boolean).join(' – ')
+  return (
+    <Reveal delay={delay} className="text-center" style={cardStyle}>
+      {ev.name && <Kicker>{ev.name}</Kicker>}
+      {dateLabel && (
+        <p style={{ margin: '12px 0 0', fontFamily: F.display, fontSize: 20, color: c.ivory }}>{dateLabel}</p>
+      )}
+      {hours && (
+        <p style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 17, letterSpacing: '.06em', color: c.goldSoft }}>
+          {hours}{ev.tz ? ` ${ev.tz}` : ''}
+        </p>
+      )}
+
+      <Horizon width="72%" style={{ margin: '18px auto' }} />
+
+      {ev.venue && (
+        <p style={{ margin: 0, fontFamily: F.sans, fontSize: 14.5, fontWeight: 500, color: c.ivory }}>{ev.venue}</p>
+      )}
+      {ev.address && (
+        <p style={{ margin: '6px auto 0', maxWidth: 250, fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: c.muted }}>{ev.address}</p>
+      )}
+
+      {ev.maps && (
+        <a href={ev.maps} target="_blank" rel="noreferrer" className="inline-block"
+          style={{
+            marginTop: 18, padding: '10px 24px', borderRadius: 999,
+            border: `1px solid ${c.gold}`, color: c.goldSoft,
+            fontFamily: F.sans, fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase',
+          }}>
+          Petunjuk Arah
+        </a>
+      )}
+    </Reveal>
+  )
+}
+
+const Acara = ({ data }) => {
+  const events = data?.events || []
+  if (!events.length) return null
+  return (
+    <Section id="sd-acara">
+      <Reveal className="flex flex-col items-center text-center" style={{ marginBottom: 30 }}>
+        <Kicker>Save The Date</Kicker>
+        <Title>Rangkaian Acara</Title>
+      </Reveal>
+      <div className="flex flex-col" style={{ gap: 16 }}>
+        {events.map((ev, i) => <EventCard key={ev?.id || i} ev={ev} delay={i * 0.08} />)}
+      </div>
+    </Section>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════
@@ -356,8 +514,11 @@ export default function SenjaDioramaTheme({
             <Hero data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate}
               countdown={countdown} countdownEnabled={data?.countdownEnabled ?? true} />
 
-            {/* Bagian 2 dan seterusnya menyusul: Quote, Mempelai, Acara,
-                Love Story, Galeri, Informasi, RSVP, Penutup. */}
+            <Quote data={data} />
+            <Mempelai data={data} />
+            <Acara data={data} />
+
+            {/* Bagian berikutnya: Love Story, Galeri, Informasi, RSVP, Penutup. */}
             <Section id="sd-placeholder" style={{ paddingBottom: 140 }}>
               <p className="text-center" style={{ fontFamily: F.display, fontSize: 15, color: c.muted, margin: 0 }}>
                 Bagian berikutnya sedang dibangun.
