@@ -119,10 +119,12 @@ const genDust = () => {
 }
 const genPetals = () => {
   const rp = seeded(11)
-  const hues = [c.opalPink, c.opalMint, c.opalLilac, c.opalChamp]
   return Array.from({ length: 14 }, () => ({
     x: rp() * 100, s: 9 + rp() * 12, d: rp() * 16, t: 14 + rp() * 12,
-    hue: hues[Math.floor(rp() * 4) % 4],
+    // Di mana emasnya mulai menggelap, digeser sedikit per kelopak supaya
+    // selusin kelopak yang berbagi satu gradien tidak terlihat dicetak
+    // dari satu cetakan.
+    turn: 34 + rp() * 24,
   }))
 }
 
@@ -145,7 +147,12 @@ const Petals = ({ petals }) => (
       <div key={i} style={{
         position: 'absolute', left: `${p.x}%`, top: 0, width: p.s, height: p.s * 0.62,
         borderRadius: '50% 50% 50% 50% / 62% 62% 38% 38%',
-        background: `linear-gradient(140deg, ${p.hue}, rgba(255,255,255,.75))`,
+        // Perhentian kedua dulu putih 75%, yang di atas latar pearl #FCF9F7
+        // berarti sebagian besar tiap kelopak putih di atas putih. Kini
+        // gradasi emas ke hitam, sekeluarga dengan tombol Hadir, sehingga
+        // terbaca baik di atas pearl maupun di atas foto gelap.
+        background: `linear-gradient(140deg, ${c.goldLight} 0%, ${c.goldMid} ${p.turn}%, ${c.goldDeep} 76%, ${c.ink} 100%)`,
+        boxShadow: '0 2px 7px rgba(46,39,34,.26)',
         opacity: 0, animation: `op-petal ${p.t}s linear ${p.d}s infinite`,
       }} />
     ))}
@@ -777,7 +784,11 @@ export default function OpalinePearlTheme({
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Parisienne&family=Jost:wght@300;400;500&display=swap');
         @keyframes op-twinkle { 0%,100% { opacity: .12; } 50% { opacity: .95; } }
         @keyframes op-float { 0% { transform: translate3d(0,0,0); } 50% { transform: translate3d(10px,-22px,0); } 100% { transform: translate3d(0,0,0); } }
-        @keyframes op-petal { 0% { transform: translate3d(0,calc(var(--inv-h) * -0.12),0) rotate(0deg); opacity: 0; } 12% { opacity: .9; } 100% { transform: translate3d(46px,calc(var(--inv-h) * 1.12),0) rotate(460deg); opacity: 0; } }
+        /* Dulu hanya ada tiga perhentian, sehingga opacity memuncak di .9 pada 12%
+           lalu meluruh sepanjang sisa jatuhnya — kelopaknya menghabiskan
+           hampir seluruh perjalanan dalam keadaan setengah pudar. Kini penuh
+           dan bertahan, memudar hanya di ujung. */
+        @keyframes op-petal { 0% { transform: translate3d(0,calc(var(--inv-h) * -0.12),0) rotate(0deg); opacity: 0; } 7% { opacity: 1; } 86% { opacity: 1; } 100% { transform: translate3d(46px,calc(var(--inv-h) * 1.12),0) rotate(460deg); opacity: 0; } }
         @keyframes op-opal { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         /* Frosted panel shared by the bottom nav and the music button.
            The gradient fill is what reads as a pane of glass rather than a
