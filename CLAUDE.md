@@ -117,22 +117,30 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
    sessions. A third session vanishes with no warning anywhere. Fixing means mapping over
    `data.events` (Senja Diorama and BaseThemeEngine already do), which is a structural change
    to those four sections, not a rename.
-2. **Demo invitations accept wishes that are never saved.** `/invite/demo?theme=N` shows the
+2. **`data.giftAddress` is ignored by 8 themes.** The editor's "Alamat Pengiriman Kado" toggle
+   writes `{ enabled, recipient, phone, address }`, but only BaseThemeEngine, Minang Elegant,
+   Cinematic Shadow — and now Opaline Pearl, Blanc Lumière, Ashen Bloom (fixed 2026-08-16) —
+   read it. Still missing in: Cinematic Luxury (Photo + Video), Bordeaux Luxe, Botanical Ivory,
+   Aurum Noir, Morning Mist Luxe, Velour Olive, Senja Diorama. A real customer hit this on
+   Opaline. Watch for the second half of the bug too: those themes gate the whole gift section
+   on `if (!accounts.length) return null`, so a couple who enables only the shipping address and
+   adds no bank account loses the entire section.
+3. **Demo invitations accept wishes that are never saved.** `/invite/demo?theme=N` shows the
    normal RSVP form and confirms success, but `useWishSubmit` skips persistence for demo
    routes, so the wish disappears on reload. Decision already taken (2026-08-09): keep demo
    wishes local for the session but label the form honestly as "mode pratinjau" instead of
    letting it claim a save. Not yet built.
-3. **`referral_code` may not be set on new signups.** `LoginPage.jsx` generates it client-side
+4. **`referral_code` may not be set on new signups.** `LoginPage.jsx` generates it client-side
    and writes it via `profiles.update` immediately after `signUp()`. Under the publishable key
    that write is subject to `auth.uid() = id`, and with email confirmation enabled there is no
    session yet — so it can fail silently (only `console.error`). Needs checking against a real
    new account; the durable fix is to move signup bootstrap to a trigger or server endpoint.
-4. **`withdrawals` has no admin policy.** Fine today because the client only INSERTs, but an
+5. **`withdrawals` has no admin policy.** Fine today because the client only INSERTs, but an
    admin approval screen would read nothing.
-5. **`ProfilePage.jsx` hardcodes a fake phone** as `defaultValue="+62 812 3456 7890"`, so every
+6. **`ProfilePage.jsx` hardcodes a fake phone** as `defaultValue="+62 812 3456 7890"`, so every
    user sees a stranger's-looking number prefilled in their own profile. Should read the real
    `profiles.phone`.
-6. **`themes` table only holds ids 7–21.** Ids 1–6 (Classic Elegance, Rose Garden, Midnight
+7. **`themes` table only holds ids 7–21.** Ids 1–6 (Classic Elegance, Rose Garden, Midnight
    Gold, Ivory Dream, Lavender Bliss, Tropical Breeze) exist in `DEFAULT_THEMES` but were never
    seeded. Most real invitations sit on `theme_id: 1`, which the DB does not describe.
 

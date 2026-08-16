@@ -465,20 +465,33 @@ const LoveStory = ({ data }) => {
 }
 
 // ─── 6. DRESSCODE ────────────────────────────────────────────────
+// The editor offers exactly one colour, chosen from eight presets: `dresscode`
+// stores a single { name, color, notes } and there is no second or third
+// colour anywhere in the app. This section used to draw THREE swatches — the
+// couple's choice, then two of the theme's own opal tints hardcoded beside it.
+// Guests read that as a three-colour dresscode the couple never picked, and it
+// misled hardest exactly where it mattered: real invitations chose Navy Blue
+// (#2c3e6b) and Dusty Blue, which sat next to invented pastel mint and lilac.
+//
+// One swatch now, ringed by the theme's opal gradient. The ring reads as
+// ornament rather than as a second colour, so the identity survives without
+// the section claiming anything the couple did not choose.
 const Dresscode = ({ data }) => {
   const dc = data?.dresscode
-  if (!dc?.name && !dc?.color) return null
+  if (!dc?.name && !dc?.color && !dc?.notes) return null
   return (
     <section className="relative" style={{ zIndex: 1, padding: '0 26px 96px' }}>
       <Reveal className="text-center" style={{ padding: '34px 24px', borderRadius: 22, background: 'linear-gradient(150deg,#F7EFE9,#FDF9F6)', border: `1px solid rgba(195,161,93,.26)` }}>
         <p className="uppercase" style={{ margin: 0, fontSize: 10, letterSpacing: '.4em', color: c.muted3 }}>Dresscode</p>
-        <div className="flex justify-center" style={{ margin: '22px auto 0', gap: 12 }}>
-          <div style={{ width: 52, height: 52, borderRadius: '50%', background: dc.color || c.opalPink, boxShadow: '0 8px 20px rgba(94,72,50,.14)', border: '2px solid #FFFFFF' }} />
-          <div style={{ width: 52, height: 52, borderRadius: '50%', background: c.opalMint, boxShadow: '0 8px 20px rgba(94,72,50,.14)', border: '2px solid #FFFFFF' }} />
-          <div style={{ width: 52, height: 52, borderRadius: '50%', background: c.opalLilac, boxShadow: '0 8px 20px rgba(94,72,50,.14)', border: '2px solid #FFFFFF' }} />
-        </div>
-        <h4 style={{ margin: '20px 0 0', fontFamily: F.serif, fontWeight: 500, fontSize: 22, color: c.ink }}>{dc.name}</h4>
-        <p style={{ margin: '8px 0 0', fontSize: 12.5, lineHeight: 1.8, color: c.muted }}>{dc.notes}</p>
+        {dc.color && (
+          <div className="relative" style={{ width: 108, height: 108, margin: '24px auto 0' }}>
+            <div className="absolute" style={{ inset: 0, borderRadius: '50%', background: opalConic, opacity: 0.55, animation: 'op-opal 26s linear infinite' }} />
+            <div className="absolute" style={{ inset: 7, borderRadius: '50%', background: '#FFFFFF' }} />
+            <div className="absolute" style={{ inset: 12, borderRadius: '50%', background: dc.color, boxShadow: 'inset 0 6px 16px rgba(255,255,255,.3), 0 12px 28px rgba(94,72,50,.18)' }} />
+          </div>
+        )}
+        {dc.name && <h4 style={{ margin: '20px 0 0', fontFamily: F.serif, fontWeight: 500, fontSize: 22, color: c.ink }}>{dc.name}</h4>}
+        {dc.notes && <p style={{ margin: '8px 0 0', fontSize: 12.5, lineHeight: 1.8, color: c.muted }}>{dc.notes}</p>}
       </Reveal>
     </section>
   )
