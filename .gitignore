@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Master video/design sources. Kept out of public/ so Vercel never serves
+# them, and out of git so a 45MB .mov never enters the history.
+design-assets/
