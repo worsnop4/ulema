@@ -117,14 +117,11 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
    sessions. A third session vanishes with no warning anywhere. Fixing means mapping over
    `data.events` (Senja Diorama and BaseThemeEngine already do), which is a structural change
    to those four sections, not a rename.
-2. **`data.giftAddress` is ignored by 8 themes.** The editor's "Alamat Pengiriman Kado" toggle
-   writes `{ enabled, recipient, phone, address }`, but only BaseThemeEngine, Minang Elegant,
-   Cinematic Shadow — and now Opaline Pearl, Blanc Lumière, Ashen Bloom (fixed 2026-08-16) —
-   read it. Still missing in: Cinematic Luxury (Photo + Video), Bordeaux Luxe, Botanical Ivory,
-   Aurum Noir, Morning Mist Luxe, Velour Olive, Senja Diorama. A real customer hit this on
-   Opaline. Watch for the second half of the bug too: those themes gate the whole gift section
-   on `if (!accounts.length) return null`, so a couple who enables only the shipping address and
-   adds no bank account loses the entire section.
+2. ~~`data.giftAddress` ignored by 8 themes~~ — **done 2026-08-16.** All bespoke themes now
+   render it, and each one's gift section gate was loosened from `if (!accounts.length) return
+   null` so a couple who enables only the shipping address keeps the section. Fixing this also
+   turned up Cinematic Luxury reading accounts as `acc.no` / `acc.name`; the real fields are
+   `number` / `holder` (verified: 37 stored accounts, zero with `no` or `name`).
 3. **Demo invitations accept wishes that are never saved.** `/invite/demo?theme=N` shows the
    normal RSVP form and confirms success, but `useWishSubmit` skips persistence for demo
    routes, so the wish disappears on reload. Decision already taken (2026-08-09): keep demo
@@ -144,8 +141,9 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
    Gold, Ivory Dream, Lavender Bliss, Tropical Breeze) exist in `DEFAULT_THEMES` but were never
    seeded. Most real invitations sit on `theme_id: 1`, which the DB does not describe.
 
-**Field-name drift is the recurring bug class here.** Three separate rounds of it have now been
-found and fixed (love-story `desc`, event `venue`/`start`/`maps`, gift bank/e-wallet). The
+**Field-name drift is the recurring bug class here.** Four separate rounds of it have now been
+found and fixed (love-story `desc`, event `venue`/`start`/`maps`, gift bank/e-wallet, and
+Cinematic Luxury's account `no`/`name`). The
 editor's `*Form.jsx` modules are the source of truth for field names — `src/types/invitation.js`
 is outdated and has been wrong more than once. Before wiring any theme to data, verify against
 the form module, and ideally against real rows in Supabase.
