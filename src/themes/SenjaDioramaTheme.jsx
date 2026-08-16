@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import InvitationLayout from './components/InvitationLayout'
 import { MUSIC_URLS } from '../pages/InvitationTemplate'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import { THEMES } from '../config/constants'
 
 // ═══════════════════════════════════════════════════════════════════
@@ -441,6 +442,192 @@ const Acara = ({ data }) => {
   )
 }
 
+// ─── 6. LOVE STORY (opsional) ────────────────────────────────────
+// `year` is free text and is shown exactly as typed (§3). Feeding it to
+// new Date() would turn "2019" into 1 Jan 2019 and swallow "Awal 2024"
+// entirely — a bug that had to be undone in two other themes.
+const LoveStory = ({ data }) => {
+  const stories = data?.loveStory || []
+  if (!stories.length) return null
+  return (
+    <Section id="sd-story">
+      <Reveal className="flex flex-col items-center text-center" style={{ marginBottom: 30 }}>
+        <Kicker>Perjalanan Kami</Kicker>
+        <Title>Love Story</Title>
+      </Reveal>
+
+      <div className="relative">
+        {/* The timeline spine, echoing the horizon rules elsewhere. */}
+        <div className="absolute" style={{
+          left: 21, top: 10, bottom: 10, width: 1,
+          background: `linear-gradient(180deg, transparent, ${c.gold}88, transparent)`,
+        }} />
+        <div className="flex flex-col" style={{ gap: 16 }}>
+          {stories.map((s, i) => (
+            <Reveal key={s.id || i} delay={i * 0.06} className="relative flex" style={{ gap: 16 }}>
+              <div className="flex-shrink-0 flex items-start justify-center" style={{ width: 42, paddingTop: 22 }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: c.gold, boxShadow: `0 0 12px ${c.gold}` }} />
+              </div>
+              <div className="flex-1" style={{ ...cardStyle, padding: 18 }}>
+                {s.year && <Kicker style={{ fontSize: 11, letterSpacing: '.24em' }}>{s.year}</Kicker>}
+                {s.title && <p style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 17, color: c.ivory }}>{s.title}</p>}
+                {s.desc && <p style={{ margin: '7px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.75, color: c.muted }}>{s.desc}</p>}
+                {s.photo && (
+                  <div className="overflow-hidden" style={{ marginTop: 12, borderRadius: 14, aspectRatio: '16/10' }}>
+                    <img src={s.photo} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </Section>
+  )
+}
+
+// ─── 7. GALERI (opsional) ────────────────────────────────────────
+const Galeri = ({ data }) => {
+  const photos = (data?.gallery || []).map(g => (typeof g === 'string' ? g : g?.src)).filter(Boolean)
+  if (!photos.length) return null
+  return (
+    <Section id="sd-galeri">
+      <Reveal className="flex flex-col items-center text-center" style={{ marginBottom: 26 }}>
+        <Kicker>Momen</Kicker>
+        <Title>Galeri</Title>
+      </Reveal>
+      {/* Intrinsic sizing: measures this column, not the browser window, so
+          the grid stays right inside the 480px shell as well as on a phone.
+          The min(...,100%) floor is what stops a narrow screen overflowing. */}
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(132px, 100%), 1fr))', gap: 10 }}>
+        {photos.map((src, i) => (
+          <Reveal key={src} delay={(i % 4) * 0.05}>
+            <div className="overflow-hidden" style={{ aspectRatio: '3/4', borderRadius: 16, border: `1px solid ${c.goldSoft}2E` }}>
+              <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
+// ─── 8. INFORMASI (dresscode / live / hadiah / turut mengundang) ──
+const InfoCard = ({ label, children, delay }) => (
+  <Reveal delay={delay} style={cardStyle}>
+    <Kicker style={{ fontSize: 9.5, letterSpacing: '.3em', color: c.faint }}>{label}</Kicker>
+    <div style={{ marginTop: 12 }}>{children}</div>
+  </Reveal>
+)
+
+const Dresscode = ({ dresscode }) => (
+  <div className="flex items-center" style={{ gap: 14 }}>
+    {dresscode.color && (
+      <span className="flex-shrink-0" style={{
+        width: 40, height: 40, borderRadius: '50%',
+        background: dresscode.color, border: `1px solid ${c.goldSoft}66`,
+      }} />
+    )}
+    <div style={{ minWidth: 0 }}>
+      {dresscode.name && <p style={{ margin: 0, fontFamily: F.display, fontSize: 17, color: c.ivory }}>{dresscode.name}</p>}
+      {dresscode.notes && <p style={{ margin: '4px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: c.muted }}>{dresscode.notes}</p>}
+    </div>
+  </div>
+)
+
+const Gift = ({ accounts, copiedKey, copy }) => (
+  <div className="flex flex-col" style={{ gap: 12 }}>
+    <p style={{ margin: 0, fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: c.muted }}>
+      Doa restu Anda adalah hadiah terindah. Bila berkenan memberi tanda kasih, berikut informasinya.
+    </p>
+    {accounts.map((acc, i) => (
+      <div key={acc.id || i} style={{ padding: '14px 16px', borderRadius: 16, background: 'rgba(247,241,232,.06)', border: `1px solid ${c.goldSoft}22` }}>
+        {/* `bank` holds the e-wallet name too when type is 'ewallet' — one
+            field for both, so never label it "Bank" unconditionally. */}
+        <p style={{ margin: 0, fontFamily: F.sans, fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: c.gold }}>
+          {acc.bank || (acc.type === 'ewallet' ? 'E-Wallet' : 'Bank')}
+        </p>
+        <p style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 19, letterSpacing: '.06em', color: c.ivory }}>{acc.number || '—'}</p>
+        {acc.holder && <p style={{ margin: '4px 0 0', fontFamily: F.sans, fontSize: 12.5, color: c.muted }}>a.n. {acc.holder}</p>}
+        {acc.number && (
+          <button onClick={() => copy(acc.number, acc.id || i)}
+            style={{
+              marginTop: 12, padding: '8px 18px', borderRadius: 999, cursor: 'pointer',
+              background: 'transparent', border: `1px solid ${c.gold}`, color: c.goldSoft,
+              fontFamily: F.sans, fontSize: 10.5, letterSpacing: '.18em', textTransform: 'uppercase',
+            }}>
+            {copiedKey === (acc.id || i) ? 'Tersalin' : 'Salin'}
+          </button>
+        )}
+      </div>
+    ))}
+  </div>
+)
+
+const Informasi = ({ data }) => {
+  const { copiedKey, copy } = useCopyToClipboard()
+  const dresscode = data?.dresscode || {}
+  const hasDresscode = Boolean(dresscode.name || dresscode.color || dresscode.notes)
+  const live = Boolean(data?.livestreamEnabled) && (data?.livestreamPlatforms || []).filter(p => p?.url)
+  const hasLive = Boolean(live && live.length)
+  const accounts = data?.accounts || []
+  const families = (data?.families || [])
+    .map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) }))
+    .filter(f => f.members.length)
+  const hasFamilies = Boolean(data?.turutMengundangEnabled) && families.length > 0
+
+  if (!hasDresscode && !hasLive && !accounts.length && !hasFamilies) return null
+
+  return (
+    <Section id="sd-info">
+      <Reveal className="flex flex-col items-center text-center" style={{ marginBottom: 26 }}>
+        <Kicker>Untuk Tamu</Kicker>
+        <Title>Informasi</Title>
+      </Reveal>
+
+      <div className="flex flex-col" style={{ gap: 14 }}>
+        {hasDresscode && (
+          <InfoCard label="Dresscode" delay={0}><Dresscode dresscode={dresscode} /></InfoCard>
+        )}
+
+        {hasLive && (
+          <InfoCard label="Live Streaming" delay={0.05}>
+            <div className="flex flex-col" style={{ gap: 10 }}>
+              {live.map((p, i) => (
+                <a key={i} href={p.url} target="_blank" rel="noreferrer"
+                  className="flex items-center justify-between"
+                  style={{ padding: '12px 16px', borderRadius: 14, background: 'rgba(247,241,232,.06)', border: `1px solid ${c.goldSoft}22` }}>
+                  <span style={{ fontFamily: F.sans, fontSize: 13, color: c.ivory }}>{p.type || 'Siaran Langsung'}</span>
+                  <span style={{ fontFamily: F.sans, fontSize: 10.5, letterSpacing: '.18em', textTransform: 'uppercase', color: c.gold }}>Tonton</span>
+                </a>
+              ))}
+            </div>
+          </InfoCard>
+        )}
+
+        {accounts.length > 0 && (
+          <InfoCard label="Hadiah" delay={0.1}><Gift accounts={accounts} copiedKey={copiedKey} copy={copy} /></InfoCard>
+        )}
+
+        {hasFamilies && (
+          <InfoCard label="Turut Mengundang" delay={0.15}>
+            <div className="flex flex-col" style={{ gap: 14 }}>
+              {families.map((fam, i) => (
+                <div key={i}>
+                  {fam.side && <p style={{ margin: 0, fontFamily: F.display, fontSize: 15, color: c.goldSoft }}>{fam.side}</p>}
+                  {fam.members.map((m, j) => (
+                    <p key={j} style={{ margin: '4px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.8, color: c.muted }}>{m}</p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </InfoCard>
+        )}
+      </div>
+    </Section>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════
@@ -517,8 +704,11 @@ export default function SenjaDioramaTheme({
             <Quote data={data} />
             <Mempelai data={data} />
             <Acara data={data} />
+            <LoveStory data={data} />
+            <Galeri data={data} />
+            <Informasi data={data} />
 
-            {/* Bagian berikutnya: Love Story, Galeri, Informasi, RSVP, Penutup. */}
+            {/* Bagian berikutnya: RSVP & Ucapan, Penutup, nav + tombol musik. */}
             <Section id="sd-placeholder" style={{ paddingBottom: 140 }}>
               <p className="text-center" style={{ fontFamily: F.display, fontSize: 15, color: c.muted, margin: 0 }}>
                 Bagian berikutnya sedang dibangun.
