@@ -53,6 +53,26 @@ don't let them block you, and don't do a mass cleanup unless asked.
 
 Categories: `Special`, `Luxury`, `Motion` (3D), `Adat` (traditional).
 
+### Shipping a video-backdrop theme (Gilded Palace is the reference)
+Keep the master in gitignored `design-assets/`; ship a cut-down `intro` + `loop` pair under
+`public/themes/`. Four things were learned the expensive way:
+
+- **Pick the resolution by measuring VMAF at display size, not by eye or by CRF number.** Encode
+  several candidates, upscale each to 1080 wide, and score against a near-lossless reference
+  (`ffmpeg -hide_banner -i cand -i ref -lavfi "[0:v]scale=1080:1920,setpts=PTS-STARTPTS[a];[1:v]setpts=PTS-STARTPTS[b];[a][b]libvmaf"`).
+  Gilded Palace's first cut scored **66.9** (visibly broken) and had to be redone at 810p → 92.4.
+  At invitation-sized bitrates **810p beats 1080p at equal file size**. Note `-v error` suppresses
+  the score line — use `-hide_banner` instead.
+- **Intro and loop must be the same resolution**, or the handoff reads as a sudden focus snap.
+- **Build the loop by dissolving its tail into a REVERSED copy of its head**, so the dissolve lands
+  exactly on frame 0. Dissolving into a forward head moves the loop's start far from the intro's
+  end (that seam fell to 23 dB and was visible). Never assume a "static" shot is static — this
+  ballroom's frames one second apart measure only 22.5 dB.
+- **Verify all three seams with PSNR** (poster→intro, intro→loop, loop wrap). Above ~30 dB the
+  difference is compression noise and the swap can be hard-cut; below that it shows.
+- Set the loop's `preload` to `none` until the intro is playing, so opening the page fetches only
+  the poster rather than every megabyte at once.
+
 ### Full-height backdrops: use `fixed`, not `sticky`
 An invitation scrolls inside `InvitationLayout`'s inner div, **not the window** — so
 `window.scrollTo`/`scrollTop` are always no-ops here; use `scrollIntoView`. For a layer that must
