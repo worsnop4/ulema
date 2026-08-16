@@ -13,15 +13,34 @@ import { THEMES } from '../config/constants'
 //  tangga ballroom di bawah lampu kristal, lalu berhenti di sana dan
 //  bernapas pelan selamanya.
 //
-//  Tiga babak, satu aset gambar dan dua potong video:
+//  Tiga babak, satu aset gambar dan dua potong video, semuanya 810x1440:
 //    poster.jpg  frame beku detik pertama, latar sebelum undangan dibuka
 //    intro.mp4   17,5 dtk perjalanan, diputar sekali saat dibuka
 //    loop.mp4     7,5 dtk ballroom, berputar terus sesudahnya
 //
-//  Ketiga sambungannya diukur, bukan dikira-kira: poster→intro 33,4 dB,
-//  intro→loop 33,4 dB, ujung loop→awal loop 32,2 dB. Selisih sekecil itu
+//  Ketiga sambungannya diukur, bukan dikira-kira: poster→intro 34,9 dB,
+//  intro→loop 35,1 dB, ujung loop→awal loop 36,6 dB. Selisih sekecil itu
 //  hanya derau kompresi, jadi peralihannya boleh ditukar keras tanpa
 //  crossfade panjang yang justru akan terbaca sebagai kedip.
+//
+//  Cara loop-nya dibuat penting dan tidak jelas dari luar. Adegan ballroom
+//  ini tidak diam — dua frame berjarak satu detik saja hanya mirip 22,5 dB —
+//  jadi memotongnya begitu saja akan menyentak tiap 7,5 detik. Ekornya
+//  dilarutkan ke potongan kepala yang DIPUTAR MUNDUR, sehingga dissolve-nya
+//  berakhir tepat di frame pertama dan putarannya kembali ke tempat ia
+//  bermula. Melarutkan ekor ke kepala yang maju terlihat rapi di titik
+//  putaran tapi memindahkan awal loop 7,4 detik jauhnya dari ujung intro,
+//  dan sambungan itu jatuh ke 23 dB — sudah dicoba, dan terlihat.
+//
+//  Resolusi 810x1440 dipilih dengan mengukur VMAF pada ukuran tampil
+//  sebenarnya, bukan dari angka CRF: versi 540p yang pertama hanya mencetak
+//  66,9 (di bawah 70 memang terlihat pecah) sementara ini 92,4. Di bitrate
+//  segini 810p mengalahkan 1080p pada ukuran berkas yang sama — piksel lebih
+//  sedikit tapi bersih menang atas piksel banyak yang penuh artefak.
+//
+//  Intro dan loop wajib seresolusi. Intro 720p dengan loop 1080p menghemat
+//  byte, tapi pada titik pergantiannya gambar mendadak menajam dan terbaca
+//  seperti kamera yang baru menemukan fokus.
 //
 //  Pelajaran Velour Olive dipakai di sini (§ VideoBackdrop): video ber-opacity
 //  0 tetap men-decode tiap frame. Maka hanya satu video yang pernah berjalan,
@@ -36,9 +55,9 @@ const A = {
 }
 
 // Detik ke berapa kartu "The Wedding Of" terbit. Intro-nya 17,5 detik, dan
-// pada detik 15 kameranya sudah berhenti di tangga ballroom — kartunya
-// muncul di atas gambar yang sudah tenang, bukan di tengah perjalanan.
-const HERO_AT = 15
+// pada detik 13 kameranya sudah sampai di tangga ballroom — kartunya muncul
+// di atas gambar yang sudah tenang, bukan di tengah perjalanan.
+const HERO_AT = 13
 
 // ─── PALET ───────────────────────────────────────────────────────
 // Diambil dari videonya sendiri, bukan dari selera: warna rata-rata tiap
@@ -115,9 +134,16 @@ const Panggung = ({ phase, introRef, loopRef, introMounted, still }) => (
 
       {!still && (
         <>
-          {/* Loop dipasang sejak awal supaya sudah ter-buffer saat gilirannya
-              tiba, tapi tanpa autoPlay: yang mahal itu decode, bukan mount. */}
-          <video ref={loopRef} muted loop playsInline preload="auto" poster={A.poster}
+          {/* Loop dipasang sejak awal tapi tanpa autoPlay: yang mahal itu
+              decode, bukan mount.
+
+              Unduhannya baru dimulai ketika intro sudah berjalan. Kalau
+              preload-nya "auto" sejak awal, membuka halaman berarti menarik
+              7,4MB video sekaligus sebelum tamu menyentuh apa pun — dan yang
+              dibutuhkan saat itu hanya poster. Setelah intro mulai, ada 17
+              detik untuk mengambil 1,5MB: cukup bahkan di jaringan lambat. */}
+          <video ref={loopRef} muted loop playsInline poster={A.poster}
+            preload={phase === 'poster' ? 'none' : 'auto'}
             className="absolute inset-0 w-full h-full"
             style={{ objectFit: 'cover', opacity: phase === 'loop' ? 1 : 0, transition: 'opacity .7s ease' }}>
             <source src={A.loop} type="video/mp4" />
