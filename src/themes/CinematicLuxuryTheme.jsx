@@ -40,6 +40,10 @@ export default function CinematicLuxuryTheme({
   primaryEvent, audioRef
 }) {
   const meta = data.meta || {}
+  // Alamat Pengiriman Kado: null bila toggle-nya mati atau seluruh isinya kosong,
+  // sehingga pemakaian di bawah cukup memeriksa kebenarannya sekali.
+  const ga = data.giftAddress
+  const giftAddr = ga?.enabled && (ga.address || ga.recipient || ga.phone) ? ga : null
   
   // Ambil konfigurasi tema aktif
   const themes = getThemes()
@@ -286,7 +290,9 @@ export default function CinematicLuxuryTheme({
 
         <section className="py-24 px-6 bg-[#0d0d0d]">
           <div className="max-w-lg mx-auto">
-            {data.accounts?.length > 0 && (
+            {/* Alamat Pengiriman Kado punya toggle sendiri di editor, jadi blok
+                ini tidak boleh digerbangi hanya oleh daftar rekening. */}
+            {(data.accounts?.length > 0 || giftAddr) && (
               <FadeUp className="mb-20 text-center">
                 <h2 className="font-serif text-3xl tracking-widest uppercase mb-4" style={{ color: luxGold }}>Tanda Kasih</h2>
                 <p className="text-sm leading-relaxed mb-8" style={{ color: luxMuted }}>
@@ -296,17 +302,33 @@ export default function CinematicLuxuryTheme({
                   {data.accounts.map((acc, i) => (
                     <div key={i} className="p-6 text-left" style={{ backgroundColor: luxCard, border: '1px solid rgba(221,196,151,0.1)' }}>
                       <p className="text-xs uppercase tracking-widest mb-2" style={{ color: luxMuted }}>{acc.bank}</p>
-                      <p className="font-serif text-2xl tracking-widest mb-1">{acc.no}</p>
-                      <p className="text-sm" style={{ color: luxGold }}>a.n. {acc.name}</p>
+                      <p className="font-serif text-2xl tracking-widest mb-1">{acc.number}</p>
+                      <p className="text-sm" style={{ color: luxGold }}>a.n. {acc.holder}</p>
                       <button 
-                        onClick={() => copyAccount(acc.no)}
+                        onClick={() => copyAccount(acc.number)}
                         className="mt-4 flex items-center gap-2 text-xs uppercase tracking-widest hover:text-white transition-colors"
                         style={{ color: luxGold }}
                       >
-                        <Copy size={12} /> {copied === acc.no ? 'Tersalin!' : 'Salin Nomor'}
+                        <Copy size={12} /> {copied === acc.number ? 'Tersalin!' : 'Salin Nomor'}
                       </button>
                     </div>
                   ))}
+
+                  {giftAddr && (
+                    <div className="p-6 text-left" style={{ backgroundColor: luxCard, border: '1px solid rgba(221,196,151,0.1)' }}>
+                      <p className="text-xs uppercase tracking-widest mb-2" style={{ color: luxMuted }}>Kirim Kado</p>
+                      {giftAddr.recipient && <p className="font-serif text-xl tracking-wide mb-1">{giftAddr.recipient}</p>}
+                      {giftAddr.phone && <p className="text-sm mb-2" style={{ color: luxGold }}>{giftAddr.phone}</p>}
+                      {giftAddr.address && <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: luxMuted }}>{giftAddr.address}</p>}
+                      {giftAddr.address && (
+                        <button onClick={() => copyAccount(giftAddr.address)}
+                          className="mt-4 flex items-center gap-2 text-xs uppercase tracking-widest hover:text-white transition-colors"
+                          style={{ color: luxGold }}>
+                          <Copy size={12} /> {copied === giftAddr.address ? 'Tersalin!' : 'Salin Alamat'}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </FadeUp>
             )}

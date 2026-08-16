@@ -517,7 +517,11 @@ const Gift = ({ data }) => {
   const [open, setOpen] = useState(false)
   const { copiedKey, copy } = useCopyToClipboard()
   const accounts = data?.accounts || []
-  if (!accounts.length) return null
+  // Toggle Alamat Pengiriman Kado berdiri sendiri di editor; menggerbangi
+  // section hanya pada accounts menyembunyikannya sepenuhnya.
+  const gift = data?.giftAddress
+  const hasGiftAddress = Boolean(gift?.enabled && (gift.address || gift.recipient || gift.phone))
+  if (!accounts.length && !hasGiftAddress) return null
   return (
     <section id="aurum-gift" style={{ padding: '96px 28px', background: c.bg }}>
       <div className="text-center flex flex-col items-center" style={{ marginBottom: 32 }}>
@@ -550,6 +554,21 @@ const Gift = ({ data }) => {
                 </div>
               )
             })}
+
+            {hasGiftAddress && (
+              <div style={{ border: `1px solid ${c.brd22}`, background: `linear-gradient(135deg, #17120d, ${c.bgAlt})`, padding: 22, borderRadius: RAD.panel }}>
+                <p className="uppercase" style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '0.3em', color: c.gold, marginBottom: 8 }}>Kirim Kado</p>
+                {gift.recipient && <p style={{ fontFamily: F.serif, fontSize: 18, color: c.text, marginBottom: 4 }}>{gift.recipient}</p>}
+                {gift.phone && <p style={{ fontFamily: F.sans, fontSize: 11.5, fontWeight: 300, color: c.muted, marginBottom: 8 }}>{gift.phone}</p>}
+                {gift.address && <p style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 300, lineHeight: 1.75, color: c.body, whiteSpace: 'pre-line' }}>{gift.address}</p>}
+                {gift.address && (
+                  <button onClick={() => copy(gift.address, 'an-gift-address')} className="uppercase"
+                    style={{ marginTop: 14, padding: '9px 14px', cursor: 'pointer', fontFamily: F.sans, fontSize: 8, fontWeight: 600, letterSpacing: '0.25em', border: `1px solid ${c.brd55}`, background: copiedKey === 'an-gift-address' ? c.gold : 'transparent', color: copiedKey === 'an-gift-address' ? c.btnText : c.goldBright, transition: 'all .3s ease', borderRadius: RAD.pill }}>
+                    {copiedKey === 'an-gift-address' ? 'Tersalin' : 'Salin Alamat'}
+                  </button>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

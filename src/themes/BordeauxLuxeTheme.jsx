@@ -449,7 +449,11 @@ const GallerySection = ({ data }) => {
 const GiftSection = ({ data }) => {
   const [showGifts, setShowGifts] = useState(false)
   const { copiedKey: copied, copy: copyAccount } = useCopyToClipboard()
-  if (!data?.accounts || data.accounts.length === 0) return null
+  // Toggle Alamat Pengiriman Kado berdiri sendiri di editor, jadi section ini
+  // tidak boleh digerbangi hanya oleh daftar rekening.
+  const gift = data?.giftAddress
+  const hasGiftAddress = Boolean(gift?.enabled && (gift.address || gift.recipient || gift.phone))
+  if ((!data?.accounts || data.accounts.length === 0) && !hasGiftAddress) return null
   return (
     <section className="px-6 relative z-10">
       <Glass className="p-8 flex flex-col items-center">
@@ -483,6 +487,23 @@ const GiftSection = ({ data }) => {
                   </div>
                 )
               })}
+
+              {hasGiftAddress && (
+                <div className="p-5 rounded-2xl flex flex-col items-center text-center"
+                  style={{ border: `1px solid ${c.glassBrd}`, background: 'rgba(201,162,75,0.05)' }}>
+                  <p className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: c.gold }}>Kirim Kado</p>
+                  {gift.recipient && <p className="text-[15px] font-semibold mb-1" style={{ color: c.cream }}>{gift.recipient}</p>}
+                  {gift.phone && <p className="text-[13px] mb-2 font-sans" style={{ color: c.text, opacity: 0.75 }}>{gift.phone}</p>}
+                  {gift.address && <p className="text-[13px] leading-relaxed font-sans mb-4 whitespace-pre-line" style={{ color: c.text, opacity: 0.8 }}>{gift.address}</p>}
+                  {gift.address && (
+                    <button onClick={() => copyAccount(gift.address, 'bx-gift-address')}
+                      className="px-5 py-1.5 text-xs uppercase tracking-wider font-semibold rounded-full transition-all"
+                      style={{ border: `1px solid ${c.gold}`, background: copied === 'bx-gift-address' ? c.gold : 'transparent', color: copied === 'bx-gift-address' ? c.wineDeep : c.gold }}>
+                      {copied === 'bx-gift-address' ? 'Tersalin!' : 'Salin Alamat'}
+                    </button>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

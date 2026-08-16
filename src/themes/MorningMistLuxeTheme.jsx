@@ -426,7 +426,11 @@ const WishRsvp = ({ data, wishes, onSubmitWish }) => {
 const Gift = ({ data }) => {
   const { copiedKey, copy } = useCopyToClipboard()
   const accounts = data?.accounts || []
-  if (!accounts.length) return null
+  // Toggle Alamat Pengiriman Kado berdiri sendiri di editor; menggerbangi
+  // section hanya pada accounts menyembunyikannya sepenuhnya.
+  const gift = data?.giftAddress
+  const hasGiftAddress = Boolean(gift?.enabled && (gift.address || gift.recipient || gift.phone))
+  if (!accounts.length && !hasGiftAddress) return null
   return (
     <section id="mm-hadiah" style={{ background: c.bgBase, padding: '88px 24px 80px' }}>
       <SectionHead eyebrow="Hadiah" title="Tanda kasih" />
@@ -452,6 +456,20 @@ const Gift = ({ data }) => {
             </Reveal>
           )
         })}
+
+        {hasGiftAddress && (
+          <Reveal style={{ borderRadius: 20, padding: '24px 22px', background: 'linear-gradient(130deg, rgba(233,239,244,.10), rgba(233,239,244,.04))', border: '1px solid rgba(233,239,244,.16)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+            <div style={{ fontFamily: F.serif, fontSize: 22, letterSpacing: '0.08em', color: c.ink }}>Kirim Kado</div>
+            {gift.recipient && <div style={{ fontFamily: F.sans, fontSize: 15, color: c.soft2, marginTop: 12 }}>{gift.recipient}</div>}
+            {gift.phone && <div style={{ fontFamily: F.sans, fontSize: 12.5, color: c.soft3, fontWeight: 300, marginTop: 4 }}>{gift.phone}</div>}
+            {gift.address && <div style={{ fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.75, color: c.soft3, fontWeight: 300, marginTop: 10, whiteSpace: 'pre-line' }}>{gift.address}</div>}
+            {gift.address && (
+              <button onClick={() => copy(gift.address, 'mm-gift-address')} className="uppercase" style={{ marginTop: 16, padding: '10px 24px', ...PILL, letterSpacing: '0.22em', fontSize: 11, border: '1px solid rgba(220,230,237,.4)', background: copiedKey === 'mm-gift-address' ? 'rgba(233,239,244,.16)' : 'transparent', color: c.ink2 }}>
+                {copiedKey === 'mm-gift-address' ? 'Tersalin ✓' : 'Salin Alamat'}
+              </button>
+            )}
+          </Reveal>
+        )}
       </div>
     </section>
   )

@@ -305,7 +305,10 @@ function getBabakFlags(data) {
   const hasGallery = (data?.gallery || []).length > 0
   const hasDresscode = Boolean(data?.dresscode?.name || data?.dresscode?.color || data?.dresscode?.notes)
   const hasLive = Boolean(data?.livestreamEnabled) && (data?.livestreamPlatforms || []).some(p => p.url)
-  const hasGift = (data?.accounts || []).length > 0
+  // Alamat Pengiriman Kado punya toggle sendiri; tanpa ikut dihitung di sini
+  // pasangan yang hanya mengisi alamat kirim kehilangan babak Informasi.
+  const g = data?.giftAddress
+  const hasGift = (data?.accounts || []).length > 0 || Boolean(g?.enabled && (g.address || g.recipient || g.phone))
   const hasFamilies = Boolean(data?.turutMengundangEnabled) && (data?.families || []).some(f => (f.members || []).filter(m => m && m.trim()).length)
   return { hasStory, hasGallery, hasDresscode, hasLive, hasGift, hasFamilies, hasInfo: hasDresscode || hasLive || hasGift || hasFamilies }
 }
@@ -618,6 +621,30 @@ const GiftBlock = ({ data }) => {
             </div>
           )
         })}
+
+        {(() => {
+          const gift = data?.giftAddress
+          if (!gift?.enabled || !(gift.address || gift.recipient || gift.phone)) return null
+          return (
+            <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(244,239,230,.06)' }}>
+              <p style={{ fontFamily: F.serif, fontSize: 17, color: c.ivory, margin: 0 }}>Kirim Kado</p>
+              {gift.recipient && <p style={{ fontFamily: F.sans, fontSize: 12.5, color: 'rgba(244,239,230,.85)', margin: '6px 0 0' }}>{gift.recipient}</p>}
+              {gift.phone && <p style={{ fontFamily: F.sans, fontSize: 11.5, color: 'rgba(244,239,230,.6)', margin: '3px 0 0' }}>{gift.phone}</p>}
+              {gift.address && <p style={{ fontFamily: F.sans, fontSize: 11.5, lineHeight: 1.7, color: 'rgba(244,239,230,.6)', margin: '8px 0 10px', whiteSpace: 'pre-line' }}>{gift.address}</p>}
+              {gift.address && (
+                <button onClick={() => copy(gift.address, 'vo-gift-address')}
+                  style={{
+                    padding: '7px 16px', borderRadius: 999, border: `1px solid ${c.champagne}`,
+                    background: copiedKey === 'vo-gift-address' ? c.champagne : 'transparent',
+                    color: copiedKey === 'vo-gift-address' ? c.ink : c.champagne,
+                    fontFamily: F.sans, fontSize: 10, letterSpacing: '1.5px', cursor: 'pointer',
+                  }}>
+                  {copiedKey === 'vo-gift-address' ? 'TERSALIN' : 'SALIN ALAMAT'}
+                </button>
+              )}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

@@ -535,7 +535,7 @@ const Dresscode = ({ dresscode }) => (
   </div>
 )
 
-const Gift = ({ accounts, copiedKey, copy }) => (
+const Gift = ({ accounts, giftAddr, copiedKey, copy }) => (
   <div className="flex flex-col" style={{ gap: 12 }}>
     <p style={{ margin: 0, fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: c.muted }}>
       Doa restu Anda adalah hadiah terindah. Bila berkenan memberi tanda kasih, berikut informasinya.
@@ -561,6 +561,28 @@ const Gift = ({ accounts, copiedKey, copy }) => (
         )}
       </div>
     ))}
+
+    {/* Alamat pengiriman kado fisik. Toggle-nya berdiri sendiri di editor,
+        terpisah dari daftar rekening, jadi kartu Hadiah harus muncul bila
+        salah satunya terisi — bukan hanya bila ada rekening. */}
+    {giftAddr && (
+      <div style={{ padding: '14px 16px', borderRadius: 16, background: 'rgba(247,241,232,.06)', border: `1px solid ${c.goldSoft}22` }}>
+        <p style={{ margin: 0, fontFamily: F.sans, fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: c.gold }}>Kirim Kado</p>
+        {giftAddr.recipient && <p style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 17, color: c.ivory }}>{giftAddr.recipient}</p>}
+        {giftAddr.phone && <p style={{ margin: '4px 0 0', fontFamily: F.sans, fontSize: 12.5, color: c.muted }}>{giftAddr.phone}</p>}
+        {giftAddr.address && <p style={{ margin: '10px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.75, color: c.muted, whiteSpace: 'pre-line' }}>{giftAddr.address}</p>}
+        {giftAddr.address && (
+          <button onClick={() => copy(giftAddr.address, 'sd-gift-address')}
+            style={{
+              marginTop: 12, padding: '8px 18px', borderRadius: 999, cursor: 'pointer',
+              background: 'transparent', border: `1px solid ${c.gold}`, color: c.goldSoft,
+              fontFamily: F.sans, fontSize: 10.5, letterSpacing: '.18em', textTransform: 'uppercase',
+            }}>
+            {copiedKey === 'sd-gift-address' ? 'Tersalin' : 'Salin Alamat'}
+          </button>
+        )}
+      </div>
+    )}
   </div>
 )
 
@@ -571,12 +593,14 @@ const Informasi = ({ data }) => {
   const live = Boolean(data?.livestreamEnabled) && (data?.livestreamPlatforms || []).filter(p => p?.url)
   const hasLive = Boolean(live && live.length)
   const accounts = data?.accounts || []
+  const ga = data?.giftAddress
+  const giftAddr = ga?.enabled && (ga.address || ga.recipient || ga.phone) ? ga : null
   const families = (data?.families || [])
     .map(f => ({ ...f, members: (f.members || []).filter(m => m && m.trim()) }))
     .filter(f => f.members.length)
   const hasFamilies = Boolean(data?.turutMengundangEnabled) && families.length > 0
 
-  if (!hasDresscode && !hasLive && !accounts.length && !hasFamilies) return null
+  if (!hasDresscode && !hasLive && !accounts.length && !giftAddr && !hasFamilies) return null
 
   return (
     <Section id="sd-info">
@@ -605,8 +629,8 @@ const Informasi = ({ data }) => {
           </InfoCard>
         )}
 
-        {accounts.length > 0 && (
-          <InfoCard label="Hadiah" delay={0.1}><Gift accounts={accounts} copiedKey={copiedKey} copy={copy} /></InfoCard>
+        {(accounts.length > 0 || giftAddr) && (
+          <InfoCard label="Hadiah" delay={0.1}><Gift accounts={accounts} giftAddr={giftAddr} copiedKey={copiedKey} copy={copy} /></InfoCard>
         )}
 
         {hasFamilies && (

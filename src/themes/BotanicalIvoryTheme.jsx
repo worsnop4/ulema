@@ -446,7 +446,13 @@ const GallerySection = ({ data }) => {
 const GiftSection = ({ data }) => {
   const { copiedKey: copied, copy: copyAccount } = useCopyToClipboard()
   const accounts = data?.accounts || []
-  if (!accounts.length) return null
+  // Alamat Pengiriman Kado punya tombol nyala sendiri di editor, terpisah dari
+  // daftar rekening. Menggerbangi seluruh section hanya pada accounts membuat
+  // pasangan yang cuma ingin mencantumkan alamat kirim kehilangan section ini
+  // sepenuhnya — dan sebelum ini alamatnya memang tidak pernah dirender.
+  const gift = data?.giftAddress
+  const hasGiftAddress = Boolean(gift?.enabled && (gift.address || gift.recipient || gift.phone))
+  if (!accounts.length && !hasGiftAddress) return null
   return (
     <section id="kado" className="relative" style={{ ...dotted(c.ivory, 'rgba(201,162,75,0.13)'), padding: '56px 28px', textAlign: 'center' }}>
       <Corners />
@@ -471,6 +477,21 @@ const GiftSection = ({ data }) => {
             </div>
           )
         })}
+
+        {hasGiftAddress && (
+          <div className="flex flex-col gap-1" style={{ border: `1px solid rgba(201,162,75,0.35)`, padding: 20, textAlign: 'left' }}>
+            <span className="font-sans" style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: c.gold, fontWeight: 600 }}>Kirim Kado</span>
+            {gift.recipient && <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.15rem', color: c.charcoal }}>{gift.recipient}</span>}
+            {gift.phone && <span className="font-sans" style={{ fontSize: 12, color: 'rgba(43,43,38,0.6)' }}>{gift.phone}</span>}
+            {gift.address && <span className="font-sans" style={{ fontSize: 12.5, lineHeight: 1.7, color: 'rgba(43,43,38,0.7)', whiteSpace: 'pre-line', marginTop: 4 }}>{gift.address}</span>}
+            {gift.address && (
+              <button onClick={() => copyAccount(gift.address, 'bi-gift-address')} className="font-sans"
+                style={{ alignSelf: 'flex-start', marginTop: 8, padding: '8px 18px', border: `1px solid ${c.sage}`, background: copied === 'bi-gift-address' ? c.sage : 'transparent', color: copied === 'bi-gift-address' ? c.cream : c.sage, borderRadius: 20, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                {copied === 'bi-gift-address' ? 'Tersalin!' : 'Salin Alamat'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </section>
   )
