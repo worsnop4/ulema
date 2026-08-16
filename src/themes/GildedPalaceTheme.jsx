@@ -35,6 +35,11 @@ const A = {
   loop:   '/themes/Motion/theme-2/loop.mp4',
 }
 
+// Detik ke berapa kartu "The Wedding Of" terbit. Intro-nya 17,5 detik, dan
+// pada detik 15 kameranya sudah berhenti di tangga ballroom — kartunya
+// muncul di atas gambar yang sudah tenang, bukan di tengah perjalanan.
+const HERO_AT = 15
+
 // ─── PALET ───────────────────────────────────────────────────────
 // Diambil dari videonya sendiri, bukan dari selera: warna rata-rata tiap
 // babak jatuh di #E2D2B9 – #EBDAC4, dan pita tempat teks akan berdiri
@@ -63,7 +68,7 @@ const c = {
 
 const F = {
   display: "'Bodoni Moda', serif",
-  script:  "'Mrs Saint Delafield', cursive",
+  script:  "'Great Vibes', cursive",
   sans:    "'Manrope', sans-serif",
 }
 
@@ -82,12 +87,25 @@ const pad2 = (n) => String(n ?? 0).padStart(2, '0')
 //  PANGGUNG — latar istana
 // ═══════════════════════════════════════════════════════════════════
 
-// Sticky, bukan fixed. Elemen setinggi 0 yang menempel di puncak scroller
-// lalu menggantung anaknya setinggi --inv-h: latar tinggal diam sementara
-// isi undangan lewat di depannya, tanpa satu pun listener scroll.
+// Fixed dan dijangkarkan ke kolom, bukan sticky.
+//
+// Versi pertama memakai `sticky top-0` setinggi 0 di dalam scroller, dan
+// latarnya berhenti di halaman Mempelai: sesudah itu undangan berjalan di
+// atas krem polos. Sticky di dalam scroller ini sudah gagal dua kali —
+// kelopak Opaline juga berhenti di tengah jalan dengan cara yang sama, dan
+// yang menyelesaikannya waktu itu persis pola di bawah ini. Fixed tidak
+// punya kotak pembatas yang bisa kehabisan tinggi, jadi seluruh kelas bug
+// itu hilang, bukan digeser.
+//
+// left:50% + translateX(-50%) + width:--inv-w yang menjangkarkannya ke kolom
+// undangan, bukan ke jendela: di desktop kolomnya hanya 480px di tengah layar
+// lebar, dan tanpa penjangkaran ini videonya akan melebar ke seluruh monitor.
 const Panggung = ({ phase, introRef, loopRef, introMounted, still }) => (
-  <div className="sticky top-0 pointer-events-none" style={{ height: 0, zIndex: 0 }}>
-    <div className="absolute left-0 right-0 overflow-hidden" style={{ top: 0, height: 'var(--inv-h)', background: c.champagne }}>
+  <div className="fixed pointer-events-none" style={{
+    top: 0, left: '50%', transform: 'translateX(-50%)',
+    width: 'var(--inv-w)', height: 'var(--inv-h)', zIndex: 0,
+  }}>
+    <div className="absolute inset-0 overflow-hidden" style={{ background: c.champagne }}>
 
       {/* Frame beku detik pertama. Identik dengan frame pertama intro.mp4
           (terukur 30,7 dB — selisihnya cuma kompresi JPEG), jadi saat video
@@ -264,7 +282,7 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
             <div className="flex flex-col items-center text-center">
               <Kicker style={{ fontSize: 9, letterSpacing: '.34em' }}>The Wedding Of</Kicker>
 
-              <h1 style={{ margin: '8px 0 0', fontFamily: F.script, fontSize: 58, lineHeight: 1, color: c.ink }}>
+              <h1 style={{ margin: '8px 0 0', fontFamily: F.script, fontSize: 46, lineHeight: 1, color: c.ink }}>
                 {groomNick} &amp; {brideNick}
               </h1>
               <Rule width={70} style={{ margin: '14px 0' }} />
@@ -300,23 +318,34 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
 }
 
 // ─── 2. HERO ─────────────────────────────────────────────────────
-// Sengaja tanpa foto besar: satu layar penuh dibiarkan jadi milik video,
-// karena di detik-detik inilah kameranya sedang berjalan menembus gerbang.
-// Yang tersisa hanya nama dan hitung mundur di atas satu tablet marmer.
-const Hero = ({ groomNick, brideNick, heroDate, countdown, countdownEnabled }) => {
+// Muncul di detik ke-15 video, bukan begitu undangan dibuka. Empat belas
+// detik pertama adalah perjalanan kameranya sendiri — menaruh kartu di atasnya
+// sejak awal berarti menutupi satu-satunya bagian yang bergerak. Pada detik
+// 15 kameranya sudah sampai di tangga ballroom dan diam, dan di situlah
+// kartunya punya tempat untuk berdiri.
+//
+// `ready` datang dari waktu putar video yang sebenarnya (lihat HERO_AT di
+// bawah), bukan dari setTimeout: kalau videonya tersendat karena jaringan,
+// penghitung waktu akan menampilkan kartu di atas lorong yang masih bergerak.
+const Hero = ({ data, groomNick, brideNick, heroDate, countdown, countdownEnabled, ready }) => {
   const parts = [['Hari', countdown?.d], ['Jam', countdown?.h], ['Menit', countdown?.m], ['Detik', countdown?.s]]
+  const heroPhoto = data?.meta?.photo || data?.meta?.coverPhoto || data?.groom?.photo || data?.bride?.photo || null
   return (
     <section id="gp-home" className="relative flex flex-col items-center justify-end text-center"
-      style={{ zIndex: 1, minHeight: 'var(--inv-h)', boxSizing: 'border-box', padding: '96px 26px 104px' }}>
+      style={{ zIndex: 1, minHeight: 'var(--inv-h)', boxSizing: 'border-box', padding: '90px 26px 104px' }}>
       <motion.div className="flex flex-col items-center"
-        initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.1, duration: 1.1, ease: [0.2, 0.7, 0.2, 1] }}>
+        initial={{ opacity: 0, y: 18 }}
+        animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+        transition={{ duration: 1.2, ease: [0.2, 0.7, 0.2, 1] }}
+        style={{ pointerEvents: ready ? 'auto' : 'none' }}>
 
-        <div style={{ ...cardStyle, padding: '26px 24px 22px', width: 'min(340px, 100%)' }}>
+        {heroPhoto && <ArchPhoto src={heroPhoto} w={158} ratio="3 / 4" style={{ marginBottom: -32, zIndex: 1 }} />}
+
+        <div style={{ ...cardStyle, padding: heroPhoto ? '44px 24px 22px' : '26px 24px 22px', width: 'min(340px, 100%)' }}>
           <div className="flex flex-col items-center">
             <Arch style={{ marginBottom: 12 }} />
             <Kicker>The Wedding Of</Kicker>
-            <h1 style={{ margin: '10px 0 0', fontFamily: F.script, fontSize: 64, lineHeight: 1, color: c.ink }}>
+            <h1 style={{ margin: '10px 0 0', fontFamily: F.script, fontSize: 50, lineHeight: 1, color: c.ink }}>
               {groomNick} &amp; {brideNick}
             </h1>
             <Rule width={70} style={{ margin: '14px 0' }} />
@@ -365,7 +394,7 @@ const PersonCard = ({ person, delay }) => (
   <Reveal delay={delay} className="flex flex-col items-center text-center" style={cardStyle}>
     <ArchPhoto src={person?.photo} alt={person?.nickname || ''} w={160} ratio="3 / 4" pan={false} />
 
-    <h3 style={{ margin: '16px 0 0', fontFamily: F.script, fontSize: 46, lineHeight: 1, color: c.giltDeep }}>
+    <h3 style={{ margin: '16px 0 0', fontFamily: F.script, fontSize: 36, lineHeight: 1, color: c.giltDeep }}>
       {person?.nickname || '—'}
     </h3>
     <p style={{ margin: '4px 0 0', fontFamily: F.display, fontSize: 16.5, color: c.ink }}>
@@ -403,7 +432,7 @@ const Mempelai = ({ data }) => (
         width: 52, height: 52, borderRadius: '50%',
         background: 'rgba(247,241,230,.88)', border: `1px solid rgba(168,130,58,.45)`,
         boxShadow: '0 10px 24px rgba(58,46,35,.24)',
-        fontFamily: F.script, fontSize: 42, lineHeight: 1, color: c.giltDeep, paddingBottom: 6,
+        fontFamily: F.script, fontSize: 33, lineHeight: 1, color: c.giltDeep, paddingBottom: 6,
       }}>&amp;</span>
       <PersonCard person={data?.bride} delay={0.08} />
     </div>
@@ -820,7 +849,7 @@ const Penutup = ({ data, groomNick, brideNick, heroDate }) => {
         </p>
         <Rule width={52} style={{ margin: '22px 0' }} />
         <Kicker>Wassalamualaikum Wr. Wb.</Kicker>
-        <h2 style={{ margin: '14px 0 0', fontFamily: F.script, fontSize: 56, lineHeight: 1, color: c.ink }}>
+        <h2 style={{ margin: '14px 0 0', fontFamily: F.script, fontSize: 44, lineHeight: 1, color: c.ink }}>
           {groomNick} &amp; {brideNick}
         </h2>
         <p style={{ margin: '10px 0 0', fontFamily: F.display, fontSize: 13.5, letterSpacing: '.16em', color: c.giltDeep }}>{heroDate}</p>
@@ -904,6 +933,9 @@ export default function GildedPalaceTheme({
   const [phase, setPhase] = useState('poster')
   const [introMounted, setIntroMounted] = useState(true)
 
+  // Kartu "The Wedding Of" baru muncul saat video sampai di detik ini.
+  const [heroReady, setHeroReady] = useState(false)
+
   // Terpisah dari `opened` dengan sengaja. Isi undangan ter-mount seketika,
   // tapi cover harus tetap terpasang sepanjang fade-nya sendiri; menggantung
   // cover pada !opened akan melepasnya di commit yang sama dan transisinya
@@ -923,21 +955,32 @@ export default function GildedPalaceTheme({
   const guest = guestName || 'Bapak/Ibu/Saudara/i'
   const musicEnabled = data?.music !== false
 
-  // Sambungan intro → loop. Loop dijalankan lebih dulu, baru fase berganti,
-  // supaya frame pertamanya sudah ter-decode ketika ia terlihat. Elemen intro
-  // dilepas setelah fade-nya selesai: video yang sudah selesai tetap memegang
-  // decoder sampai ia benar-benar hilang dari pohon.
+  // Sambungan intro → loop, dan pemicu munculnya kartu Hero.
+  //
+  // Loop dijalankan lebih dulu, baru fase berganti, supaya frame pertamanya
+  // sudah ter-decode ketika ia terlihat. Elemen intro dilepas setelah fade-nya
+  // selesai: video yang sudah selesai tetap memegang decoder sampai ia
+  // benar-benar hilang dari pohon.
   useEffect(() => {
     const v = introRef.current
     if (!v) return
+    const onTime = () => { if (v.currentTime >= HERO_AT) setHeroReady(true) }
     const onEnd = () => {
+      // Juga di sini, bukan hanya di timeupdate: bila tamu menyeret videonya
+      // melewati detik 15, atau timeupdate dilewati saat tab di latar
+      // belakang, kartunya tetap harus terbit.
+      setHeroReady(true)
       const l = loopRef.current
       if (l) { l.currentTime = 0; l.play().catch(() => {}) }
       setPhase('loop')
       setTimeout(() => setIntroMounted(false), 900)
     }
+    v.addEventListener('timeupdate', onTime)
     v.addEventListener('ended', onEnd)
-    return () => v.removeEventListener('ended', onEnd)
+    return () => {
+      v.removeEventListener('timeupdate', onTime)
+      v.removeEventListener('ended', onEnd)
+    }
   }, [introMounted])
 
   const handleOpen = () => {
@@ -949,14 +992,27 @@ export default function GildedPalaceTheme({
     setOpened(true)
     if (audioRef?.current) setMusicPlaying(true)
 
-    if (!reduceMotion) {
+    if (reduceMotion) {
+      // Tanpa video: tidak ada yang perlu ditunggu.
+      setHeroReady(true)
+    } else {
       const v = introRef.current
       if (v) {
         v.currentTime = 0
         // Muted + playsInline, dan ini pun dipicu oleh ketukan tamu — dua
         // alasan terpisah kenapa autoplay policy tidak akan menolaknya.
         // Kalau tetap gagal, latar diam di frame beku, bukan jadi kosong.
-        v.play().then(() => setPhase('intro')).catch(() => setPhase('poster'))
+        v.play().then(() => setPhase('intro')).catch(() => {
+          setPhase('poster')
+          setHeroReady(true)
+        })
+        // Jaring pengaman. Menggantungkan kartu Hero pada video berarti video
+        // yang mogok akan meninggalkan undangan kosong selamanya — dan kosong
+        // jauh lebih buruk daripada kartu yang terbit kecepatan. Ambangnya
+        // jauh di atas 15 detik supaya jalur normal selalu menang lebih dulu.
+        setTimeout(() => setHeroReady(true), 24000)
+      } else {
+        setHeroReady(true)
       }
     }
     setTimeout(() => setCoverGone(true), 1150)
@@ -965,7 +1021,7 @@ export default function GildedPalaceTheme({
   return (
     <InvitationLayout layout={THEMES.GILDED_PALACE} data={data}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Manrope:wght@400;500;600;700&family=Mrs+Saint+Delafield&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Manrope:wght@400;500;600;700&family=Great+Vibes&display=swap');
 
         /* Geser saja, jangan pernah scale: men-scale raster melembekkan foto. */
         @keyframes gp-pan {
@@ -1020,8 +1076,9 @@ export default function GildedPalaceTheme({
 
         {opened && (
           <div className="relative flex flex-col w-full" style={{ zIndex: 1 }}>
-            <Hero groomNick={groomNick} brideNick={brideNick} heroDate={heroDate}
-              countdown={countdown} countdownEnabled={data?.countdownEnabled ?? true} />
+            <Hero data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate}
+              countdown={countdown} countdownEnabled={data?.countdownEnabled ?? true}
+              ready={heroReady} />
 
             <Quote data={data} />
             <Mempelai data={data} />
