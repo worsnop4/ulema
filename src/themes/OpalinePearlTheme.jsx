@@ -147,12 +147,13 @@ const Petals = ({ petals }) => (
       <div key={i} style={{
         position: 'absolute', left: `${p.x}%`, top: 0, width: p.s, height: p.s * 0.62,
         borderRadius: '50% 50% 50% 50% / 62% 62% 38% 38%',
-        // Perhentian kedua dulu putih 75%, yang di atas latar pearl #FCF9F7
-        // berarti sebagian besar tiap kelopak putih di atas putih. Kini
-        // gradasi emas ke hitam, sekeluarga dengan tombol Hadir, sehingga
-        // terbaca baik di atas pearl maupun di atas foto gelap.
-        background: `linear-gradient(140deg, ${c.goldLight} 0%, ${c.goldMid} ${p.turn}%, ${c.goldDeep} 76%, ${c.ink} 100%)`,
-        boxShadow: '0 2px 7px rgba(46,39,34,.26)',
+        // Putih dengan ujung emas. Bagian putihnya sendiri hampir tidak punya
+        // kontras terhadap latar pearl #FCF9F7 — 1,02:1 — jadi yang membuatnya
+        // terbaca di section terang adalah bayangan di bawahnya dan pita emas
+        // di ujungnya, bukan warna isiannya. Karena itu bayangannya lebih
+        // dalam daripada yang biasanya dipakai untuk elemen sekecil ini.
+        background: `linear-gradient(140deg, #FFFFFF 0%, #FFF6E6 ${p.turn}%, ${c.goldLight} 78%, ${c.goldMid} 100%)`,
+        boxShadow: '0 3px 9px rgba(94,72,50,.34)',
         opacity: 0, animation: `op-petal ${p.t}s linear ${p.d}s infinite`,
       }} />
     ))}
@@ -845,13 +846,7 @@ export default function OpalinePearlTheme({
         @keyframes op-fadeOut { from { opacity: 1; } to { opacity: 0; } }
       `}</style>
 
-      {/* Tanpa overflow-x-hidden di sini, dan itu disengaja. Menyetel satu
-          sumbu ke hidden memaksa sumbu lainnya menjadi auto, sehingga elemen
-          ini berubah jadi kontainer scroll tersendiri dan sticky di dalamnya
-          tidak pernah aktif terhadap scroller yang sebenarnya. Pemotongan
-          horizontal tetap ada: scroller milik InvitationLayout sudah
-          overflow-x-hidden, jadi yang di sini memang berlebih. */}
-      <div className="w-full relative min-h-full flex flex-col" style={{ fontFamily: F.sans, color: c.ink, background: c.pearl }}>
+            <div className="w-full relative h-full flex flex-col overflow-x-hidden" style={{ fontFamily: F.sans, color: c.ink, background: c.pearl }}>
         {data?.music !== false && (
           <audio ref={audioRef} src={data?.musicUrl || MUSIC_URLS[data?.musicId || 1] || MUSIC_URLS[1]} loop />
         )}
@@ -869,11 +864,12 @@ export default function OpalinePearlTheme({
             gulungan tanpa memakai position: fixed, yang di desktop akan
             melebar ke seluruh jendela dan tumpah keluar kolom undangan. */}
         {coverGone && (
-          <div className="sticky top-0 pointer-events-none" style={{ height: 0, zIndex: 3 }}>
-            <div className="absolute left-0 right-0 overflow-hidden" style={{ top: 0, height: 'var(--inv-h)' }}>
-              <Stardust dust={dust} />
-              <Petals petals={petals} />
-            </div>
+          <div className="fixed pointer-events-none overflow-hidden" style={{
+            top: 0, left: '50%', transform: 'translateX(-50%)',
+            width: 'var(--inv-w)', height: 'var(--inv-h)', zIndex: 3,
+          }}>
+            <Stardust dust={dust} />
+            <Petals petals={petals} />
           </div>
         )}
 
