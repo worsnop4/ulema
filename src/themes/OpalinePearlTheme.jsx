@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import InvitationLayout from './components/InvitationLayout'
 import { MUSIC_URLS } from '../pages/InvitationTemplate'
@@ -94,9 +94,16 @@ const Reveal = ({ children, className = '', style = {} }) => (
 )
 
 const placeholderBg = 'repeating-linear-gradient(135deg,#EAE0D9 0 12px,#F6F0EB 12px 24px)'
-const Framed = ({ src, width = 116, height = 146, radius = '60px 60px 18px 18px', style = {} }) => (
-  <div style={{ position: 'relative', flex: `0 0 ${width}px`, width, height, borderRadius: radius, overflow: 'hidden', background: placeholderBg, border: `1px solid rgba(195,161,93,.4)`, ...style }}>
-    {src && <img src={src} alt="" className="w-full h-full object-cover" />}
+// Portrait frame for the couple cards. The width used to be a hard 116px,
+// which meant enlarging it would eat the same fixed pixels out of the text
+// beside it on every screen — on a 360px phone that leaves the name almost no
+// room. A clamped percentage grows the photo where there is room to grow (up
+// to 168px in the 480px desktop column) and holds back where there is not, so
+// the frame gets meaningfully bigger without ever squeezing the names.
+// aspect-ratio keeps the original arch proportion at every size.
+const Framed = ({ src, radius = '60px 60px 18px 18px', style = {} }) => (
+  <div style={{ position: 'relative', flex: '0 0 clamp(126px, 41%, 168px)', aspectRatio: '116 / 146', borderRadius: radius, overflow: 'hidden', background: placeholderBg, border: `1px solid rgba(195,161,93,.4)`, ...style }}>
+    {src && <img src={src} alt="" className="w-full h-full object-cover" style={{ objectPosition: 'center 35%' }} />}
   </div>
 )
 
@@ -732,6 +739,23 @@ export default function OpalinePearlTheme({
   const [petals] = useState(genPetals)
   const [coverGone, setCoverGone] = useState(false)
 
+  // Tombol musik hanya menemani slide awal. Kehadirannya diikat ke seberapa
+  // banyak hero yang masih terlihat, bukan ke angka scrollTop, karena undangan
+  // ini menggulir di dalam shell InvitationLayout dan bukan di window —
+  // patokan scrollTop milik window akan selalu nol di sini.
+  const [heroVisible, setHeroVisible] = useState(true)
+  useEffect(() => {
+    if (!opened) return
+    const hero = document.getElementById('op-home')
+    if (!hero) return
+    const io = new IntersectionObserver(
+      ([e]) => setHeroVisible(e.intersectionRatio > 0.5),
+      { threshold: [0, 0.5, 1] }
+    )
+    io.observe(hero)
+    return () => io.disconnect()
+  }, [opened])
+
   const handleOpen = () => {
     if (animateClose) return
     setAnimateClose(true)
@@ -810,7 +834,13 @@ export default function OpalinePearlTheme({
         @keyframes op-fadeOut { from { opacity: 1; } to { opacity: 0; } }
       `}</style>
 
-      <div className="w-full relative h-full flex flex-col overflow-x-hidden" style={{ fontFamily: F.sans, color: c.ink, background: c.pearl }}>
+      {/* Tanpa overflow-x-hidden di sini, dan itu disengaja. Menyetel satu
+          sumbu ke hidden memaksa sumbu lainnya menjadi auto, sehingga elemen
+          ini berubah jadi kontainer scroll tersendiri dan sticky di dalamnya
+          tidak pernah aktif terhadap scroller yang sebenarnya. Pemotongan
+          horizontal tetap ada: scroller milik InvitationLayout sudah
+          overflow-x-hidden, jadi yang di sini memang berlebih. */}
+      <div className="w-full relative min-h-full flex flex-col" style={{ fontFamily: F.sans, color: c.ink, background: c.pearl }}>
         {data?.music !== false && (
           <audio ref={audioRef} src={data?.musicUrl || MUSIC_URLS[data?.musicId || 1] || MUSIC_URLS[1]} loop />
         )}
@@ -821,8 +851,20 @@ export default function OpalinePearlTheme({
             fully occluded by the cover — so they were burning the frame budget
             during the one moment that needs all of it. They join once the
             cover is gone; at these opacities nobody sees them arrive. */}
-        {coverGone && <Stardust dust={dust} />}
-        {coverGone && <Petals petals={petals} />}
+        {/* Sticky, tinggi 0, berisi satu lapis setinggi layar. Sebelumnya
+            lapisan ini absolute terhadap akar tema yang hanya setinggi satu
+            layar, jadi debu dan kelopaknya tergulir pergi dan tidak pernah
+            sampai ke bagian penutup. Sticky membuatnya ikut sepanjang
+            gulungan tanpa memakai position: fixed, yang di desktop akan
+            melebar ke seluruh jendela dan tumpah keluar kolom undangan. */}
+        {coverGone && (
+          <div className="sticky top-0 pointer-events-none" style={{ height: 0, zIndex: 3 }}>
+            <div className="absolute left-0 right-0 overflow-hidden" style={{ top: 0, height: 'var(--inv-h)' }}>
+              <Stardust dust={dust} />
+              <Petals petals={petals} />
+            </div>
+          </div>
+        )}
 
         {!coverGone && (
           <Cover data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate} guestName={guest} handleOpen={handleOpen} animateClose={animateClose} />
@@ -846,7 +888,14 @@ export default function OpalinePearlTheme({
             {/* Music toggle */}
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
-                className="op-glass op-nav-btn fixed md:absolute flex items-center justify-center" style={{ bottom: 96, right: 'max(18px, calc(var(--inv-w) / 2 - 218px))', zIndex: 70, width: 50, height: 50, borderRadius: '50%', cursor: 'pointer', gap: 3 }}>
+                className="op-glass op-nav-btn fixed md:absolute flex items-center justify-center" style={{
+                  top: 20, right: 'max(18px, calc(var(--inv-w) / 2 - 218px))', zIndex: 70,
+                  width: 50, height: 50, borderRadius: '50%', cursor: 'pointer', gap: 3,
+                  opacity: heroVisible ? 1 : 0,
+                  transform: heroVisible ? 'translateY(0)' : 'translateY(-10px)',
+                  pointerEvents: heroVisible ? 'auto' : 'none',
+                  transition: 'opacity .45s ease, transform .45s ease',
+                }}>
                 {[0, 1, 2].map((i) => (
                   <span key={i} style={{ display: 'block', width: 3, height: musicPlaying ? 4 : 12, borderRadius: 2, background: c.navLabel, animation: musicPlaying ? `op-eq ${0.6 + i * 0.16}s ease-in-out infinite` : 'none' }} />
                 ))}
