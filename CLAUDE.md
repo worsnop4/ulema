@@ -53,6 +53,27 @@ don't let them block you, and don't do a mass cleanup unless asked.
 
 Categories: `Special`, `Luxury`, `Motion` (3D), `Adat` (traditional).
 
+### Full-height backdrops: use `fixed`, not `sticky`
+An invitation scrolls inside `InvitationLayout`'s inner div, **not the window** — so
+`window.scrollTo`/`scrollTop` are always no-ops here; use `scrollIntoView`. For a layer that must
+stay put behind the whole invitation (video backdrop, falling petals, parallax stage), `position:
+sticky` inside that scroller has now failed twice the same way: it holds for the first few
+sections and then the layer scrolls away (Opaline's petals stopped at the groom's page, Gilded
+Palace's video stopped at Mempelai). The pattern that works, and is now used by both:
+
+```jsx
+<div className="fixed pointer-events-none" style={{
+  top: 0, left: '50%', transform: 'translateX(-50%)',
+  width: 'var(--inv-w)', height: 'var(--inv-h)', zIndex: 0,
+}}>
+```
+
+The `left`/`transform`/`--inv-w` trio anchors it to the invitation column instead of the window —
+on desktop the column is only 480px wide inside a much wider viewport. `fixed` is safe here
+because nothing in the ancestor chain has `transform`/`filter`/`will-change` (which would trap it),
+and an ancestor's `overflow: hidden` does not clip a fixed descendant unless that ancestor is its
+containing block.
+
 ## Data Architecture — know this before "fixing" data flows
 
 - **Invitations** live in Supabase (table `invitations`, JSONB `data` column). Real, per-couple.
