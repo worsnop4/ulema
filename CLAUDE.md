@@ -102,10 +102,45 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
 
 ## Open items / pending (context, not a to-do list)
 
-- **Security/RLS review is unverified.** Supabase RLS policies aren't in the repo. Public
-  `/invite/:slug` write access and direct-from-component Supabase calls are known risk areas.
-  Treat "is this secure?" as an open question until RLS is confirmed.
 - **Theme-preset → Supabase migration ("Tahap 2")** is pending (see Data Architecture above).
+- ~~Security/RLS review is unverified~~ — **done 2026-08-09/10.** All 10 tables have RLS with
+  policies. The leaked `service_role` key in `VITE_SUPABASE_ANON_KEY` was rotated to a
+  publishable key and legacy JWT keys disabled (both old keys now return 401). An open write
+  hole on `musics` was closed, and guest wishes moved to the `append_invitation_wish` RPC so
+  they no longer rewrite the whole invitation row.
+
+## Open tasks — known, unfixed, in rough priority order
+
+1. **`events[2]` and beyond are silently dropped** in Botanical Ivory, Bordeaux Luxe,
+   Cinematic Shadow and Minang Elegant. Each hardwires `akad = events[0]` / `resepsi =
+   events[1]` and renders only those two, but `AcaraForm` lets a couple add unlimited
+   sessions. A third session vanishes with no warning anywhere. Fixing means mapping over
+   `data.events` (Senja Diorama and BaseThemeEngine already do), which is a structural change
+   to those four sections, not a rename.
+2. **Demo invitations accept wishes that are never saved.** `/invite/demo?theme=N` shows the
+   normal RSVP form and confirms success, but `useWishSubmit` skips persistence for demo
+   routes, so the wish disappears on reload. Decision already taken (2026-08-09): keep demo
+   wishes local for the session but label the form honestly as "mode pratinjau" instead of
+   letting it claim a save. Not yet built.
+3. **`referral_code` may not be set on new signups.** `LoginPage.jsx` generates it client-side
+   and writes it via `profiles.update` immediately after `signUp()`. Under the publishable key
+   that write is subject to `auth.uid() = id`, and with email confirmation enabled there is no
+   session yet — so it can fail silently (only `console.error`). Needs checking against a real
+   new account; the durable fix is to move signup bootstrap to a trigger or server endpoint.
+4. **`withdrawals` has no admin policy.** Fine today because the client only INSERTs, but an
+   admin approval screen would read nothing.
+5. **`ProfilePage.jsx` hardcodes a fake phone** as `defaultValue="+62 812 3456 7890"`, so every
+   user sees a stranger's-looking number prefilled in their own profile. Should read the real
+   `profiles.phone`.
+6. **`themes` table only holds ids 7–21.** Ids 1–6 (Classic Elegance, Rose Garden, Midnight
+   Gold, Ivory Dream, Lavender Bliss, Tropical Breeze) exist in `DEFAULT_THEMES` but were never
+   seeded. Most real invitations sit on `theme_id: 1`, which the DB does not describe.
+
+**Field-name drift is the recurring bug class here.** Three separate rounds of it have now been
+found and fixed (love-story `desc`, event `venue`/`start`/`maps`, gift bank/e-wallet). The
+editor's `*Form.jsx` modules are the source of truth for field names — `src/types/invitation.js`
+is outdated and has been wrong more than once. Before wiring any theme to data, verify against
+the form module, and ideally against real rows in Supabase.
 
 ## House style
 
