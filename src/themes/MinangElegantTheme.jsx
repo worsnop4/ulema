@@ -37,6 +37,16 @@ const A = {
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────
+// Jam acara, dirakit dari field yang benar-benar tersimpan. Tema ini dulu
+// membaca `ev.time`, yang tidak ada di satu pun undangan: data menyimpan
+// `start`, `end`, dan `tz` secara terpisah (lihat panduan desain §3, yang
+// memuat peringatan khusus soal nama-nama ini). Akibatnya jam acara selalu
+// jatuh ke teks cadangan.
+const fmtHours = (ev) => {
+  const range = [ev?.start, ev?.end].filter(Boolean).join(' \u2014 ')
+  return range && ev?.tz ? `${range} ${ev.tz}` : range
+}
+
 const fmtCoverDate = (s) => {
   if (!s) return 'Sabtu, 28 Desember 2027'
   try {
@@ -327,7 +337,7 @@ const EventsSection = ({ akad, baralek }) => {
         viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
         <Glass className="p-7 flex flex-col items-center text-center">
           <p className="text-xs tracking-[0.35em] uppercase mb-1 font-sans opacity-50" style={{ color: c.text }}>
-            {title}
+            {ev.name || title}
           </p>
           <div className="flex flex-col items-center justify-center mt-3 mb-5">
             <span style={{ fontFamily: 'Cormorant Infant, serif', fontSize: '2.5rem', color: c.maroon, fontWeight: 600, lineHeight: 1, marginBottom: '0.2rem' }}>
@@ -340,14 +350,14 @@ const EventsSection = ({ akad, baralek }) => {
           </div>
           <div className="flex items-center gap-1.5 mb-3 text-sm font-sans opacity-80" style={{ color: c.text }}>
             <Clock size={11} color={c.gold} />
-            <span>{ev.time || '10:00 — Selesai'}</span>
+            <span>{fmtHours(ev) || '10:00 — Selesai'}</span>
           </div>
-          <p className="font-semibold text-sm mb-1 font-sans" style={{ color: c.maroon }}>{ev.location || '—'}</p>
+          <p className="font-semibold text-sm mb-1 font-sans" style={{ color: c.maroon }}>{ev.venue || '—'}</p>
           <p className="text-[13px] leading-relaxed mb-5 opacity-70 font-sans max-w-[200px]" style={{ color: c.text }}>
             {ev.address || ''}
           </p>
-          {ev.mapUrl && (
-            <a href={ev.mapUrl} target="_blank" rel="noreferrer"
+          {ev.maps && (
+            <a href={ev.maps} target="_blank" rel="noreferrer"
               className="flex items-center gap-1.5 text-[13px] tracking-widest uppercase font-sans font-semibold px-5 py-2 rounded-full"
               style={{ border: `1px solid ${c.maroon}`, color: c.maroon }}>
               <MapPin size={10} /> Petunjuk Arah

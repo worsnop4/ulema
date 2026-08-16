@@ -7,6 +7,17 @@ import InvitationLayout from './components/InvitationLayout'
 import { getThemes } from '../hooks/useSharedInvitation'
 import { THEMES } from '../config/constants'
 
+// Jam acara, dirakit dari field yang benar-benar tersimpan. Tema ini dulu
+// membaca `ev.time`, yang tidak ada di satu pun undangan: data menyimpan
+// `start`, `end`, dan `tz` secara terpisah (lihat panduan desain §3, yang
+// memuat peringatan khusus soal nama-nama ini). Akibatnya jam acara selalu
+// jatuh ke teks cadangan.
+const fmtHours = (ev) => {
+  const range = [ev?.start, ev?.end].filter(Boolean).join(' \u2014 ')
+  return range && ev?.tz ? `${range} ${ev.tz}` : range
+}
+
+
 // Generic Reveal Component for smooth scroll animations
 const FadeUp = ({ children, delay = 0, duration = 0.8, className = '' }) => (
   <motion.div
@@ -231,18 +242,18 @@ export default function CinematicLuxuryTheme({
                       <Calendar size={100} color={luxGold} />
                     </div>
                     <div className="relative z-10 text-center">
-                      <h3 className="font-serif text-2xl mb-4" style={{ color: luxGold }}>{event.title}</h3>
+                      <h3 className="font-serif text-2xl mb-4" style={{ color: luxGold }}>{event.name}</h3>
                       <p className="text-sm uppercase tracking-widest mb-1">{event.dateLabel || event.date}</p>
-                      <p className="text-xs mb-6" style={{ color: luxMuted }}>Pukul {event.time}</p>
+                      <p className="text-xs mb-6" style={{ color: luxMuted }}>{fmtHours(event)}</p>
                       
                       <div className="h-px w-full bg-gradient-to-r from-transparent via-[rgba(221,196,151,0.3)] to-transparent my-6" />
                       
                       <p className="font-bold text-sm mb-2">{event.venue}</p>
                       <p className="text-xs leading-relaxed mb-8" style={{ color: luxMuted }}>{event.address}</p>
                       
-                      {event.mapUrl && (
+                      {event.maps && (
                         <a 
-                          href={event.mapUrl} target="_blank" rel="noreferrer"
+                          href={event.maps} target="_blank" rel="noreferrer"
                           className="inline-flex items-center gap-2 px-6 py-3 text-xs tracking-widest uppercase border transition-colors hover:bg-white hover:text-black"
                           style={{ borderColor: luxGold, color: luxGold }}
                         >

@@ -19,6 +19,16 @@ const c = {
 const ID_DAYS = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 const ID_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 
+// Jam acara, dirakit dari field yang benar-benar tersimpan. Tema ini dulu
+// membaca `ev.time`, yang tidak ada di satu pun undangan: data menyimpan
+// `start`, `end`, dan `tz` secara terpisah (lihat panduan desain §3, yang
+// memuat peringatan khusus soal nama-nama ini). Akibatnya jam acara selalu
+// jatuh ke teks cadangan.
+const fmtHours = (ev) => {
+  const range = [ev?.start, ev?.end].filter(Boolean).join(' \u2014 ')
+  return range && ev?.tz ? `${range} ${ev.tz}` : range
+}
+
 const fmtDotDate = (s) => {
   if (!s) return '28 . 12 . 2027'
   try {
@@ -404,7 +414,7 @@ const EventCard = ({ ev, title }) => {
       <div className="bg-white p-8 flex flex-col items-center text-center h-full"
         style={{ borderTop: `2px solid ${c.gold}`, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}>
         <h3 className="mb-4" style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.3rem', color: c.textDark }}>
-          {title}
+          {ev.name || title}
         </h3>
         <p className="text-[11px] uppercase tracking-[0.2em] mb-2"
           style={{ fontFamily: "'Lato', sans-serif", color: `${c.textDark}88` }}>
@@ -419,16 +429,16 @@ const EventCard = ({ ev, title }) => {
         <div className="flex items-center gap-1.5 mb-4 text-sm"
           style={{ fontFamily: "'Lato', sans-serif", color: c.textDark }}>
           <Clock size={13} color={c.gold} />
-          {ev.time || '08:00 — Selesai'}
+          {fmtHours(ev) || '08:00 — Selesai'}
         </div>
         <p className="font-bold text-sm mb-1" style={{ fontFamily: "'Lato', sans-serif", color: c.textDark }}>
-          {ev.location || '—'}
+          {ev.venue || '—'}
         </p>
         <p className="text-xs mb-5 max-w-[220px]" style={{ fontFamily: "'Lato', sans-serif", color: `${c.textDark}99` }}>
           {ev.address || ''}
         </p>
-        {ev.mapUrl && (
-          <a href={ev.mapUrl} target="_blank" rel="noreferrer"
+        {ev.maps && (
+          <a href={ev.maps} target="_blank" rel="noreferrer"
             className="text-[11px] tracking-widest uppercase px-5 py-2"
             style={{ fontFamily: "'Lato', sans-serif", border: `1px solid ${c.gold}`, color: c.gold }}>
             Google Maps

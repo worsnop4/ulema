@@ -49,6 +49,16 @@ const fmtEventDate = (s) => {
   } catch { return { day: '28', monthYear: 'Desember 2027' } }
 }
 
+// Jam acara, dirakit dari field yang benar-benar tersimpan. Tema ini dulu
+// membaca `ev.time`, yang tidak ada di satu pun undangan: data menyimpan
+// `start`, `end`, dan `tz` secara terpisah (lihat panduan desain §3, yang
+// memuat peringatan khusus soal nama-nama ini). Akibatnya jam acara selalu
+// jatuh ke teks cadangan.
+const fmtHours = (ev) => {
+  const range = [ev?.start, ev?.end].filter(Boolean).join(' \u2014 ')
+  return range && ev?.tz ? `${range} ${ev.tz}` : range
+}
+
 // ─── REUSABLE DECOR ──────────────────────────────────────────────
 const Corners = ({ inset = 18, size = 28, opacity = 0.55 }) => {
   const base = { position: 'absolute', width: size, height: size, opacity, pointerEvents: 'none' }
@@ -301,14 +311,14 @@ const EventsSection = ({ akad, resepsi }) => {
     return (
       <Reveal x={dir === 'L' ? -20 : 20}>
         <div style={{ border: `1px solid rgba(227,207,154,0.3)`, padding: '28px 22px', textAlign: 'center', marginBottom: 18 }}>
-          <Eyebrow color={c.gold} className="mb-3.5" style={{ fontSize: 11, letterSpacing: '0.3em' }}>{title}</Eyebrow>
+          <Eyebrow color={c.gold} className="mb-3.5" style={{ fontSize: 11, letterSpacing: '0.3em' }}>{ev.name || title}</Eyebrow>
           <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '2.4rem', fontWeight: 600, color: c.goldSoft, lineHeight: 1 }}>{day}</span>
           <p className="font-sans" style={{ fontSize: 14, margin: '8px 0 14px', color: c.cream }}>{monthYear}</p>
-          <p className="font-sans" style={{ fontSize: 13, color: c.goldSoft, margin: '0 0 14px' }}>{ev.time || '—'}</p>
-          <p className="font-sans" style={{ fontSize: 14, fontWeight: 600, color: c.cream, margin: '0 0 4px' }}>{ev.location || '—'}</p>
+          <p className="font-sans" style={{ fontSize: 13, color: c.goldSoft, margin: '0 0 14px' }}>{fmtHours(ev) || '—'}</p>
+          <p className="font-sans" style={{ fontSize: 14, fontWeight: 600, color: c.cream, margin: '0 0 4px' }}>{ev.venue || '—'}</p>
           {ev.address && <p className="font-sans" style={{ fontSize: 12, lineHeight: 1.6, color: 'rgba(242,237,227,0.7)', margin: '0 auto 18px', maxWidth: 220 }}>{ev.address}</p>}
-          {ev.mapUrl && (
-            <a href={ev.mapUrl} target="_blank" rel="noreferrer" className="inline-block font-sans"
+          {ev.maps && (
+            <a href={ev.maps} target="_blank" rel="noreferrer" className="inline-block font-sans"
               style={{ padding: '10px 24px', border: `1px solid ${c.gold}`, borderRadius: 30, fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: c.goldSoft }}>
               Petunjuk Arah
             </a>

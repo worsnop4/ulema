@@ -64,6 +64,16 @@ const fmtShortDate = (s) => {
   return `${d.getDate().toString().padStart(2, '0')} ${ID_MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
 }
 
+// Jam acara, dirakit dari field yang benar-benar tersimpan. Tema ini dulu
+// membaca `ev.time`, yang tidak ada di satu pun undangan: data menyimpan
+// `start`, `end`, dan `tz` secara terpisah (lihat panduan desain §3, yang
+// memuat peringatan khusus soal nama-nama ini). Akibatnya jam acara selalu
+// jatuh ke teks cadangan.
+const fmtHours = (ev) => {
+  const range = [ev?.start, ev?.end].filter(Boolean).join(' \u2014 ')
+  return range && ev?.tz ? `${range} ${ev.tz}` : range
+}
+
 // ─── GLASS CARD ──────────────────────────────────────────────────
 const Glass = ({ children, className = '', style = {} }) => (
   <div
@@ -329,7 +339,7 @@ const EventsSection = ({ akad, resepsi }) => {
         initial={{ opacity: 0, x: dir === 'L' ? -20 : 20 }} whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.7 }}>
         <Glass className="p-7 flex flex-col items-center text-center">
-          <Label>{title}</Label>
+          <Label>{ev.name || title}</Label>
           <div className="flex flex-col items-center justify-center mt-2 mb-4">
             <span style={{ fontFamily: "'Cormorant Upright', serif", fontSize: '2.6rem', color: c.gold, fontWeight: 600, lineHeight: 1 }}>{day}</span>
             <div className="flex items-center gap-1.5 mt-1">
@@ -339,12 +349,12 @@ const EventsSection = ({ akad, resepsi }) => {
           </div>
           <div className="flex items-center gap-1.5 mb-3 text-sm font-sans" style={{ color: c.text, opacity: 0.85 }}>
             <Clock size={12} color={c.gold} />
-            <span>{ev.time || '10:00 — Selesai'}</span>
+            <span>{fmtHours(ev) || '10:00 — Selesai'}</span>
           </div>
-          <p className="font-semibold text-sm mb-1 font-sans" style={{ color: c.gold }}>{ev.location || '—'}</p>
+          <p className="font-semibold text-sm mb-1 font-sans" style={{ color: c.gold }}>{ev.venue || '—'}</p>
           <p className="text-[13px] leading-relaxed mb-5 font-sans max-w-[210px]" style={{ color: c.text, opacity: 0.7 }}>{ev.address || ''}</p>
-          {ev.mapUrl && (
-            <a href={ev.mapUrl} target="_blank" rel="noreferrer"
+          {ev.maps && (
+            <a href={ev.maps} target="_blank" rel="noreferrer"
               className="flex items-center gap-1.5 text-[12px] tracking-widest uppercase font-sans font-semibold px-5 py-2 rounded-full"
               style={{ border: `1px solid ${c.gold}`, color: c.gold }}>
               <MapPin size={11} /> Petunjuk Arah
