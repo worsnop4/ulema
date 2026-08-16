@@ -31,6 +31,7 @@ const OpalinePearlTheme = lazy(() => import('../themes/OpalinePearlTheme'))
 const VelourOliveTheme = lazy(() => import('../themes/VelourOliveTheme'))
 const SenjaDioramaTheme = lazy(() => import('../themes/SenjaDioramaTheme'))
 const GildedPalaceTheme = lazy(() => import('../themes/GildedPalaceTheme'))
+const RoseSanctuaryTheme = lazy(() => import('../themes/RoseSanctuaryTheme'))
 
 const THEME_COMPONENTS = {
   [THEMES.WATERCOLOR_FLORAL]: WatercolorFloralTheme,
@@ -54,6 +55,7 @@ const THEME_COMPONENTS = {
   [THEMES.VELOUR_OLIVE]: VelourOliveTheme,
   [THEMES.SENJA_DIORAMA]: SenjaDioramaTheme,
   [THEMES.GILDED_PALACE]: GildedPalaceTheme,
+  [THEMES.ROSE_SANCTUARY]: RoseSanctuaryTheme,
 }
 
 // ── Countdown Hook ─────────────────────────────────────────────
