@@ -24,6 +24,9 @@ const c = {
   goldDeep: '#8E7134',
   goldMid:  '#C9A863',
   goldLight:'#E7C87E',
+  // Label nav/musik. Champagne terang, dipilih lewat pengukuran kontras
+  // terhadap panel kaca gelap di atas latar pearl maupun foto gelap.
+  navLabel: '#F0E0BE',
   opalPink: '#F6DCE4',
   opalMint: '#DCEDE6',
   opalLilac:'#E4DDF3',
@@ -452,8 +455,13 @@ const LoveStory = ({ data }) => {
           <Reveal key={ls.id ?? i} className="relative" style={{ marginBottom: 26 }}>
             <div className="absolute" style={{ left: -25, top: 8, width: 9, height: 9, transform: 'rotate(45deg)', background: 'linear-gradient(135deg,#E7C87E,#B08F4B)', boxShadow: '0 0 0 4px rgba(195,161,93,.14)' }} />
             <div style={{ borderRadius: 20, overflow: 'hidden', background: '#FFFFFF', border: `1px solid rgba(195,161,93,.24)`, boxShadow: '0 14px 36px rgba(94,72,50,.08)' }}>
-              <div style={{ height: 132, background: placeholderBg }}>
-                {ls.photo && <img src={ls.photo} alt="" className="w-full h-full object-cover" />}
+              {/* Rasio, bukan tinggi tetap. 132px memaksa foto potret masuk
+                  pita rendah dan object-cover memangkas dari tengah, sehingga
+                  kepala terpotong. 4/3 mengikuti Ashen Bloom; titik potongnya
+                  digeser sedikit ke atas karena wajah di foto pasangan hampir
+                  selalu ada di sepertiga atas. */}
+              <div style={{ aspectRatio: '4 / 3', background: placeholderBg }}>
+                {ls.photo && <img src={ls.photo} alt="" className="w-full h-full object-cover" style={{ objectPosition: 'center 35%' }} />}
               </div>
               <div style={{ padding: '16px 18px 18px' }}>
                 <span style={{ fontSize: 10, letterSpacing: '.3em', color: c.muted3 }}>{ls.year}</span>
@@ -752,15 +760,26 @@ export default function OpalinePearlTheme({
            tinted rectangle: brighter along the top edge, thinner underneath,
            with a hairline white highlight inside the top and a soft shadow
            inside the bottom. -webkit- prefix kept for older Safari. */
+        /* Panel gelap, label terang — bukan sebaliknya. Panel terang tembus
+           pandang tidak bisa menerangi latar gelap secukupnya di alpha rendah,
+           sehingga label emas tua tenggelam di atas foto hero. Panel gelap
+           selalu menggelapkan apa pun di belakangnya, jadi satu warna label
+           terang bekerja di atas foto gelap maupun section pearl.
+
+           Alpha 0,72 bukan tebakan. Kontras label diukur pada kedua ekstrem
+           latar: di bawah itu label jatuh ke 4,08:1 di atas pearl, sedangkan
+           teks nav berukuran 9,5px menuntut 4,5:1. Di 0,72 hasilnya 5,07:1 di
+           pearl dan 12,16:1 di atas foto. Gradiennya menebal ke bawah, tidak
+           pernah menipis, supaya angka terburuknya tetap yang di atas. */
         .op-glass {
-          background: linear-gradient(180deg, rgba(255,252,249,.44) 0%, rgba(255,250,246,.26) 100%);
-          border: 1px solid rgba(255,255,255,.55);
+          background: linear-gradient(180deg, rgba(37,31,26,.72) 0%, rgba(37,31,26,.84) 100%);
+          border: 1px solid rgba(231,200,126,.32);
           box-shadow:
-            0 16px 40px rgba(94,72,50,.20),
-            inset 0 1px 0 rgba(255,255,255,.85),
-            inset 0 -1px 0 rgba(94,72,50,.06);
-          -webkit-backdrop-filter: blur(22px) saturate(1.8) brightness(1.18);
-          backdrop-filter: blur(22px) saturate(1.8) brightness(1.18);
+            0 16px 40px rgba(30,24,18,.32),
+            inset 0 1px 0 rgba(255,255,255,.18),
+            inset 0 -1px 0 rgba(0,0,0,.16);
+          -webkit-backdrop-filter: blur(22px) saturate(1.9);
+          backdrop-filter: blur(22px) saturate(1.9);
         }
         /* The browser's default focus ring is a blue box that fights the
            palette. Replace it rather than remove it — the nav still has to be
@@ -829,7 +848,7 @@ export default function OpalinePearlTheme({
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
                 className="op-glass op-nav-btn fixed md:absolute flex items-center justify-center" style={{ bottom: 96, right: 'max(18px, calc(var(--inv-w) / 2 - 218px))', zIndex: 70, width: 50, height: 50, borderRadius: '50%', cursor: 'pointer', gap: 3 }}>
                 {[0, 1, 2].map((i) => (
-                  <span key={i} style={{ display: 'block', width: 3, height: musicPlaying ? 4 : 12, borderRadius: 2, background: c.goldDeep, animation: musicPlaying ? `op-eq ${0.6 + i * 0.16}s ease-in-out infinite` : 'none' }} />
+                  <span key={i} style={{ display: 'block', width: 3, height: musicPlaying ? 4 : 12, borderRadius: 2, background: c.navLabel, animation: musicPlaying ? `op-eq ${0.6 + i * 0.16}s ease-in-out infinite` : 'none' }} />
                 ))}
               </button>
             )}
@@ -846,7 +865,7 @@ export default function OpalinePearlTheme({
                 traded a readable nav for a pretty one. */}
             <nav className="op-glass fixed md:absolute left-1/2 -translate-x-1/2 flex justify-between" style={{ bottom: 22, zIndex: 70, width: 'min(432px, calc(var(--inv-w) - 32px))', gap: 2, padding: '8px 10px', borderRadius: 999 }}>
               {NAV.map(([label, id]) => (
-                <button key={id} className="op-nav-btn" onClick={() => scrollToId(id)} style={{ flex: 1, border: 'none', cursor: 'pointer', background: 'transparent', color: c.goldDeep, fontFamily: F.sans, fontSize: 9.5, letterSpacing: '.1em', textTransform: 'uppercase', padding: '9px 2px 8px', borderRadius: 999 }}>{label}</button>
+                <button key={id} className="op-nav-btn" onClick={() => scrollToId(id)} style={{ flex: 1, border: 'none', cursor: 'pointer', background: 'transparent', color: c.navLabel, fontFamily: F.sans, fontSize: 9.5, letterSpacing: '.1em', textTransform: 'uppercase', padding: '9px 2px 8px', borderRadius: 999 }}>{label}</button>
               ))}
             </nav>
           </div>
