@@ -145,12 +145,12 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
    uploader from photo to video when it is `'video'`, and only `CinematicLuxuryTheme` ever reads
    the resulting `meta.coverVideo`. Velour Olive is marked `'video'` but paints its own shipped
    backdrop, so a couple there uploads a cover video that is silently never shown — and never
-   gets offered the cover-photo box the theme actually falls back to. Istana Kencana is
+   gets offered the cover-photo box the theme actually falls back to. Gilded Palace is
    deliberately `'photo'` for this reason. Fixing Velour Olive is a one-word change in
    `DEFAULT_THEMES` plus the `themes` row, but it changes a live theme, so it needs a decision.
 9. **Bottom nav and music button use `fixed md:absolute`** in most bespoke themes. At ≥768px the
    `absolute` variant wins and anchors them to the content container instead of the screen, so
-   they scroll away instead of staying put. Istana Kencana uses plain `fixed` anchored to
+   they scroll away instead of staying put. Gilded Palace uses plain `fixed` anchored to
    `--inv-w` (see its `MusicButton`) — that is the pattern to copy when this is fixed elsewhere.
 
 **Field-name drift is the recurring bug class here.** Four separate rounds of it have now been

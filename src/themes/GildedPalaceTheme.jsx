@@ -6,7 +6,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import { THEMES } from '../config/constants'
 
 // ═══════════════════════════════════════════════════════════════════
-//  ISTANA KENCANA — kategori Motion (MOT-002)
+//  GILDED PALACE — kategori Motion (MOT-002)
 //
 //  Tamu tiba di gerbang emas yang masih tertutup. Begitu undangan dibuka,
 //  kamera bergerak sendiri: gerbang → halaman istana → lorong pualam →
@@ -153,7 +153,7 @@ const Title = ({ children, style = {} }) => (
 // Garis rambut emas dengan kilau yang lewat perlahan — satu-satunya gerak
 // yang ditambahkan tema ini di luar video, memantulkan lampu kristal aula.
 const Rule = ({ width = 62, style = {} }) => (
-  <div className="ik-rule" style={{ width, ...style }} />
+  <div className="gp-rule" style={{ width, ...style }} />
 )
 
 const Section = ({ id, children, style = {} }) => (
@@ -196,7 +196,7 @@ const ArchPhoto = ({ src, alt = '', w = 186, ratio = '3 / 4', pan = true, radius
   }}>
     {src
       ? <img src={src} alt={alt} className="absolute object-cover"
-          style={{ width: '112%', height: '112%', left: '-6%', top: '-6%', maxWidth: 'none', animation: pan ? 'ik-pan 24s ease-in-out infinite alternate' : 'none' }} />
+          style={{ width: '112%', height: '112%', left: '-6%', top: '-6%', maxWidth: 'none', animation: pan ? 'gp-pan 24s ease-in-out infinite alternate' : 'none' }} />
       : <span className="absolute inset-0 flex items-center justify-center" style={{ fontFamily: F.sans, fontSize: 11, color: c.faint }}>Foto</span>}
   </div>
 )
@@ -306,7 +306,7 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
 const Hero = ({ groomNick, brideNick, heroDate, countdown, countdownEnabled }) => {
   const parts = [['Hari', countdown?.d], ['Jam', countdown?.h], ['Menit', countdown?.m], ['Detik', countdown?.s]]
   return (
-    <section id="ik-home" className="relative flex flex-col items-center justify-end text-center"
+    <section id="gp-home" className="relative flex flex-col items-center justify-end text-center"
       style={{ zIndex: 1, minHeight: 'var(--inv-h)', boxSizing: 'border-box', padding: '96px 26px 104px' }}>
       <motion.div className="flex flex-col items-center"
         initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
@@ -347,7 +347,7 @@ const Quote = ({ data }) => {
   const quote = data?.quote
   if (!quote) return null
   return (
-    <Section id="ik-quote">
+    <Section id="gp-quote">
       <Reveal className="flex flex-col items-center text-center" style={cardStyle}>
         <Arch w={38} style={{ marginBottom: 16 }} />
         <p style={{
@@ -387,7 +387,7 @@ const PersonCard = ({ person, delay }) => (
 )
 
 const Mempelai = ({ data }) => (
-  <Section id="ik-mempelai">
+  <Section id="gp-mempelai">
     <SectionHead kicker="Assalamualaikum Wr. Wb." title="Mempelai">
       <p style={{ margin: '14px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.85, color: c.muted, maxWidth: 300 }}>
         Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud menyelenggarakan pernikahan putra-putri kami.
@@ -462,7 +462,7 @@ const Acara = ({ data }) => {
   const events = data?.events || []
   if (!events.length) return null
   return (
-    <Section id="ik-acara">
+    <Section id="gp-acara">
       <SectionHead kicker="Save The Date" title="Rangkaian Acara" />
       <div className="flex flex-col" style={{ gap: 15 }}>
         {events.map((ev, i) => <EventCard key={ev?.id || i} ev={ev} delay={i * 0.07} />)}
@@ -480,7 +480,7 @@ const LoveStory = ({ data }) => {
   const stories = data?.loveStory || []
   if (!stories.length) return null
   return (
-    <Section id="ik-story">
+    <Section id="gp-story">
       <SectionHead kicker="Perjalanan Kami" title="Love Story" />
 
       <div className="relative">
@@ -517,7 +517,7 @@ const Galeri = ({ data }) => {
   const photos = (data?.gallery || []).map(g => (typeof g === 'string' ? g : g?.src)).filter(Boolean)
   if (!photos.length) return null
   return (
-    <Section id="ik-galeri">
+    <Section id="gp-galeri">
       <SectionHead kicker="Momen" title="Galeri" />
       {/* Ukuran intrinsik: mengukur kolom ini, bukan jendela browser, jadi
           grid-nya benar di dalam shell 480px maupun di ponsel. Lantai
@@ -615,8 +615,8 @@ const Gift = ({ accounts, giftAddr, copiedKey, copy }) => (
         {giftAddr.phone && <p style={{ margin: '4px 0 0', fontFamily: F.sans, fontSize: 12.5, color: c.muted }}>{giftAddr.phone}</p>}
         {giftAddr.address && <p style={{ margin: '10px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.75, color: c.muted, whiteSpace: 'pre-line' }}>{giftAddr.address}</p>}
         {giftAddr.address && (
-          <button onClick={() => copy(giftAddr.address, 'ik-gift-address')} style={copyBtn}>
-            {copiedKey === 'ik-gift-address' ? 'Tersalin' : 'Salin Alamat'}
+          <button onClick={() => copy(giftAddr.address, 'gp-gift-address')} style={copyBtn}>
+            {copiedKey === 'gp-gift-address' ? 'Tersalin' : 'Salin Alamat'}
           </button>
         )}
       </div>
@@ -641,7 +641,7 @@ const Informasi = ({ data }) => {
   if (!hasDresscode && !hasLive && !accounts.length && !giftAddr && !hasFamilies) return null
 
   return (
-    <Section id="ik-info">
+    <Section id="gp-info">
       <SectionHead kicker="Untuk Tamu" title="Informasi" />
 
       <div className="flex flex-col" style={{ gap: 14 }}>
@@ -724,7 +724,7 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
   }
 
   return (
-    <Section id="ik-rsvp">
+    <Section id="gp-rsvp">
       <SectionHead kicker="Konfirmasi Kehadiran" title="RSVP & Ucapan" />
 
       <Reveal style={cardStyle}>
@@ -810,7 +810,7 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
 const Penutup = ({ data, groomNick, brideNick, heroDate }) => {
   const photo = data?.meta?.footerPhoto || data?.meta?.photo || null
   return (
-    <section id="ik-penutup" className="relative flex flex-col items-center justify-center text-center"
+    <section id="gp-penutup" className="relative flex flex-col items-center justify-center text-center"
       style={{ zIndex: 1, minHeight: 'var(--inv-h)', boxSizing: 'border-box', padding: '90px 26px 150px' }}>
       <Reveal className="flex flex-col items-center" style={{ ...cardStyle, padding: '30px 24px 26px', width: 'min(348px, 100%)' }}>
         {photo && <ArchPhoto src={photo} w={150} ratio="3 / 4" style={{ marginBottom: 20 }} />}
@@ -835,7 +835,7 @@ const Penutup = ({ data, groomNick, brideNick, heroDate }) => {
 // menang: navigasinya lalu berlabuh di dasar dokumen, bukan di layar, dan
 // hilang dari pandangan begitu tamu menggulir. Penjangkarannya ke lebar
 // kolom (--inv-w) melakukan pekerjaan yang tadinya diminta dari absolute.
-const NAV = [['Home', 'ik-home'], ['Mempelai', 'ik-mempelai'], ['Acara', 'ik-acara'], ['Galeri', 'ik-galeri'], ['RSVP', 'ik-rsvp']]
+const NAV = [['Home', 'gp-home'], ['Mempelai', 'gp-mempelai'], ['Acara', 'gp-acara'], ['Galeri', 'gp-galeri'], ['RSVP', 'gp-rsvp']]
 
 const scrollToId = (id) => {
   // Yang menggulir itu div bagian dalam InvitationLayout, bukan jendela.
@@ -854,7 +854,7 @@ const BottomNav = ({ visible }) => (
     opacity: visible ? 1 : 0, pointerEvents: visible ? 'auto' : 'none', transition: 'opacity .7s ease .3s',
   }}>
     {NAV.map(([label, id]) => (
-      <button key={id} className="ik-nav-btn" onClick={() => scrollToId(id)}
+      <button key={id} className="gp-nav-btn" onClick={() => scrollToId(id)}
         style={{
           flex: 1, padding: '8px 2px', borderRadius: 999, border: 'none', cursor: 'pointer',
           background: 'transparent', color: c.giltDeep,
@@ -882,7 +882,7 @@ const MusicButton = ({ musicPlaying, setMusicPlaying, visible }) => (
         display: 'block', width: 3, height: 14, borderRadius: 2, background: c.giltDeep,
         transformOrigin: 'bottom',
         transform: musicPlaying ? undefined : 'scaleY(.35)',
-        animation: musicPlaying ? `ik-eq ${0.62 + i * 0.15}s ease-in-out infinite` : 'none',
+        animation: musicPlaying ? `gp-eq ${0.62 + i * 0.15}s ease-in-out infinite` : 'none',
       }} />
     ))}
   </button>
@@ -891,7 +891,7 @@ const MusicButton = ({ musicPlaying, setMusicPlaying, visible }) => (
 // ═══════════════════════════════════════════════════════════════════
 //  MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════
-export default function IstanaKencanaTheme({
+export default function GildedPalaceTheme({
   data, countdown, opened, setOpened,
   animateClose, setAnimateClose,
   musicPlaying, setMusicPlaying, audioRef,
@@ -963,38 +963,38 @@ export default function IstanaKencanaTheme({
   }
 
   return (
-    <InvitationLayout layout={THEMES.ISTANA_KENCANA} data={data}>
+    <InvitationLayout layout={THEMES.GILDED_PALACE} data={data}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Manrope:wght@400;500;600;700&family=Mrs+Saint+Delafield&display=swap');
 
         /* Geser saja, jangan pernah scale: men-scale raster melembekkan foto. */
-        @keyframes ik-pan {
+        @keyframes gp-pan {
           from { transform: translate3d(0, 0, 0); }
           to   { transform: translate3d(-3%, -2.5%, 0); }
         }
-        @keyframes ik-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+        @keyframes gp-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
 
         /* Garis rambut emas dengan kilau lampu kristal yang lewat pelan. */
-        .ik-rule {
+        .gp-rule {
           position: relative;
           height: 1px;
           background: linear-gradient(90deg, transparent, ${c.gilt}, transparent);
           overflow: hidden;
         }
-        .ik-rule::after {
+        .gp-rule::after {
           content: '';
           position: absolute;
           top: 0; left: -40%;
           width: 40%; height: 100%;
           background: linear-gradient(90deg, transparent, #FFF6E0, transparent);
-          animation: ik-gleam 7s ease-in-out infinite;
+          animation: gp-gleam 7s ease-in-out infinite;
         }
-        @keyframes ik-gleam {
+        @keyframes gp-gleam {
           0%, 62% { transform: translateX(0); }
           100%    { transform: translateX(350%); }
         }
 
-        .ik-nav-btn:focus-visible {
+        .gp-nav-btn:focus-visible {
           outline: 2px solid ${c.giltDeep};
           outline-offset: 2px;
         }
@@ -1004,7 +1004,7 @@ export default function IstanaKencanaTheme({
            prop still di Panggung), dan sisa gerak di halaman ini ikut
            berhenti. */
         @media (prefers-reduced-motion: reduce) {
-          .ik-rule::after { animation: none; opacity: 0; }
+          .gp-rule::after { animation: none; opacity: 0; }
         }
       `}</style>
 
