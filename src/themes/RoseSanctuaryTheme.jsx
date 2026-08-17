@@ -14,9 +14,11 @@ import { THEMES } from '../config/constants'
 //  tumbuh sendiri sesudahnya.
 //
 //  Tiga babak, semuanya 810x1440:
-//    poster.jpg  frame pertama, latar sebelum undangan dibuka
+//    poster.jpg  latar sebelum undangan dibuka — karya tersendiri, bukan
+//                frame dari videonya (terukur 15,2 dB dari frame pertama
+//                intro), jadi pembukaannya dissolve panjang yang disengaja
 //    intro.mp4   8,5 dtk mekar, diputar sekali saat dibuka
-//    loop.mp4    3,9 dtk, berputar terus sesudahnya
+//    loop.mp4    4,0 dtk, berputar terus sesudahnya
 //
 //  LOOP-NYA PING-PONG, dan itu keharusan, bukan gaya. Rekaman ini tidak
 //  pernah berhenti bergerak: dua frame berjarak setengah detik saja hanya
@@ -24,7 +26,7 @@ import { THEMES } from '../config/constants'
 //  menyentak. Ping-pong (mundur 8,5→6,5 lalu maju 6,5→8,5) adalah satu-
 //  satunya konstruksi yang memberi sambungan tepat-frame di kedua ujungnya:
 //  ia bermula dan berakhir di frame yang sama persis dengan ujung intro.
-//  Hasil ukurannya 34,6 dB di sambungan intro dan 29,4 dB di titik putaran —
+//  Hasil ukurannya 29,3 dB di sambungan intro dan 29,6 dB di titik putaran —
 //  sementara dua frame BERSEBELAHAN di rekaman ini sendiri hanya 29,8 dB.
 //  Artinya tidak ada satu pun sambungan yang lebih kasar daripada laju
 //  gerak alami rekamannya, dan tak satu pun bisa terlihat.
@@ -114,9 +116,13 @@ const Panggung = ({ phase, introRef, loopRef, introMounted, still }) => (
   }}>
     <div className="absolute inset-0 overflow-hidden" style={{ background: c.blush }}>
 
-      {/* Frame pertama intro, dibekukan. Terukur 38,0 dB terhadap frame
-          pertama videonya, jadi saat video mulai berjalan tidak ada satu
-          piksel pun yang melompat. */}
+      {/* Poster ini karya tersendiri, bukan frame dari videonya: komposisi
+          masjid yang lebih dekat dan lebih tajam, terukur 15,2 dB dari frame
+          pertama intro — dua gambar yang benar-benar berbeda. Maka
+          pembukaannya sengaja dijadikan dissolve panjang (lihat transisi
+          opacity di bawah), bukan pergantian tak terlihat seperti di Gilded
+          Palace. Arahnya kebetulan menolong: poster dekat larut ke video yang
+          lebih lebar, jadi terbaca sebagai kamera yang menarik mundur. */}
       <img src={A.poster} alt="" className="absolute inset-0 w-full h-full"
         style={{ objectFit: 'cover' }} />
 
@@ -125,17 +131,26 @@ const Panggung = ({ phase, introRef, loopRef, introMounted, still }) => (
           {/* Tanpa autoPlay: yang mahal itu decode, bukan mount. Unduhannya
               pun baru dimulai setelah intro berjalan — membuka halaman
               seharusnya cuma menarik poster 100KB, bukan 6MB video. */}
-          <video ref={loopRef} muted loop playsInline poster={A.poster}
+          {/* Sengaja tanpa atribut poster. Atribut itu memasang gambar diam di
+              dalam elemen video sampai frame pertamanya ter-decode, dan karena
+              poster di sini bukan frame pertama video, hasilnya justru dua
+              pergantian beruntun: poster → poster lagi → frame video.
+              Gambar diamnya sudah dipegang <img> di belakang keduanya. */}
+          <video ref={loopRef} muted loop playsInline
             preload={phase === 'poster' ? 'none' : 'auto'}
             className="absolute inset-0 w-full h-full"
-            style={{ objectFit: 'cover', opacity: phase === 'loop' ? 1 : 0, transition: 'opacity .6s ease' }}>
+            style={{ objectFit: 'cover', opacity: phase === 'loop' ? 1 : 0, transition: 'opacity .5s ease' }}>
             <source src={A.loop} type="video/mp4" />
           </video>
 
+          {/* 1,2 detik, jauh lebih panjang daripada pergantian intro→loop di
+              bawahnya. Intro dan loop bertemu di frame yang sama sehingga
+              boleh ditukar cepat; poster dan intro adalah dua gambar berbeda,
+              dan dissolve yang tanggung di situ terbaca sebagai kedip. */}
           {introMounted && (
-            <video ref={introRef} muted playsInline preload="auto" poster={A.poster}
+            <video ref={introRef} muted playsInline preload="auto"
               className="absolute inset-0 w-full h-full"
-              style={{ objectFit: 'cover', opacity: phase === 'intro' ? 1 : 0, transition: 'opacity .6s ease' }}>
+              style={{ objectFit: 'cover', opacity: phase === 'intro' ? 1 : 0, transition: 'opacity 1.2s ease' }}>
               <source src={A.intro} type="video/mp4" />
             </video>
           )}
