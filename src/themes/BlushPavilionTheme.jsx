@@ -334,18 +334,36 @@ const Cover = ({ data, groomNick, brideNick, heroDate, guestName, handleOpen, an
 const Hero = ({ data, groomNick, brideNick, heroDate, countdown, countdownEnabled, ready }) => {
   const parts = [['Hari', countdown?.d], ['Jam', countdown?.h], ['Menit', countdown?.m], ['Detik', countdown?.s]]
   const heroPhoto = data?.meta?.photo || data?.meta?.coverPhoto || data?.groom?.photo || data?.bride?.photo || null
+  // justify-center, bukan justify-end. Dengan justify-end seluruh isi menempel
+  // ke dasar layar dan sepertiga atas dibiarkan kosong, padahal di situlah
+  // paviliun dan lampu kristalnya berada. Sekarang foto dan kartu ditimbang
+  // sebagai satu kelompok di tengah, sehingga fotonya naik mengisi ruang itu.
   return (
-    <section id="bp-home" className="relative flex flex-col items-center justify-end text-center"
-      style={{ zIndex: 1, minHeight: 'var(--inv-h)', boxSizing: 'border-box', padding: '86px 24px 100px' }}>
+    <section id="bp-home" className="relative flex flex-col items-center justify-center text-center"
+      style={{ zIndex: 1, minHeight: 'var(--inv-h)', boxSizing: 'border-box', padding: '80px 24px 96px' }}>
       <motion.div className="flex flex-col items-center"
         initial={{ opacity: 0, y: 18 }}
         animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
         transition={{ duration: 1.2, ease: [0.2, 0.7, 0.2, 1] }}
         style={{ pointerEvents: ready ? 'auto' : 'none' }}>
 
-        {heroPhoto && <Medallion src={heroPhoto} w={142} style={{ marginBottom: -44, zIndex: 1 }} />}
+        {/* Berdiri sendiri di atas kartu, tidak lagi menumpanginya. Bingkainya
+            cincin ganda: garis rambut di luar, sela kertas, lalu tepi
+            medalinya sendiri — jadi ia terbaca sebagai potret berbingkai,
+            bukan foto yang ditempel ke kartu. */}
+        {heroPhoto && (
+          <div style={{
+            marginBottom: 26, padding: 8, borderRadius: '50%',
+            border: `1px solid rgba(169,196,203,.9)`,
+            background: 'rgba(251,246,242,.55)',
+            backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
+            boxShadow: '0 16px 34px rgba(62,50,45,.2)',
+          }}>
+            <Medallion src={heroPhoto} w={178} />
+          </div>
+        )}
 
-        <div style={{ ...cardStyle, padding: heroPhoto ? '54px 22px 22px' : '24px 22px 22px', width: 'min(332px, 100%)' }}>
+        <div style={{ ...cardStyle, padding: '24px 22px 22px', width: 'min(332px, 100%)' }}>
           <div className="flex flex-col items-center">
             <Kicker>The Wedding Of</Kicker>
             <h1 style={{ margin: '8px 0 0', fontFamily: F.script, fontSize: 52, lineHeight: 1.1, color: c.roseDeep }}>
