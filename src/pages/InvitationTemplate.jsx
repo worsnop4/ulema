@@ -29,7 +29,7 @@ const AshenBloomTheme = lazy(() => import('../themes/AshenBloomTheme'))
 const BlancLumiereTheme = lazy(() => import('../themes/BlancLumiereTheme'))
 const OpalinePearlTheme = lazy(() => import('../themes/OpalinePearlTheme'))
 const VelourOliveTheme = lazy(() => import('../themes/VelourOliveTheme'))
-const SenjaDioramaTheme = lazy(() => import('../themes/SenjaDioramaTheme'))
+const BlushPavilionTheme = lazy(() => import('../themes/BlushPavilionTheme'))
 const GildedPalaceTheme = lazy(() => import('../themes/GildedPalaceTheme'))
 const RoseSanctuaryTheme = lazy(() => import('../themes/RoseSanctuaryTheme'))
 
@@ -53,7 +53,7 @@ const THEME_COMPONENTS = {
   [THEMES.BLANC_LUMIERE]: BlancLumiereTheme,
   [THEMES.OPALINE_PEARL]: OpalinePearlTheme,
   [THEMES.VELOUR_OLIVE]: VelourOliveTheme,
-  [THEMES.SENJA_DIORAMA]: SenjaDioramaTheme,
+  [THEMES.BLUSH_PAVILION]: BlushPavilionTheme,
   [THEMES.GILDED_PALACE]: GildedPalaceTheme,
   [THEMES.ROSE_SANCTUARY]: RoseSanctuaryTheme,
 }
