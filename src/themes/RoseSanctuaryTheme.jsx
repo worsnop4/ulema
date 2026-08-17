@@ -406,28 +406,54 @@ const Quote = ({ data }) => {
 }
 
 // ─── 4. MEMPELAI ─────────────────────────────────────────────────
-const PersonCard = ({ person, delay }) => (
-  <Reveal delay={delay} className="flex flex-col items-center text-center" style={cardStyle}>
-    <DomePhoto src={person?.photo} alt={person?.nickname || ''} w={154} ratio="3 / 4" pan={false} />
+// Potret berdiri di samping namanya, dan sisinya bertukar antara mempelai
+// pria dan wanita — bukan dua kartu tengah bertumpuk yang identik. Bujur
+// telur penuh dipakai di sini, berbeda dari kubah di sampul dan hero, supaya
+// bagian ini punya bentuknya sendiri.
+//
+// Foto 118px membuat kolom teks tetap sekitar 200px di layar 390px: cukup
+// untuk nama lengkap dan nama kedua orang tua tanpa terpecah jadi satu kata
+// per baris.
+const PersonCard = ({ person, delay, flip }) => (
+  <Reveal delay={delay} style={{ ...cardStyle, padding: 16 }}>
+    <div className="flex items-center" style={{ gap: 15, flexDirection: flip ? 'row-reverse' : 'row' }}>
+      <div className="relative flex-shrink-0 overflow-hidden" style={{
+        width: 118, aspectRatio: '3 / 4', borderRadius: '50%',
+        border: `1px solid rgba(169,140,99,.6)`,
+        boxShadow: '0 12px 26px rgba(94,36,34,.2), inset 0 0 0 4px rgba(250,245,240,.65)',
+        background: c.blush,
+      }}>
+        {person?.photo
+          ? <img src={person.photo} alt={person?.nickname || ''} className="absolute object-cover"
+              style={{ width: '112%', height: '112%', left: '-6%', top: '-6%', maxWidth: 'none' }} />
+          : <span className="absolute inset-0 flex items-center justify-center" style={{ fontFamily: F.sans, fontSize: 11, color: c.faint }}>Foto</span>}
+      </div>
 
-    <h3 style={{ margin: '16px 0 0', fontFamily: F.script, fontSize: 38, lineHeight: 1.1, color: c.rose }}>
-      {person?.nickname || '—'}
-    </h3>
-    <p style={{ margin: '4px 0 0', fontFamily: F.display, fontSize: 16.5, color: c.ink }}>
-      {person?.name || person?.nickname || '—'}
-    </p>
-    <Rule width={46} style={{ margin: '12px 0' }} />
-    <p style={{ margin: 0, fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.75, color: c.muted }}>
-      Putra/Putri dari<br />
-      {person?.father || '—'} &amp; {person?.mother || '—'}
-    </p>
+      <div style={{ minWidth: 0, flex: 1, textAlign: flip ? 'right' : 'left' }}>
+        <h3 style={{ margin: 0, fontFamily: F.script, fontSize: 36, lineHeight: 1.05, color: c.rose }}>
+          {person?.nickname || '—'}
+        </h3>
+        <p style={{ margin: '3px 0 0', fontFamily: F.display, fontSize: 15.5, lineHeight: 1.3, color: c.ink }}>
+          {person?.name || person?.nickname || '—'}
+        </p>
+        <span style={{
+          display: 'block', width: 34, height: 1, margin: '10px 0',
+          marginLeft: flip ? 'auto' : 0,
+          background: c.gold,
+        }} />
+        <p style={{ margin: 0, fontFamily: F.sans, fontSize: 12, lineHeight: 1.7, color: c.muted }}>
+          Putra/Putri dari<br />
+          {person?.father || '—'} &amp; {person?.mother || '—'}
+        </p>
 
-    {person?.instagram && (
-      <a href={`https://instagram.com/${person.instagram.replace('@', '')}`} target="_blank" rel="noreferrer"
-        style={{ marginTop: 12, fontFamily: F.sans, fontSize: 11.5, fontWeight: 600, color: c.rose }}>
-        @{person.instagram.replace('@', '')}
-      </a>
-    )}
+        {person?.instagram && (
+          <a href={`https://instagram.com/${person.instagram.replace('@', '')}`} target="_blank" rel="noreferrer"
+            style={{ display: 'inline-block', marginTop: 9, fontFamily: F.sans, fontSize: 11.5, fontWeight: 600, color: c.rose }}>
+            @{person.instagram.replace('@', '')}
+          </a>
+        )}
+      </div>
+    </div>
   </Reveal>
 )
 
@@ -439,18 +465,19 @@ const Mempelai = ({ data }) => (
       </p>
     </SectionHead>
 
-    <div className="flex flex-col items-center" style={{ gap: 16 }}>
-      <PersonCard person={data?.groom} delay={0} />
-      {/* Medali di antara dua potret. Satu huruf sebesar ini memang butuh
-          keping kertasnya sendiri: di atas video terang ia tidak punya apa
-          pun untuk dibaca sebagai latar. */}
-      <span className="flex items-center justify-center" style={{
-        width: 50, height: 50, borderRadius: '50%',
+    <div className="flex flex-col" style={{ gap: 14 }}>
+      <PersonCard person={data?.groom} delay={0} flip={false} />
+      {/* Medali di antara dua potret, digeser ke sisi yang berlawanan dengan
+          foto di atasnya supaya alur zigzagnya tersambung. Ia memang butuh
+          keping kertasnya sendiri: satu huruf sebesar ini di atas video
+          terang tidak punya apa pun untuk dibaca sebagai latar. */}
+      <span className="flex items-center justify-center self-center" style={{
+        width: 46, height: 46, borderRadius: '50%',
         background: 'rgba(250,245,240,.9)', border: `1px solid rgba(169,140,99,.48)`,
         boxShadow: '0 8px 22px rgba(94,36,34,.2)',
-        fontFamily: F.script, fontSize: 34, lineHeight: 1, color: c.rose, paddingBottom: 8,
+        fontFamily: F.script, fontSize: 32, lineHeight: 1, color: c.rose, paddingBottom: 8,
       }}>&amp;</span>
-      <PersonCard person={data?.bride} delay={0.08} />
+      <PersonCard person={data?.bride} delay={0.08} flip />
     </div>
   </Section>
 )
@@ -464,41 +491,76 @@ const Mempelai = ({ data }) => (
 // Seluruh data.events di-map. Empat tema lama memasangkan mati events[0]
 // dan events[1] lalu diam-diam membuang sesi ketiga; itu baru selesai
 // diperbaiki, dan tema baru tidak boleh mengulanginya.
+// Tanggal dipecah jadi bagian-bagiannya untuk potongan tiket. Hanya kalau
+// `date` benar-benar terurai; `dateLabel` teks bebas dan tidak boleh
+// dilewatkan ke new Date() — "Awal 2024" akan berubah jadi 1 Januari 2024.
+const fmtParts = (s) => {
+  if (!s) return null
+  const d = new Date(s)
+  if (isNaN(d.getTime())) return null
+  return { day: pad2(d.getDate()), mon: ID_MONTHS[d.getMonth()].slice(0, 3), yr: d.getFullYear(), dayName: ID_DAYS[d.getDay()] }
+}
+
+// Berbentuk tiket, bukan kartu tengah bertumpuk: potongan tanggal di kiri,
+// keterangan di kanan, dipisah garis putus-putus seperti sobekan karcis.
+// Angka tanggalnya jadi jangkar mata, sehingga daftar beberapa sesi bisa
+// dipindai sekali lihat alih-alih dibaca satu per satu dari atas.
 const EventCard = ({ ev, i, delay }) => {
   if (!ev) return null
+  const parts = fmtParts(ev.date)
   const dateLabel = ev.dateLabel || fmtDate(ev.date)
   const hours = [ev.start, ev.end].filter(Boolean).join(' – ')
   return (
-    <Reveal delay={delay} className="text-center" style={cardStyle}>
-      <Kicker>{eventTitle(ev, i)}</Kicker>
-      {dateLabel && (
-        <p style={{ margin: '12px 0 0', fontFamily: F.display, fontSize: 19.5, color: c.roseDeep }}>{dateLabel}</p>
-      )}
-      {hours && (
-        <p style={{ margin: '7px 0 0', fontFamily: F.display, fontSize: 16.5, letterSpacing: '.05em', color: c.goldDeep, fontVariantNumeric: 'tabular-nums' }}>
-          {hours}{ev.tz ? ` ${ev.tz}` : ''}
-        </p>
-      )}
+    <Reveal delay={delay} style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+      <div className="flex items-stretch">
+        {/* Potongan tiket. Hanya muncul kalau tanggalnya terurai; kalau
+            pasangan hanya mengetik label bebas, seluruh ruang diberikan ke
+            kolom kanan alih-alih menampilkan stub kosong. */}
+        {parts && (
+          <div className="flex-shrink-0 flex flex-col items-center justify-center text-center"
+            style={{
+              width: 92, padding: '18px 8px',
+              background: 'rgba(237,220,210,.72)',
+              borderRight: `1px dashed rgba(140,58,58,.42)`,
+            }}>
+            <span className="uppercase" style={{ fontFamily: F.sans, fontSize: 9, fontWeight: 700, letterSpacing: '.18em', color: c.goldDeep }}>{parts.dayName}</span>
+            <span style={{ fontFamily: F.display, fontSize: 40, lineHeight: 1.05, color: c.roseDeep, fontVariantNumeric: 'tabular-nums' }}>{parts.day}</span>
+            <span className="uppercase" style={{ fontFamily: F.sans, fontSize: 10, fontWeight: 700, letterSpacing: '.14em', color: c.rose }}>{parts.mon}</span>
+            <span style={{ fontFamily: F.sans, fontSize: 10.5, color: c.muted, fontVariantNumeric: 'tabular-nums' }}>{parts.yr}</span>
+          </div>
+        )}
 
-      <Rule width="70%" style={{ margin: '16px auto' }} />
+        <div style={{ flex: 1, minWidth: 0, padding: '16px 16px 18px' }}>
+          <Kicker style={{ fontSize: 9.5, letterSpacing: '.24em' }}>{eventTitle(ev, i)}</Kicker>
 
-      {ev.venue && (
-        <p style={{ margin: 0, fontFamily: F.sans, fontSize: 14.5, fontWeight: 700, color: c.ink }}>{ev.venue}</p>
-      )}
-      {ev.address && (
-        <p style={{ margin: '6px auto 0', maxWidth: 250, fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.7, color: c.muted }}>{ev.address}</p>
-      )}
+          {!parts && dateLabel && (
+            <p style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 17, color: c.roseDeep }}>{dateLabel}</p>
+          )}
+          {hours && (
+            <p style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 16.5, letterSpacing: '.04em', color: c.goldDeep, fontVariantNumeric: 'tabular-nums' }}>
+              {hours}{ev.tz ? ` ${ev.tz}` : ''}
+            </p>
+          )}
 
-      {ev.maps && (
-        <a href={ev.maps} target="_blank" rel="noreferrer" className="inline-block"
-          style={{
-            marginTop: 16, padding: '10px 22px', borderRadius: 999,
-            border: `1px solid ${c.rose}`, color: c.rose,
-            fontFamily: F.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase',
-          }}>
-          Petunjuk Arah
-        </a>
-      )}
+          {ev.venue && (
+            <p style={{ margin: '10px 0 0', fontFamily: F.sans, fontSize: 14, fontWeight: 700, lineHeight: 1.35, color: c.ink }}>{ev.venue}</p>
+          )}
+          {ev.address && (
+            <p style={{ margin: '5px 0 0', fontFamily: F.sans, fontSize: 12, lineHeight: 1.65, color: c.muted }}>{ev.address}</p>
+          )}
+
+          {ev.maps && (
+            <a href={ev.maps} target="_blank" rel="noreferrer" className="inline-block"
+              style={{
+                marginTop: 14, padding: '9px 18px', borderRadius: 999,
+                border: `1px solid ${c.rose}`, color: c.rose,
+                fontFamily: F.sans, fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase',
+              }}>
+              Petunjuk Arah
+            </a>
+          )}
+        </div>
+      </div>
     </Reveal>
   )
 }
@@ -527,57 +589,95 @@ const LoveStory = ({ data }) => {
     <Section id="rs-story">
       <SectionHead kicker="Perjalanan Kami" title="Love Story" />
 
-      <div className="relative">
-        <div className="absolute" style={{
-          left: 20, top: 12, bottom: 12, width: 1,
-          background: `linear-gradient(180deg, transparent, ${c.gold}, transparent)`,
-        }} />
-        <div className="flex flex-col" style={{ gap: 15 }}>
-          {stories.map((s, i) => (
-            <Reveal key={s.id || i} delay={i * 0.06} className="relative flex" style={{ gap: 15 }}>
-              <div className="flex-shrink-0 flex items-start justify-center" style={{ width: 41, paddingTop: 24 }}>
-                <span style={{ width: 9, height: 9, borderRadius: '50%', background: c.roseSoft, boxShadow: '0 0 0 3px rgba(250,245,240,.75)' }} />
-              </div>
-              <div className="flex-1" style={{ ...cardStyle, padding: 18, minWidth: 0 }}>
-                {s.year && <Kicker style={{ fontSize: 10.5, letterSpacing: '.2em' }}>{s.year}</Kicker>}
-                {s.title && <p style={{ margin: '8px 0 0', fontFamily: F.display, fontSize: 17, color: c.roseDeep }}>{s.title}</p>}
-                {s.desc && <p style={{ margin: '7px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.75, color: c.muted }}>{s.desc}</p>}
+      {/* Kartu pos, bukan rel bertulang tengah. Fotonya berdiri di samping
+          teks dan berpindah sisi tiap babak, jadi matanya bergerak zigzag
+          menyusuri halaman alih-alih turun lurus menyusuri satu garis.
+          Susunannya tetap satu kolom supaya tetap terbaca di lebar 390px —
+          zigzag sungguhan dengan dua kolom akan meremas keduanya. */}
+      <div className="flex flex-col" style={{ gap: 14 }}>
+        {stories.map((s, i) => {
+          const flip = i % 2 === 1
+          return (
+            <Reveal key={s.id || i} delay={i * 0.06} style={{ ...cardStyle, padding: 14 }}>
+              <div className="flex items-start" style={{ gap: 13, flexDirection: flip ? 'row-reverse' : 'row' }}>
+                {/* Paspartu putih dibuat dengan border, bukan outline: outline
+                    tidak ikut lengkung sudut, dan aturan penggambarannya di
+                    atas konten kurang seragam antar-browser. */}
                 {s.photo && (
-                  <div className="overflow-hidden" style={{ marginTop: 12, borderRadius: 12, aspectRatio: '4 / 3', border: `1px solid rgba(169,140,99,.32)` }}>
+                  <div className="flex-shrink-0 overflow-hidden" style={{
+                    width: 104, aspectRatio: '3 / 4', borderRadius: 3,
+                    boxSizing: 'border-box', border: `5px solid ${c.paper}`,
+                    background: c.blush,
+                    boxShadow: '0 6px 16px rgba(94,36,34,.2)',
+                    transform: `rotate(${flip ? 1.3 : -1.3}deg)`,
+                  }}>
                     <img src={s.photo} alt="" className="w-full h-full object-cover" style={{ objectPosition: 'center 35%' }} />
                   </div>
                 )}
+                <div style={{ minWidth: 0, flex: 1, textAlign: flip ? 'right' : 'left' }}>
+                  {/* Tahun sebagai angka besar bertulisan tangan, bukan label
+                      huruf kapital kecil — inilah penanda babaknya di sini,
+                      menggantikan titik di rel. */}
+                  {s.year && (
+                    <p style={{ margin: 0, fontFamily: F.script, fontSize: 30, lineHeight: 1, color: c.roseSoft }}>{s.year}</p>
+                  )}
+                  {s.title && <p style={{ margin: '6px 0 0', fontFamily: F.display, fontSize: 16.5, lineHeight: 1.3, color: c.roseDeep }}>{s.title}</p>}
+                  {s.desc && <p style={{ margin: '7px 0 0', fontFamily: F.sans, fontSize: 12.5, lineHeight: 1.75, color: c.muted }}>{s.desc}</p>}
+                </div>
               </div>
             </Reveal>
-          ))}
-        </div>
+          )
+        })}
       </div>
     </Section>
   )
 }
 
-// ─── 7. GALERI (opsional) ────────────────────────────────────────
+// ─── 7. GALERI (opsional) — album tempelan ───────────────────────
+// Sengaja bukan grid rapi berbingkai kubah seperti tema Motion sebelumnya.
+// Foto di sini ditempel seperti di album kertas: tinggi berbeda-beda dalam
+// dua kolom masonry, tiap lembar diberi paspartu putih dan dimiringkan
+// sedikit ke arah berlawanan.
+//
+// columnCount, bukan grid. Grid memaksa tiap baris setinggi barisnya yang
+// tertinggi, dan itu justru yang membuat galeri terasa seperti tabel.
+// Multi-kolom membiarkan tiap lembar setinggi dirinya sendiri lalu
+// menumpuknya rapat — persis kesan album yang dicari.
+//
+// Kemiringannya dari indeks, bukan Math.random(): react-hooks/purity
+// melarang panggilan tak-murni saat render, dan nilai acak akan berubah
+// setiap kali komponen ini digambar ulang.
+const TILT = [-1.4, 1, -0.7, 1.5, -1.1, 0.8]
+const RATIO = ['3 / 4', '4 / 5', '1 / 1', '3 / 4', '4 / 5', '4 / 3']
+
 const Galeri = ({ data }) => {
   const photos = (data?.gallery || []).map(g => (typeof g === 'string' ? g : g?.src)).filter(Boolean)
   if (!photos.length) return null
   return (
     <Section id="rs-galeri">
       <SectionHead kicker="Momen" title="Galeri" />
-      {/* Ukuran intrinsik: mengukur kolom ini, bukan jendela browser, jadi
-          grid-nya benar di dalam shell 480px maupun di ponsel. */}
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(130px, 100%), 1fr))', gap: 9 }}>
-        {photos.map((src, i) => (
-          <Reveal key={src} delay={(i % 4) * 0.05}>
-            <div className="overflow-hidden" style={{
-              aspectRatio: '3 / 4', borderRadius: '50% 50% 10px 10px / 26% 26% 3% 3%',
-              border: `1px solid rgba(169,140,99,.45)`,
-              boxShadow: '0 10px 24px rgba(94,36,34,.16), inset 0 0 0 3px rgba(250,245,240,.55)',
-            }}>
-              <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+      {/* Satu Reveal untuk seluruh album, bukan per lembar: animasi transform
+          pada anak multi-kolom bisa membuatnya melompat kolom saat berjalan. */}
+      <Reveal>
+        {/* Satu foto tidak boleh dipaksa ke dua kolom: ia akan berdiri
+            setengah lebar dengan separuh halaman kosong di sebelahnya. */}
+        <div style={{ columnCount: photos.length > 1 ? 2 : 1, columnGap: 11 }}>
+          {photos.map((src, i) => (
+            <div key={src} style={{ breakInside: 'avoid', marginBottom: 11 }}>
+              <div style={{
+                padding: 7, paddingBottom: 16, borderRadius: 3,
+                background: c.paper,
+                boxShadow: '0 8px 20px rgba(94,36,34,.18)',
+                transform: `rotate(${TILT[i % TILT.length]}deg)`,
+              }}>
+                <div className="overflow-hidden" style={{ aspectRatio: RATIO[i % RATIO.length], background: c.blush }}>
+                  <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
+              </div>
             </div>
-          </Reveal>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Reveal>
     </Section>
   )
 }
