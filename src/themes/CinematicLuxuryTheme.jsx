@@ -134,13 +134,13 @@ export default function CinematicLuxuryTheme({
 
         <button
           onClick={() => setMusicPlaying(p => !p)}
-          className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 hover:scale-110"
-          style={{ backgroundColor: 'rgba(20,20,20,0.8)', borderColor: 'rgba(221,196,151,0.3)' }}
+          className="fixed z-50 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 hover:scale-110"
+          style={{ bottom: 84, right: 'max(16px, calc(50vw - var(--inv-w) / 2 + 16px))', backgroundColor: 'rgba(20,20,20,0.8)', borderColor: 'rgba(221,196,151,0.3)' }}
         >
           {musicPlaying ? <Pause size={16} color={luxGold} /> : <Play size={16} color={luxGold} className="ml-1" />}
         </button>
 
-        <section className="relative min-h-[var(--inv-h)] flex flex-col items-center justify-center px-6 py-20 text-center">
+        <section id="cl-home" className="relative min-h-[var(--inv-h)] flex flex-col items-center justify-center px-6 py-20 text-center">
           <div className="absolute inset-0 pointer-events-none opacity-40">
             {isVideo && coverVideo ? (
               <video src={coverVideo} autoPlay loop muted playsInline className="w-full h-full object-cover" />
@@ -192,7 +192,7 @@ export default function CinematicLuxuryTheme({
           </FadeUp>
         </section>
 
-        <section className="py-24 px-6 relative">
+        <section id="cl-mempelai" className="py-24 px-6 relative">
           <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `radial-gradient(circle at 50% 50%, ${luxGold} 0%, transparent 60%)` }} />
           <div className="max-w-lg mx-auto relative z-10 space-y-24">
             <FadeUp className="flex flex-col items-center text-center">
@@ -232,7 +232,7 @@ export default function CinematicLuxuryTheme({
         </section>
 
         {data.events?.length > 0 && (
-          <section className="py-24 px-4 bg-[#0d0d0d]">
+          <section id="cl-acara" className="py-24 px-4 bg-[#0d0d0d]">
             <FadeUp className="text-center mb-12">
               <h2 className="font-serif text-3xl tracking-widest uppercase" style={{ color: luxGold }}>Rangkaian Acara</h2>
               <div className="w-12 h-px mx-auto mt-4" style={{ backgroundColor: luxGold }} />
@@ -272,8 +272,56 @@ export default function CinematicLuxuryTheme({
           </section>
         )}
 
+        {/* KISAH CINTA — juga tidak pernah ada di tema ini. Bukan salah nama
+            field, memang tidak pernah dibuat: 24 dari 53 undangan mengisi
+            loveStory, termasuk kedua undangan demo tema ini.
+
+            `year` teks bebas dan ditampilkan apa adanya. Melewatkannya ke
+            new Date() akan mengubah "2019" jadi 1 Januari 2019 dan menelan
+            "Awal 2024" bulat-bulat. Deskripsinya di `desc`, bukan `story`. */}
+        {(data.loveStory || []).length > 0 && (
+          <section id="cl-kisah" className="py-24 px-6" style={{ backgroundColor: luxBg }}>
+            <div className="max-w-lg mx-auto">
+              <FadeUp className="text-center mb-14">
+                <h2 className="font-serif text-3xl tracking-widest uppercase" style={{ color: luxGold }}>Perjalanan Kami</h2>
+              </FadeUp>
+
+              <div className="relative">
+                <div className="absolute top-2 bottom-2" style={{ left: 15, width: 1, background: `linear-gradient(180deg, transparent, ${luxGold}, transparent)`, opacity: 0.5 }} />
+                <div className="flex flex-col gap-10">
+                  {(data.loveStory || []).map((st, i) => (
+                    <FadeUp key={st.id || i} delay={i * 0.08}>
+                      <div className="flex gap-6">
+                        <div className="flex-shrink-0 flex justify-center" style={{ width: 32, paddingTop: 6 }}>
+                          <span style={{ width: 9, height: 9, borderRadius: '50%', background: luxGold, boxShadow: `0 0 12px ${luxGold}` }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {st.year && (
+                            <p className="text-[11px] tracking-[0.3em] uppercase mb-2" style={{ color: luxGold }}>{st.year}</p>
+                          )}
+                          {st.title && (
+                            <h3 className="font-serif text-xl mb-2" style={{ color: luxText }}>{st.title}</h3>
+                          )}
+                          {st.desc && (
+                            <p className="text-sm leading-relaxed" style={{ color: luxMuted }}>{st.desc}</p>
+                          )}
+                          {st.photo && (
+                            <div className="mt-4 overflow-hidden" style={{ aspectRatio: '16 / 10', border: '1px solid rgba(221,196,151,0.15)' }}>
+                              <img src={st.photo} alt="" className="w-full h-full object-cover" style={{ objectPosition: 'center 35%' }} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </FadeUp>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {data.gallery?.length > 0 && (
-          <section className="py-24 px-2">
+          <section id="cl-galeri" className="py-24 px-2">
             <FadeUp className="text-center mb-12">
               <h2 className="font-serif text-3xl tracking-widest uppercase" style={{ color: luxGold }}>Galeri Momen</h2>
               <div className="w-12 h-px mx-auto mt-4" style={{ backgroundColor: luxGold }} />
@@ -333,6 +381,81 @@ export default function CinematicLuxuryTheme({
               </FadeUp>
             )}
 
+          </div>
+        </section>
+
+        {/* DRESSCODE — tema ini tidak pernah punya bagiannya sama sekali,
+            padahal editornya menyediakan kolomnya dan kedua undangan demo tema
+            ini mengisinya (Dusty Blue dan Ivory White). Satu bulatan warna,
+            karena editor menyimpan satu warna; gerbangnya menerima catatan
+            saja, sebab pasangan boleh menulis aturan busana tanpa memilih
+            warna. */}
+        {(data.dresscode?.name || data.dresscode?.color || data.dresscode?.notes) && (
+          <section className="py-20 px-6 text-center">
+            <FadeUp>
+              <h2 className="font-serif text-2xl mb-8" style={{ color: luxGold }}>Dresscode</h2>
+              <div className="flex items-center justify-center gap-5">
+                {data.dresscode.color && (
+                  <span className="flex-shrink-0 rounded-full" style={{
+                    width: 48, height: 48, background: data.dresscode.color,
+                    border: `1px solid ${luxGold}`,
+                    boxShadow: '0 0 0 5px rgba(221,196,151,0.10), 0 8px 20px rgba(0,0,0,0.5)',
+                  }} />
+                )}
+                <div className="text-left" style={{ minWidth: 0 }}>
+                  {data.dresscode.name && (
+                    <p className="font-serif text-xl" style={{ color: luxText }}>{data.dresscode.name}</p>
+                  )}
+                  {data.dresscode.notes && (
+                    <p className="text-sm mt-1 leading-relaxed" style={{ color: luxMuted }}>{data.dresscode.notes}</p>
+                  )}
+                </div>
+              </div>
+            </FadeUp>
+          </section>
+        )}
+
+        {data.livestreamEnabled && (data.livestreamPlatforms || []).some(p => p.url) && (
+          <section className="py-20 px-6 text-center">
+            <FadeUp>
+              <h2 className="font-serif text-2xl mb-4" style={{ color: luxGold }}>Live Streaming</h2>
+              <p className="text-sm mb-8 max-w-sm mx-auto" style={{ color: luxMuted }}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
+              <div className="flex flex-col gap-3 items-center">
+                {(data.livestreamPlatforms || []).filter(p => p.url).map((p, i) => (
+                  <a key={i} href={p.url} target="_blank" rel="noreferrer" className="text-[11px] tracking-[0.25em] uppercase px-7 py-2.5" style={{ border: `1px solid ${luxGold}`, color: luxGold }}>{p.type || 'Tonton Live'}</a>
+                ))}
+              </div>
+            </FadeUp>
+          </section>
+        )}
+
+        {data.turutMengundangEnabled && (data.families || []).some(f => (f.members || []).some(m => m && m.trim())) && (
+          <section className="py-20 px-6 text-center">
+            <FadeUp>
+              <h2 className="font-serif text-2xl mb-8" style={{ color: luxGold }}>Turut Mengundang</h2>
+              <div className="flex flex-col gap-6 max-w-xs mx-auto">
+                {(data.families || []).map((fam, i) => {
+                  const members = (fam.members || []).filter(m => m && m.trim())
+                  if (!members.length) return null
+                  return (
+                    <div key={fam.id || i}>
+                      {fam.side && <p className="font-serif text-lg mb-2" style={{ color: luxGold }}>{fam.side}</p>}
+                      {members.map((m, j) => (<p key={j} className="text-sm" style={{ color: luxMuted, lineHeight: 1.9 }}>{m}</p>))}
+                    </div>
+                  )
+                })}
+              </div>
+            </FadeUp>
+          </section>
+        )}
+
+        {/* RSVP dipisah jadi bagiannya sendiri. Sebelumnya ia bersarang di
+            dalam section yang sama dengan Tanda Kasih, dan itulah yang
+            mendorong live streaming serta turut mengundang ke BELAKANG
+            formulir — tamu diminta konfirmasi kehadiran dulu, baru sesudah itu
+            diberi tautan siarannya. */}
+        <section id="cl-rsvp" className="py-24 px-6 bg-[#0d0d0d]">
+          <div className="max-w-lg mx-auto">
             <FadeUp>
               <div className="p-8 text-center" style={{ backgroundColor: luxCard, border: '1px solid rgba(221,196,151,0.1)' }}>
                 <h2 className="font-serif text-2xl tracking-widest uppercase mb-6" style={{ color: luxGold }}>Konfirmasi Kehadiran</h2>
@@ -392,40 +515,6 @@ export default function CinematicLuxuryTheme({
           </div>
         </section>
 
-        {data.livestreamEnabled && (data.livestreamPlatforms || []).some(p => p.url) && (
-          <section className="py-20 px-6 text-center">
-            <FadeUp>
-              <h2 className="font-serif text-2xl mb-4" style={{ color: luxGold }}>Live Streaming</h2>
-              <p className="text-sm mb-8 max-w-sm mx-auto" style={{ color: luxMuted }}>Bagi yang berhalangan hadir, saksikan momen bahagia kami secara langsung.</p>
-              <div className="flex flex-col gap-3 items-center">
-                {(data.livestreamPlatforms || []).filter(p => p.url).map((p, i) => (
-                  <a key={i} href={p.url} target="_blank" rel="noreferrer" className="text-[11px] tracking-[0.25em] uppercase px-7 py-2.5" style={{ border: `1px solid ${luxGold}`, color: luxGold }}>{p.type || 'Tonton Live'}</a>
-                ))}
-              </div>
-            </FadeUp>
-          </section>
-        )}
-
-        {data.turutMengundangEnabled && (data.families || []).some(f => (f.members || []).some(m => m && m.trim())) && (
-          <section className="py-20 px-6 text-center">
-            <FadeUp>
-              <h2 className="font-serif text-2xl mb-8" style={{ color: luxGold }}>Turut Mengundang</h2>
-              <div className="flex flex-col gap-6 max-w-xs mx-auto">
-                {(data.families || []).map((fam, i) => {
-                  const members = (fam.members || []).filter(m => m && m.trim())
-                  if (!members.length) return null
-                  return (
-                    <div key={fam.id || i}>
-                      {fam.side && <p className="font-serif text-lg mb-2" style={{ color: luxGold }}>{fam.side}</p>}
-                      {members.map((m, j) => (<p key={j} className="text-sm" style={{ color: luxMuted, lineHeight: 1.9 }}>{m}</p>))}
-                    </div>
-                  )
-                })}
-              </div>
-            </FadeUp>
-          </section>
-        )}
-
         <section className="py-24 px-6 text-center">
           <FadeUp>
             <p className="text-sm mb-4" style={{ color: luxMuted }}>Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.</p>
@@ -434,6 +523,31 @@ export default function CinematicLuxuryTheme({
             <p className="text-xs mt-12" style={{ color: luxMuted }}>Created with Ulema.app</p>
           </FadeUp>
         </section>
+
+        {/* NAVIGASI BAWAH — tema ini salah satu dari dua tema bespoke yang
+            belum punya. Fixed murni dijangkarkan ke lebar kolom (--inv-w),
+            bukan `fixed md:absolute`: di layar >= 768px varian absolute yang
+            menang dan navigasinya berlabuh ke dasar dokumen, bukan ke layar.
+
+            Tombol musik digeser ke atas supaya tidak bertumpuk dengan nav. */}
+        <nav className="fixed flex" style={{
+          bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
+          width: 'min(420px, calc(var(--inv-w) - 28px))', gap: 2, padding: '7px 9px', borderRadius: 999,
+          background: 'rgba(20,20,20,0.85)', border: '1px solid rgba(221,196,151,0.28)',
+          backdropFilter: 'blur(16px) saturate(1.2)', WebkitBackdropFilter: 'blur(16px) saturate(1.2)',
+          boxShadow: '0 14px 32px rgba(0,0,0,0.5)',
+        }}>
+          {[['Home', 'cl-home'], ['Mempelai', 'cl-mempelai'], ['Acara', 'cl-acara'], ['Galeri', 'cl-galeri'], ['RSVP', 'cl-rsvp']].map(([label, id]) => (
+            <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              style={{
+                flex: 1, padding: '8px 2px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                background: 'transparent', color: luxGold,
+                fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase',
+              }}>
+              {label}
+            </button>
+          ))}
+        </nav>
       </div>
     </InvitationLayout>
   )
