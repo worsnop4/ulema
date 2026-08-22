@@ -45,6 +45,8 @@ export default function InvitationLayout({
       ? 'radial-gradient(circle, #1b232d 0%, #0e141b 100%)'
     : layout === THEMES.ASHEN_BLOOM
       ? '#eceae6'
+    : layout === THEMES.MEMORIES
+      ? 'radial-gradient(circle, #F7E4E3 0%, #EFE7E4 100%)'
       : config.global?.desktopBg
         ? config.global.desktopBg
       : layout === THEMES.PLAYFUL_ILLUSTRATIVE
