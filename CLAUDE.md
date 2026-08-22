@@ -198,14 +198,17 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
    - **Auditing by grep needs comments stripped first.** Matching raw source reported five themes
      using `md:absolute` when the string only appeared in explanatory comments — twice.
    - Velour Olive has no bottom nav by design; its side dot `Rail` is the equivalent.
-9. **Velour Olive asks for a cover video nothing renders.** `themeType` does not mean "this theme
-   uses video" — it means "the couple supplies the video": `FotoVideoForm.jsx` swaps the cover
-   uploader from photo to video when it is `'video'`, and only `CinematicLuxuryTheme` ever reads
-   the resulting `meta.coverVideo`. Velour Olive is marked `'video'` but paints its own shipped
-   backdrop, so a couple there uploads a cover video that is silently never shown — and never
-   gets offered the cover-photo box the theme actually falls back to. Gilded Palace is
-   deliberately `'photo'` for this reason. Fixing Velour Olive is a one-word change in
-   `DEFAULT_THEMES` plus the `themes` row, but it changes a live theme, so it needs a decision.
+9. ~~Velour Olive asks for a cover video nothing renders~~ — **done 2026-08-22.** `themeType`
+   controls one thing only: which upload box the couple sees on the cover step
+   (`FotoVideoForm.jsx`) — `'video'` writes `meta.coverVideo`, `'photo'` writes
+   `meta.coverPhoto`. So it answers "must the *couple* supply the video", not "does this theme
+   use video". Auditing all four themes marked `video` found three wrong in different ways:
+   Velour Olive never read `meta.coverVideo` at all and only reads `meta.coverPhoto` — the box it
+   never offered — so its cover rendered an empty "Foto Cover" placeholder; Bordeaux Luxe plays a
+   backdrop video bundled with the theme and only needs the couple's photo; and **Cinematic Shadow
+   read `data.coverVideoUrl`, a name no editor module writes** (fifth round of field-name drift),
+   so its video hero never once appeared. The first two moved to `'photo'`; Shadow stayed
+   `'video'` and had its field name corrected. Cinematic Luxury was already right.
 10. **Bottom nav and music button use `fixed md:absolute`** in most bespoke themes. At ≥768px the
    `absolute` variant wins and anchors them to the content container instead of the screen, so
    they scroll away instead of staying put. Gilded Palace uses plain `fixed` anchored to

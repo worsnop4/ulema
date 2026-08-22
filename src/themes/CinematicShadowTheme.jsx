@@ -229,7 +229,15 @@ const CoverSection = ({ data, bride, groom, primaryEvent, handleOpen, animateClo
 
 // ─── 2. VIDEO HERO (setelah cover dibuka) ────────────────────────
 const VideoHeroSection = ({ data, bride, groom, primaryEvent, countdown }) => {
-  const hasVideo = Boolean(data?.coverVideoUrl)
+  // Video cover yang diunggah pasangan. Tema ini dulu membacanya sebagai
+  // `data.coverVideoUrl`, nama yang tidak pernah ditulis satu pun modul
+  // editor: FotoVideoForm menyimpannya di `meta.coverVideo`. Akibatnya
+  // video-hero tema ini tidak pernah sekali pun tampil, dan selalu jatuh ke
+  // cadangan foto galeri — padahal tema ini SATU-SATUNYA alasan pasangannya
+  // diberi kotak unggah video. Penyimpangan nama field ronde kelima di repo
+  // ini; modul *Form.jsx adalah sumber kebenarannya, bukan types/invitation.js.
+  const coverVideo = data?.meta?.coverVideo || ''
+  const hasVideo = Boolean(coverVideo)
   const galleryFallback = (data?.gallery || [])
     .slice(0, 3)
     .map(g => (typeof g === 'string' ? g : g?.src))
@@ -250,7 +258,7 @@ const VideoHeroSection = ({ data, bride, groom, primaryEvent, countdown }) => {
         <video autoPlay muted loop playsInline
           className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => { e.currentTarget.style.display = 'none' }}>
-          <source src={data.coverVideoUrl} type="video/mp4" />
+          <source src={coverVideo} type="video/mp4" />
         </video>
       ) : (
         <AnimatePresence mode="sync">

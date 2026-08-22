@@ -1,0 +1,33 @@
+-- theme_type: hentikan dua tema meminta video cover yang tidak pernah dipakai.
+--
+-- Kolom ini tidak menjelaskan temanya. Ia mengendalikan SATU hal di editor:
+-- kotak unggah mana yang dilihat pasangan di langkah cover
+-- (src/components/modules/FotoVideoForm.jsx).
+--   'photo' → kotak foto → menulis meta.coverPhoto
+--   'video' → kotak video MP4 → menulis meta.coverVideo
+-- Jadi pertanyaannya bukan "apakah tema ini memakai video", melainkan
+-- "apakah PASANGAN yang harus menyetor videonya".
+--
+-- Velour Olive (21) sama sekali tidak pernah membaca meta.coverVideo — cover-nya
+-- hanya membaca meta.coverPhoto, kotak yang justru tidak pernah ditawarkan
+-- kepada pasangannya. Akibatnya cover-nya kosong: demo-theme-21 tersimpan
+-- dengan coverPhoto DAN coverVideo sama-sama kosong, dan temanya merender
+-- kotak bertuliskan "Foto Cover".
+--
+-- Bordeaux Luxe (13) memutar video latarnya sendiri yang ikut dengan tema
+-- (public/themes/Luxury/theme-13/cover-bg.mp4). Jatah pasangannya adalah
+-- bingkai foto di dalam cover, yang membaca meta.coverPhoto. Video yang mereka
+-- unggah tidak pernah ditampilkan di mana pun — demo-theme-13 menyimpan satu.
+--
+-- Cinematic Shadow (14) SENGAJA dibiarkan 'video': rancangan video-hero-nya
+-- nyata, ia hanya membaca nama field yang salah (data.coverVideoUrl, yang tidak
+-- pernah ditulis editor mana pun). Itu diperbaiki di sisi kode pada commit yang
+-- sama, bukan dengan mengubah baris ini.
+--
+-- Cinematic Luxury (11) tidak disentuh — ia satu-satunya yang sejak awal
+-- membaca meta.coverVideo dengan benar.
+--
+-- Data yang sudah terlanjur diunggah tidak dihapus: meta.coverVideo tetap
+-- tersimpan di baris undangan, hanya tidak lagi bisa diganti dari editor.
+-- Karena tidak pernah ditampilkan, tidak ada yang hilang dari sisi tamu.
+update themes set theme_type = 'photo' where id in (13, 21);
