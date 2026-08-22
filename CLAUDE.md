@@ -53,6 +53,11 @@ don't let them block you, and don't do a mass cleanup unless asked.
 
 Categories: `Special`, `Luxury`, `Motion` (3D), `Adat` (traditional).
 
+Design guides for new themes live in `docs/`: `THEME_DESIGN_GUIDE.md` for standard single-scroll
+themes, and `THEME_GUIDE_MOTION.md` for non-linear Motion themes (deck/map/cinematic-timeline
+paradigms, asset pipeline, and the `data-bind` handoff convention). The Motion guide is
+self-contained so it can be pasted straight into an external design session.
+
 ### Shipping a video-backdrop theme (Gilded Palace is the reference)
 Keep the master in gitignored `design-assets/`; ship a cut-down `intro` + `loop` pair under
 `public/themes/`. Four things were learned the expensive way:

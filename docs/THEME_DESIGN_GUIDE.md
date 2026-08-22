@@ -13,6 +13,13 @@ bagian yang di-hardcode. Ini berlaku terlepas dari siapa yang mendesain.
 >
 > Section 1–7 di bawah (kontrak data, konvensi teknis) **berlaku sama** untuk kedua alur — itu yang
 > menjaga tema tetap "nyambung" ke aplikasi. Yang beda cuma proses & seberapa besar kebebasan visual.
+>
+> **Mode 3 — tema Motion non-linear:** kalau temanya sengaja keluar dari pola scroll ke bawah
+> (deck, peta, timeline sinematik) dan motion-nya digarap serius, pakai
+> [`THEME_GUIDE_MOTION.md`](./THEME_GUIDE_MOTION.md). Dokumen itu berdiri sendiri (bisa langsung
+> di-paste ke Claude Design) dan menambahkan yang tidak ada di sini: paradigma navigasi beserta
+> ongkos migrasinya, aturan konten yang tumbuh tanpa batas, pipeline aset video, dan konvensi
+> `data-bind` yang membuat porting jadi mekanis.
 
 ---
 
