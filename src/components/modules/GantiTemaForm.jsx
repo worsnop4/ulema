@@ -7,7 +7,10 @@ export default function GantiTemaForm() {
   const { user } = useAuth()
   const [data, updateData] = useSharedInvitation()
   const themes = getThemes()
-  const selected = data.themeId || 1
+  // 7, bukan 1: id 1–6 kini diseed dengan visible = false (tema lama, tidak
+  // dijual lagi dan disaring keluar dari katalog), jadi memilihnya sebagai
+  // bawaan berarti menyorot tema yang tidak ada di daftar pilihan ini.
+  const selected = data.themeId || 7
   const activeTheme = themes.find(t => t.id === selected) || themes[0]
 
   // Filter themes based on user package (Luxury gets all, others get their specific category)

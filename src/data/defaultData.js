@@ -1,6 +1,14 @@
 export const defaultInvitationData = {
   slug: '',
-  themeId: 1,
+  // Id 7 (Autumn Florals), bukan 1. Id 1–6 adalah tema lama yang kini diseed
+  // dengan visible = false: barisnya ada supaya undangan lama tetap tampil
+  // benar, tapi tidak muncul di katalog. Undangan baru tidak boleh lahir di
+  // tema yang tidak bisa ditemukan pemiliknya sendiri di katalog.
+  //
+  // Sebelum ini nilainya 1, dan selama tabel themes belum memuat id 1–6 itu
+  // berarti SETIAP undangan baru lahir di id yang tidak dikenal database, lalu
+  // jatuh ke `themes[0]` saat dirender. 7 adalah id visible termuda.
+  themeId: 7,
   theme: 'classic',
   groom: {
     name: '',

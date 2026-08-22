@@ -179,40 +179,19 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
 6. **`ProfilePage.jsx` hardcodes a fake phone** as `defaultValue="+62 812 3456 7890"`, so every
    user sees a stranger's-looking number prefilled in their own profile. Should read the real
    `profiles.phone`.
-7. **`themes` table only holds ids 7–21.** Ids 1–6 (Classic Elegance, Rose Garden, Midnight
-   Gold, Ivory Dream, Lavender Bliss, Tropical Breeze) exist in `DEFAULT_THEMES` but were never
-   seeded. Most real invitations sit on `theme_id: 1`, which the DB does not describe.
-8. ~~Structure audit — six bespoke themes deviate from the house layout~~ — **done 2026-08-22.**
-   All fourteen bespoke themes now follow: Cover → Hero → Quote → Mempelai → Acara → Love Story →
-   Galeri → *all* guest info (dresscode, live, gift, turut mengundang) → RSVP → Penutup, with a
-   bottom nav anchored by plain `fixed`. What the audit turned up along the way:
-   - **Cinematic Luxury had no love-story and no dresscode section at all** — never written, not a
-     field-name slip. 24 of 53 invitations fill `loveStory`. Its RSVP form was also nested inside
-     the gift section, which is *why* livestream and turut mengundang sat behind it.
-   - **Aurum Noir was a fifth theme hardwiring `events[1]`**, missed on 2026-08-16 because that
-     task named only four themes. Its fix was one line: the tabbed UI already mapped over its list.
-   - **Opaline Pearl's music button used `calc(var(--inv-w) / 2 - 218px)`** — on desktop that is
-     22px from the *window* edge, far outside the 480px column. The right form is
-     `calc(50vw - var(--inv-w) / 2 + 16px)`; grep for the broken shape before trusting `md:absolute`
-     as the only symptom.
-   - **Auditing by grep needs comments stripped first.** Matching raw source reported five themes
-     using `md:absolute` when the string only appeared in explanatory comments — twice.
-   - Velour Olive has no bottom nav by design; its side dot `Rail` is the equivalent.
-9. ~~Velour Olive asks for a cover video nothing renders~~ — **done 2026-08-22.** `themeType`
-   controls one thing only: which upload box the couple sees on the cover step
-   (`FotoVideoForm.jsx`) — `'video'` writes `meta.coverVideo`, `'photo'` writes
-   `meta.coverPhoto`. So it answers "must the *couple* supply the video", not "does this theme
-   use video". Auditing all four themes marked `video` found three wrong in different ways:
-   Velour Olive never read `meta.coverVideo` at all and only reads `meta.coverPhoto` — the box it
-   never offered — so its cover rendered an empty "Foto Cover" placeholder; Bordeaux Luxe plays a
-   backdrop video bundled with the theme and only needs the couple's photo; and **Cinematic Shadow
-   read `data.coverVideoUrl`, a name no editor module writes** (fifth round of field-name drift),
-   so its video hero never once appeared. The first two moved to `'photo'`; Shadow stayed
-   `'video'` and had its field name corrected. Cinematic Luxury was already right.
-10. **Bottom nav and music button use `fixed md:absolute`** in most bespoke themes. At ≥768px the
-   `absolute` variant wins and anchors them to the content container instead of the screen, so
-   they scroll away instead of staying put. Gilded Palace uses plain `fixed` anchored to
-   `--inv-w` (see its `MusicButton`) — that is the pattern to copy when this is fixed elsewhere.
+11. ~~`themes` table only holds ids 7–21~~ — **done 2026-08-22.** Ids 1–6 are now seeded with
+   `visible = false`: the rows exist so old invitations resolve to the right layout, but the
+   legacy themes stay out of the catalog (`LandingCatalog` filters on that column). Three things
+   made this worth doing even though **all 18 invitations on those ids turned out to be empty
+   drafts** (zero had both a couple name and an event — check the rows before ranking impact):
+   - Once the Supabase list loads it is authoritative and returned **without merging
+     `DEFAULT_THEMES`**, so any id present in code but missing from the table disappears.
+   - `InvitationTemplate` fell back to `themes[0]` — "first row by id", i.e. Autumn Florals — so a
+     couple who picked Classic Elegance could render as a different theme, palette and all, with
+     no error anywhere. The fallback is now tiered: active list → `DEFAULT_THEMES` → `themes[0]`,
+     which keeps invitations correct whenever the table lags the code.
+   - `defaultInvitationData.themeId` was `1`, so **every new invitation was born on an id the
+     database did not know**. Now `7` (the lowest visible id); `GantiTemaForm` matches.
 
 **Field-name drift is the recurring bug class here.** Four separate rounds of it have now been
 found and fixed (love-story `desc`, event `venue`/`start`/`maps`, gift bank/e-wallet, and

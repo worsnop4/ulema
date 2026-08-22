@@ -8,6 +8,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import { invitationService } from '../services/invitationService'
 import { ThemeErrorBoundary } from '../components/common/ThemeErrorBoundary'
 import { THEMES } from '../config/constants'
+import { DEFAULT_THEMES } from '../data/defaultData'
 import { useAuth } from '../hooks/useAuth'
 // Import Theme Layout Components via Lazy Loading (Code Splitting)
 const WatercolorFloralTheme = lazy(() => import('../themes/WatercolorFloralTheme'))
@@ -228,7 +229,23 @@ export default function InvitationTemplate() {
   const themes = useMemo(() => getThemes(), [])
   const themeParam = searchParams.get('theme')
   const themeId = themeParam ? Number(themeParam) : data.themeId
-  const activeTheme = useMemo(() => themes.find(t => t.id === themeId) || themes[0], [themes, themeId])
+  // Cadangan bertingkat, bukan `|| themes[0]`.
+  //
+  // Begitu daftar Supabase termuat ia jadi otoritatif dan dikembalikan apa
+  // adanya, TANPA digabung DEFAULT_THEMES. Jadi id mana pun yang ada di kode
+  // tapi belum diseed akan hilang dari daftar — dan `themes[0]` berarti "baris
+  // pertama menurut id", yang kebetulan saja. Undangan yang temanya belum
+  // diseed karena itu tampil sebagai tema lain, dengan palet tema lain, tanpa
+  // satu pun tanda bahwa ada yang salah.
+  //
+  // Sekarang: cari di daftar aktif, lalu di daftar bawaan kode, baru menyerah.
+  // Lapis kedua itu yang membuat undangan tetap benar meski tabelnya
+  // ketinggalan dari kode — persis keadaan yang membuat id 1–6 patah.
+  const activeTheme = useMemo(() => (
+    themes.find(t => t.id === themeId)
+    || DEFAULT_THEMES.find(t => t.id === themeId)
+    || themes[0]
+  ), [themes, themeId])
   const layout = activeTheme?.layout || THEMES.WATERCOLOR_FLORAL
   
   // Custom colors fallback to theme default colors
