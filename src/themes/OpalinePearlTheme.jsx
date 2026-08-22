@@ -884,19 +884,27 @@ export default function OpalinePearlTheme({
             <Couple data={data} />
             <Acara data={data} />
             <LoveStory data={data} />
-            <Dresscode data={data} />
             <Gallery data={data} />
+
+            {/* Urutan baku Ulema: seluruh informasi tamu berdekatan, lalu RSVP,
+                lalu penutup. Sebelumnya hadiah dan turut mengundang berada
+                SESUDAH formulir RSVP, dresscode terselip sendirian di antara
+                kisah dan galeri, dan live streaming berdiri terpisah dari
+                ketiganya — tamu diminta mengisi kehadiran lebih dulu, baru
+                sesudah itu ditunjukkan ke mana mengirim kado. */}
+            <Dresscode data={data} />
             <LiveStream data={data} />
-            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
             <TurutMengundang data={data} />
+
+            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Footer data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate} />
 
             {/* Music toggle */}
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
-                className="op-glass op-nav-btn fixed md:absolute flex items-center justify-center" style={{
-                  top: 20, right: 'max(18px, calc(var(--inv-w) / 2 - 218px))', zIndex: 70,
+                className="op-glass op-nav-btn fixed flex items-center justify-center" style={{
+                  top: 20, right: 'max(18px, calc(50vw - var(--inv-w) / 2 + 18px))', zIndex: 70,
                   width: 50, height: 50, borderRadius: '50%', cursor: 'pointer', gap: 3,
                   opacity: heroVisible ? 1 : 0,
                   transform: heroVisible ? 'translateY(0)' : 'translateY(-10px)',
@@ -919,7 +927,7 @@ export default function OpalinePearlTheme({
                 backdrops far enough that the dark-gold labels still read.
                 Without that brightness lift, going this transparent would have
                 traded a readable nav for a pretty one. */}
-            <nav className="op-glass fixed md:absolute left-1/2 -translate-x-1/2 flex justify-between" style={{ bottom: 22, zIndex: 70, width: 'min(432px, calc(var(--inv-w) - 32px))', gap: 2, padding: '8px 10px', borderRadius: 999 }}>
+            <nav className="op-glass fixed left-1/2 -translate-x-1/2 flex justify-between" style={{ bottom: 22, zIndex: 70, width: 'min(432px, calc(var(--inv-w) - 32px))', gap: 2, padding: '8px 10px', borderRadius: 999 }}>
               {NAV.map(([label, id]) => (
                 <button key={id} className="op-nav-btn" onClick={() => scrollToId(id)} style={{ flex: 1, border: 'none', cursor: 'pointer', background: 'transparent', color: c.navLabel, fontFamily: F.sans, fontSize: 9.5, letterSpacing: '.1em', textTransform: 'uppercase', padding: '9px 2px 8px', borderRadius: 999 }}>{label}</button>
               ))}
