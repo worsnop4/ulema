@@ -583,18 +583,25 @@ export default function MorningMistLuxeTheme({
             <Couple data={data} />
             <Acara data={data} />
             <LoveStory data={data} />
-            <Dresscode data={data} />
             <Gallery data={data} />
-            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
-            <Gift data={data} />
+
+            {/* Urutan baku Ulema: seluruh informasi tamu berdekatan, lalu RSVP,
+                lalu penutup. Sebelumnya sebagian di antaranya berada SESUDAH
+                formulir RSVP — tamu diminta mengisi kehadiran lebih dulu, baru
+                sesudah itu diberi tautan siaran atau ditunjukkan ke mana
+                mengirim kado. */}
+            <Dresscode data={data} />
             <LiveStream data={data} />
+            <Gift data={data} />
             <TurutMengundang data={data} />
+
+            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Footer data={data} groomNick={groomNick} brideNick={brideNick} dateLabel={dateLabel} />
 
             {/* Music toggle (equalizer) */}
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
-                className="fixed md:absolute flex items-center justify-center gap-0.5" style={{ right: 16, bottom: 92, zIndex: 50, width: 46, height: 46, borderRadius: 50, border: '1px solid rgba(233,239,244,.25)', background: 'rgba(16,23,32,.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer' }}>
+                className="fixed flex items-center justify-center gap-0.5" style={{ right: 'max(16px, calc(50vw - var(--inv-w) / 2 + 16px))', bottom: 92, zIndex: 50, width: 46, height: 46, borderRadius: 50, border: '1px solid rgba(233,239,244,.25)', background: 'rgba(16,23,32,.7)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer' }}>
                 {[0, 1, 2, 3].map(i => (
                   <span key={i} style={{ width: 2.5, borderRadius: 2, background: c.soft, height: 8, animation: musicPlaying ? `mm-eq ${0.7 + i * 0.13}s ease-in-out ${i * 0.1}s infinite` : 'none' }} />
                 ))}
@@ -602,7 +609,7 @@ export default function MorningMistLuxeTheme({
             )}
 
             {/* Bottom nav */}
-            <nav className="fixed md:absolute left-1/2 -translate-x-1/2 flex gap-1" style={{ bottom: 18, zIndex: 50, padding: '8px 10px', borderRadius: 999, background: 'rgba(16,23,32,.78)', border: '1px solid rgba(233,239,244,.16)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+            <nav className="fixed left-1/2 -translate-x-1/2 flex gap-1" style={{ bottom: 18, zIndex: 50, padding: '8px 10px', borderRadius: 999, background: 'rgba(16,23,32,.78)', border: '1px solid rgba(233,239,244,.16)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
               {NAV.map(([label, id]) => (
                 <button key={id} onClick={() => scrollToId(id)} style={{ border: 'none', background: 'transparent', color: c.soft3, fontFamily: F.sans, fontSize: 10.5, letterSpacing: '0.08em', padding: '9px 13px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label}</button>
               ))}

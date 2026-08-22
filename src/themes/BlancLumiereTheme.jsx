@@ -544,17 +544,24 @@ export default function BlancLumiereTheme({
             <Couple data={data} />
             <Acara data={data} />
             <LoveStory data={data} />
-            <Dresscode data={data} />
             <Gallery data={data} />
+
+            {/* Urutan baku Ulema: seluruh informasi tamu berdekatan, lalu RSVP,
+                lalu penutup. Sebelumnya sebagian di antaranya berada SESUDAH
+                formulir RSVP — tamu diminta mengisi kehadiran lebih dulu, baru
+                sesudah itu diberi tautan siaran atau ditunjukkan ke mana
+                mengirim kado. */}
+            <Dresscode data={data} />
             <LiveStream data={data} />
-            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
             <TurutMengundang data={data} />
+
+            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
 
             {/* Music toggle */}
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
-                className="fixed md:absolute flex items-center justify-center" style={{ bottom: 84, right: 20, zIndex: 55, width: 46, height: 46, borderRadius: 50, border: `1px solid ${c.line}`, background: 'rgba(255,255,255,.9)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', cursor: 'pointer', gap: 2.5, boxShadow: '0 10px 26px rgba(122,110,88,.2)' }}>
+                className="fixed flex items-center justify-center" style={{ bottom: 84, right: 'max(20px, calc(50vw - var(--inv-w) / 2 + 20px))', zIndex: 55, width: 46, height: 46, borderRadius: 50, border: `1px solid ${c.line}`, background: 'rgba(255,255,255,.9)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', cursor: 'pointer', gap: 2.5, boxShadow: '0 10px 26px rgba(122,110,88,.2)' }}>
                 {[0, 0.15, 0.3, 0.45].map((delay, i) => (
                   <span key={i} style={{ display: 'block', width: 2, height: '55%', background: c.gold, alignSelf: 'flex-end', animation: `bl-eq 0.9s ease-in-out ${delay}s infinite`, animationPlayState: musicPlaying ? 'running' : 'paused' }} />
                 ))}
@@ -562,7 +569,7 @@ export default function BlancLumiereTheme({
             )}
 
             {/* Bottom nav */}
-            <nav className="fixed md:absolute left-1/2 -translate-x-1/2 flex" style={{ bottom: 16, zIndex: 55, background: 'rgba(255,254,251,.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${c.line2}`, borderRadius: 999, padding: '9px 6px', gap: 2, boxShadow: '0 14px 36px rgba(122,110,88,.18)' }}>
+            <nav className="fixed left-1/2 -translate-x-1/2 flex" style={{ bottom: 16, zIndex: 55, background: 'rgba(255,254,251,.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${c.line2}`, borderRadius: 999, padding: '9px 6px', gap: 2, boxShadow: '0 14px 36px rgba(122,110,88,.18)' }}>
               {NAV.map(([label, id]) => (
                 <button key={id} onClick={() => scrollToId(id)} style={{ border: 'none', cursor: 'pointer', background: 'transparent', color: c.muted3, fontFamily: F.sans, fontWeight: 300, fontSize: 9.5, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '6px 8px' }}>{label}</button>
               ))}

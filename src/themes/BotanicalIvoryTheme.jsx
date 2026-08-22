@@ -703,13 +703,20 @@ export default function BotanicalIvoryTheme({
             <QuoteSection data={data} />
             <ProfileSection data={data} />
             <EventsSection events={events} />
-            <DresscodeSection data={data} />
-            <LiveStreamSection data={data} />
             <LoveStorySection data={data} />
             <GallerySection data={data} />
+
+            {/* Urutan baku Ulema: seluruh informasi tamu berdekatan, lalu RSVP,
+                lalu penutup. Sebelumnya sebagian di antaranya berada SESUDAH
+                formulir RSVP — tamu diminta mengisi kehadiran lebih dulu, baru
+                sesudah itu diberi tautan siaran atau ditunjukkan ke mana
+                mengirim kado. */}
+            <DresscodeSection data={data} />
+            <LiveStreamSection data={data} />
             <GiftSection data={data} />
-            <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <TurutMengundangSection data={data} />
+
+            <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <FooterSection bride={bride} groom={groom} />
             <StickyNav musicEnabled={musicEnabled} musicPlaying={musicPlaying} setMusicPlaying={setMusicPlaying} />
           </motion.div>

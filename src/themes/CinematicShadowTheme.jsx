@@ -1106,20 +1106,50 @@ export default function CinematicShadowTheme({
         {opened && (
           <motion.div className="flex flex-col w-full relative" style={{ zIndex: 1 }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9 }}>
-            <VideoHeroSection data={data} bride={bride} groom={groom} primaryEvent={primary} countdown={countdown} />
-            <ProfileSection data={data} />
+            <div id="cs-home"><VideoHeroSection data={data} bride={bride} groom={groom} primaryEvent={primary} countdown={countdown} /></div>
+            <div id="cs-mempelai"><ProfileSection data={data} /></div>
             <SaveTheDateSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
-            <EventsSection events={events} />
-            <LiveStreamingSection data={data} />
-            <DresscodeSection data={data} />
+            <div id="cs-acara"><EventsSection events={events} /></div>
             <LoveStorySection data={data} />
-            <GallerySection data={data} />
+            <div id="cs-galeri"><GallerySection data={data} /></div>
+
+            {/* Urutan baku Ulema: seluruh informasi tamu berdekatan, lalu RSVP,
+                lalu penutup. Sebelumnya sebagian di antaranya berada SESUDAH
+                formulir RSVP — tamu diminta mengisi kehadiran lebih dulu, baru
+                sesudah itu diberi tautan siaran atau ditunjukkan ke mana
+                mengirim kado. */}
+            <DresscodeSection data={data} />
+            <LiveStreamingSection data={data} />
             <GiftSection data={data} />
-            <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <TurutMengundangSection data={data} />
+
+            <div id="cs-rsvp"><WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} /></div>
             <ClosingSection data={data} bride={bride} groom={groom} />
 
             {data?.music !== false && <MusicToggleButton audioRef={audioRef} />}
+
+            {/* NAVIGASI BAWAH — tema terakhir yang belum punya. Fixed murni
+                dijangkarkan ke lebar kolom (--inv-w), bukan `fixed
+                md:absolute`: di layar >= 768px varian absolute yang menang dan
+                navigasinya berlabuh ke dasar dokumen, bukan ke layar. */}
+            <nav className="fixed flex" style={{
+              bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
+              width: 'min(420px, calc(var(--inv-w) - 28px))', gap: 2, padding: '7px 9px', borderRadius: 999,
+              background: 'rgba(26,26,26,.86)', border: `1px solid ${c.gold}44`,
+              backdropFilter: 'blur(16px) saturate(1.2)', WebkitBackdropFilter: 'blur(16px) saturate(1.2)',
+              boxShadow: '0 14px 32px rgba(0,0,0,.45)',
+            }}>
+              {[['Home', 'cs-home'], ['Mempelai', 'cs-mempelai'], ['Acara', 'cs-acara'], ['Galeri', 'cs-galeri'], ['RSVP', 'cs-rsvp']].map(([label, id]) => (
+                <button key={id} onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  style={{
+                    flex: 1, padding: '8px 2px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                    background: 'transparent', color: c.gold,
+                    fontFamily: "'Lato', sans-serif", fontSize: 9.5, letterSpacing: '.06em', textTransform: 'uppercase',
+                  }}>
+                  {label}
+                </button>
+              ))}
+            </nav>
           </motion.div>
         )}
       </div>

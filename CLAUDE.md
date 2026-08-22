@@ -182,24 +182,22 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
 7. **`themes` table only holds ids 7–21.** Ids 1–6 (Classic Elegance, Rose Garden, Midnight
    Gold, Ivory Dream, Lavender Bliss, Tropical Breeze) exist in `DEFAULT_THEMES` but were never
    seeded. Most real invitations sit on `theme_id: 1`, which the DB does not describe.
-8. **Structure audit 2026-08-22 — six bespoke themes still deviate from the house layout.**
-   The standard is: Cover → Hero (photo + names + date + countdown) → Quote → Mempelai → Acara →
-   Love Story → Galeri → *all* guest info (dresscode, live, gift, turut mengundang) → RSVP →
-   Penutup, plus a bottom nav anchored with plain `fixed`. Minang Elegant and Bordeaux Luxe were
-   brought in line; the rest were audited by script (strip comments first — matching raw source
-   gives false positives from prose in comments). Findings, worst first:
-   - **Cinematic Luxury renders no dresscode at all** — not a field-name slip, the section was
-     never written. Ids 10 and 11 both have a live invitation and **both fill dresscode**. It also
-     has no bottom nav and uses an early `if (!opened) return` instead of the usual gate.
-   - **Aurum Noir still hardwires `events[1]`** — a fifth theme with the bug fixed in four others
-     on 2026-08-16, missed because the task listed only four by name.
-   - **Guest info sits after the RSVP form** in Aurum Noir, Blanc Lumière, Morning Mist Luxe,
-     Opaline Pearl, Botanical Ivory and Cinematic Shadow, so guests are asked to confirm
-     attendance before being shown the livestream link. Opaline is the most-used bespoke theme
-     (6 invitations), so it is the one worth doing first.
-   - **`fixed md:absolute`** still on the nav/music button in Ashen Bloom, Aurum Noir, Blanc
-     Lumière, Morning Mist Luxe and Opaline Pearl (see the backdrop note above for why).
-   - **No bottom nav** in Cinematic Luxury and Cinematic Shadow.
+8. ~~Structure audit — six bespoke themes deviate from the house layout~~ — **done 2026-08-22.**
+   All fourteen bespoke themes now follow: Cover → Hero → Quote → Mempelai → Acara → Love Story →
+   Galeri → *all* guest info (dresscode, live, gift, turut mengundang) → RSVP → Penutup, with a
+   bottom nav anchored by plain `fixed`. What the audit turned up along the way:
+   - **Cinematic Luxury had no love-story and no dresscode section at all** — never written, not a
+     field-name slip. 24 of 53 invitations fill `loveStory`. Its RSVP form was also nested inside
+     the gift section, which is *why* livestream and turut mengundang sat behind it.
+   - **Aurum Noir was a fifth theme hardwiring `events[1]`**, missed on 2026-08-16 because that
+     task named only four themes. Its fix was one line: the tabbed UI already mapped over its list.
+   - **Opaline Pearl's music button used `calc(var(--inv-w) / 2 - 218px)`** — on desktop that is
+     22px from the *window* edge, far outside the 480px column. The right form is
+     `calc(50vw - var(--inv-w) / 2 + 16px)`; grep for the broken shape before trusting `md:absolute`
+     as the only symptom.
+   - **Auditing by grep needs comments stripped first.** Matching raw source reported five themes
+     using `md:absolute` when the string only appeared in explanatory comments — twice.
+   - Velour Olive has no bottom nav by design; its side dot `Rail` is the equivalent.
 9. **Velour Olive asks for a cover video nothing renders.** `themeType` does not mean "this theme
    uses video" — it means "the couple supplies the video": `FotoVideoForm.jsx` swaps the cover
    uploader from photo to video when it is `'video'`, and only `CinematicLuxuryTheme` ever reads

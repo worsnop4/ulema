@@ -525,18 +525,25 @@ export default function AshenBloomTheme({
             <Couple data={data} />
             <Acara data={data} />
             <LoveStory data={data} />
-            <Dresscode data={data} />
             <Gallery data={data} />
+
+            {/* Urutan baku Ulema: seluruh informasi tamu berdekatan, lalu RSVP,
+                lalu penutup. Sebelumnya sebagian di antaranya berada SESUDAH
+                formulir RSVP — tamu diminta mengisi kehadiran lebih dulu, baru
+                sesudah itu diberi tautan siaran atau ditunjukkan ke mana
+                mengirim kado. */}
+            <Dresscode data={data} />
             <LiveStream data={data} />
-            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Gift data={data} />
             <TurutMengundang data={data} />
+
+            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Footer data={data} groomNick={groomNick} brideNick={brideNick} heroDate={heroDate} />
 
             {/* Music toggle */}
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
-                className="fixed md:absolute flex items-end justify-center" style={{ bottom: 88, right: 14, zIndex: 55, width: 44, height: 44, borderRadius: 50, border: `1px solid ${c.line2}`, background: 'rgba(251,250,248,.92)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', cursor: 'pointer', gap: 3, paddingBottom: 14, boxShadow: '0 6px 18px rgba(60,55,48,.14)' }}>
+                className="fixed flex items-end justify-center" style={{ bottom: 88, right: 'max(14px, calc(50vw - var(--inv-w) / 2 + 14px))', zIndex: 55, width: 44, height: 44, borderRadius: 50, border: `1px solid ${c.line2}`, background: 'rgba(251,250,248,.92)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', cursor: 'pointer', gap: 3, paddingBottom: 14, boxShadow: '0 6px 18px rgba(60,55,48,.14)' }}>
                 {[['ab-eq1', '0.9s', 8], ['ab-eq2', '0.8s', 12], ['ab-eq3', '1s', 6]].map(([anim, dur, h], i) => (
                   <span key={i} style={{ width: 3, borderRadius: 2, background: c.terra, height: h, animation: `${anim} ${dur} ease-in-out infinite`, animationPlayState: musicPlaying ? 'running' : 'paused' }} />
                 ))}
@@ -544,7 +551,7 @@ export default function AshenBloomTheme({
             )}
 
             {/* Bottom nav */}
-            <nav className="fixed md:absolute left-1/2 -translate-x-1/2 flex" style={{ bottom: 18, zIndex: 55, background: 'rgba(46,44,41,.94)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 999, padding: '8px 10px', gap: 2, boxShadow: '0 10px 30px rgba(30,28,25,.3)' }}>
+            <nav className="fixed left-1/2 -translate-x-1/2 flex" style={{ bottom: 18, zIndex: 55, background: 'rgba(46,44,41,.94)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 999, padding: '8px 10px', gap: 2, boxShadow: '0 10px 30px rgba(30,28,25,.3)' }}>
               {NAV.map(([label, id]) => (
                 <button key={id} onClick={() => scrollToId(id)} style={{ border: 'none', cursor: 'pointer', background: 'transparent', color: '#e8e5df', fontFamily: F.sans, fontSize: 10.5, letterSpacing: '0.08em', padding: '8px 10px', borderRadius: 999 }}>{label}</button>
               ))}
