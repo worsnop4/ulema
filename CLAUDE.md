@@ -182,7 +182,25 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
 7. **`themes` table only holds ids 7–21.** Ids 1–6 (Classic Elegance, Rose Garden, Midnight
    Gold, Ivory Dream, Lavender Bliss, Tropical Breeze) exist in `DEFAULT_THEMES` but were never
    seeded. Most real invitations sit on `theme_id: 1`, which the DB does not describe.
-8. **Velour Olive asks for a cover video nothing renders.** `themeType` does not mean "this theme
+8. **Structure audit 2026-08-22 — six bespoke themes still deviate from the house layout.**
+   The standard is: Cover → Hero (photo + names + date + countdown) → Quote → Mempelai → Acara →
+   Love Story → Galeri → *all* guest info (dresscode, live, gift, turut mengundang) → RSVP →
+   Penutup, plus a bottom nav anchored with plain `fixed`. Minang Elegant and Bordeaux Luxe were
+   brought in line; the rest were audited by script (strip comments first — matching raw source
+   gives false positives from prose in comments). Findings, worst first:
+   - **Cinematic Luxury renders no dresscode at all** — not a field-name slip, the section was
+     never written. Ids 10 and 11 both have a live invitation and **both fill dresscode**. It also
+     has no bottom nav and uses an early `if (!opened) return` instead of the usual gate.
+   - **Aurum Noir still hardwires `events[1]`** — a fifth theme with the bug fixed in four others
+     on 2026-08-16, missed because the task listed only four by name.
+   - **Guest info sits after the RSVP form** in Aurum Noir, Blanc Lumière, Morning Mist Luxe,
+     Opaline Pearl, Botanical Ivory and Cinematic Shadow, so guests are asked to confirm
+     attendance before being shown the livestream link. Opaline is the most-used bespoke theme
+     (6 invitations), so it is the one worth doing first.
+   - **`fixed md:absolute`** still on the nav/music button in Ashen Bloom, Aurum Noir, Blanc
+     Lumière, Morning Mist Luxe and Opaline Pearl (see the backdrop note above for why).
+   - **No bottom nav** in Cinematic Luxury and Cinematic Shadow.
+9. **Velour Olive asks for a cover video nothing renders.** `themeType` does not mean "this theme
    uses video" — it means "the couple supplies the video": `FotoVideoForm.jsx` swaps the cover
    uploader from photo to video when it is `'video'`, and only `CinematicLuxuryTheme` ever reads
    the resulting `meta.coverVideo`. Velour Olive is marked `'video'` but paints its own shipped
@@ -190,7 +208,7 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
    gets offered the cover-photo box the theme actually falls back to. Gilded Palace is
    deliberately `'photo'` for this reason. Fixing Velour Olive is a one-word change in
    `DEFAULT_THEMES` plus the `themes` row, but it changes a live theme, so it needs a decision.
-9. **Bottom nav and music button use `fixed md:absolute`** in most bespoke themes. At ≥768px the
+10. **Bottom nav and music button use `fixed md:absolute`** in most bespoke themes. At ≥768px the
    `absolute` variant wins and anchors them to the content container instead of the screen, so
    they scroll away instead of staying put. Gilded Palace uses plain `fixed` anchored to
    `--inv-w` (see its `MusicButton`) — that is the pattern to copy when this is fixed elsewhere.
