@@ -275,7 +275,7 @@ const ProfileSection = ({ data }) => {
     </motion.div>
   )
   return (
-    <section className="w-full py-4 px-4">
+    <section id="bx-mempelai" className="w-full py-4 px-4">
       <Glass className="overflow-hidden">
         <div className="px-2 pt-8">
           <p className="text-center"><Label>Bride &amp; Groom</Label></p>
@@ -288,8 +288,20 @@ const ProfileSection = ({ data }) => {
   )
 }
 
-// ─── 4. COUNTDOWN ────────────────────────────────────────────────
-const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
+// ─── 2. HERO ─────────────────────────────────────────────────────
+// Menggantikan bagian hitung mundur yang dulu mengambang di tengah undangan,
+// terselip di antara Mempelai dan Acara.
+//
+// Setiap tema lain di repo ini membuka isinya dengan satu layar hero: foto,
+// nama, tanggal, lalu hitung mundur. Bordeaux dulu langsung melompat ke ayat,
+// dan angka hitung mundurnya baru muncul jauh di bawah — tamu yang baru
+// membuka undangan tidak pernah melihat foto maupun tanggalnya lebih dulu.
+//
+// Urutan cadangan fotonya mengikuti tema lain: meta.photo lebih dulu, karena
+// itulah kotak "Foto Utama" di editor dan itu yang pasangan kira akan muncul
+// di sini.
+const HeroSection = ({ data, bride, groom, countdown, primaryEvent }) => {
+  const heroPhoto = data?.meta?.photo || data?.meta?.coverPhoto || data?.groom?.photo || data?.bride?.photo || null
   const blocks = [
     { label: 'Hari', v: countdown?.d || 0 },
     { label: 'Jam', v: countdown?.h || 0 },
@@ -300,23 +312,55 @@ const CountdownSection = ({ countdown, primaryEvent, bride, groom }) => {
     ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Pernikahan+${groom}+%26+${bride}&dates=${primaryEvent.date.replace(/-/g, '')}T080000Z/${primaryEvent.date.replace(/-/g, '')}T120000Z`
     : null
   return (
-    <section className="w-full py-6 px-4">
+    <section id="bx-home" className="w-full py-6 px-4">
       <Glass className="p-8 flex flex-col items-center">
-        <Label>Save The Date</Label>
-        <Heading className="mb-8 text-center" style={{ fontSize: '2.2rem' }}>Menuju Hari Bahagia</Heading>
-        <div className="flex gap-3 justify-center mb-8">
+        <Label>The Wedding Of</Label>
+
+        {/* Bingkai emas yang sama dengan sampul, supaya keduanya terbaca
+            sebagai satu benda yang dilihat dua kali. */}
+        {heroPhoto && (
+          <motion.div className="mb-6 mt-2 relative p-[3px] rounded-full"
+            style={{ background: `linear-gradient(135deg, ${c.gold}, ${c.goldSoft}, ${c.gold})` }}
+            initial={{ opacity: 0, scale: 0.94 }} whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }} transition={{ duration: 0.8 }}>
+            <div className="w-44 h-56 rounded-full overflow-hidden relative" style={{ border: `2px solid ${c.wineDeep}` }}>
+              <img src={heroPhoto} alt="" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 rounded-full pointer-events-none" style={{ boxShadow: 'inset 0 0 30px rgba(0,0,0,0.4)' }} />
+            </div>
+          </motion.div>
+        )}
+
+        <Heading className="text-center leading-tight" style={{ fontSize: '2.6rem' }}>
+          {bride}
+        </Heading>
+        <span className="block my-1" style={{ fontFamily: "'Pinyon Script', cursive", fontSize: '1.6rem', color: c.gold }}>&amp;</span>
+        <Heading className="text-center leading-tight" style={{ fontSize: '2.6rem' }}>
+          {groom}
+        </Heading>
+
+        {primaryEvent?.date && (
+          <p className="mt-3 text-sm tracking-[0.2em] font-sans" style={{ color: c.text, opacity: 0.8 }}>
+            {fmtCoverDate(primaryEvent.date)}
+          </p>
+        )}
+
+        <GoldDivider />
+
+        <Label>Menuju Hari Bahagia</Label>
+        <div className="flex gap-3 justify-center mb-8 mt-2">
           {blocks.map((b, i) => (
             <motion.div key={b.label}
               className="w-16 h-16 flex flex-col items-center justify-center rounded-xl"
               style={{ background: 'rgba(201,162,75,0.08)', border: `1px solid ${c.glassBrd}` }}
               initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-              <span style={{ fontFamily: "'Cormorant Upright', serif", fontSize: '2rem', color: c.gold, fontWeight: 600, lineHeight: 1 }}>
+              <span style={{ fontFamily: "'Cormorant Upright', serif", fontSize: '2rem', color: c.gold, fontWeight: 600, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
                 {b.v.toString().padStart(2, '0')}
               </span>
               <span className="text-[8px] uppercase tracking-widest font-sans mt-0.5" style={{ color: c.text, opacity: 0.6 }}>{b.label}</span>
             </motion.div>
           ))}
         </div>
+
         {calendarUrl && (
           <a href={calendarUrl} target="_blank" rel="noreferrer"
             className="flex items-center gap-2 text-[12px] tracking-[0.25em] uppercase font-sans font-semibold px-6 py-2.5 rounded-full"
@@ -374,7 +418,7 @@ const EventsSection = ({ events }) => {
     )
   }
   return (
-    <section className="w-full py-4 px-4 flex flex-col gap-4">
+    <section id="bx-acara" className="w-full py-4 px-4 flex flex-col gap-4">
       <p className="text-center"><Label>Waktu &amp; Tempat</Label></p>
       {events.map(renderCard)}
     </section>
@@ -430,7 +474,7 @@ const GallerySection = ({ data }) => {
   const photos = data?.gallery || []
   if (!photos.length) return null
   return (
-    <section className="w-full py-4 px-4">
+    <section id="bx-galeri" className="w-full py-4 px-4">
       <Glass className="p-6">
         <p className="text-center"><Label>Our Moments</Label></p>
         <div className="grid grid-cols-2 gap-2 mt-2">
@@ -544,7 +588,7 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
   const inputStyle = { border: `1px solid ${c.glassBrd}`, background: 'rgba(201,162,75,0.05)', color: c.cream }
 
   return (
-    <section className="w-full py-6 px-4">
+    <section id="bx-rsvp" className="w-full py-6 px-4">
       <Glass className="p-8">
         <p className="text-center"><Label>Doa &amp; Kehadiran</Label></p>
         <Heading className="text-center mb-7" style={{ fontSize: '2.2rem' }}>Sampaikan Doa</Heading>
@@ -600,6 +644,48 @@ const WishRsvpSection = ({ data, wishes, onSubmitWish }) => {
 
 // ─── 10. FOOTER ──────────────────────────────────────────────────
 // ─── LIVE STREAMING (optional) ───────────────────────────────────
+// ─── DRESSCODE ───────────────────────────────────────────────────
+// Tema ini tidak pernah punya bagian dresscode sama sekali, padahal editor
+// menyediakan kolomnya dan 23 dari 53 undangan mengisinya — termasuk satu-
+// satunya undangan yang memakai tema ini. Warna dan catatan yang mereka pilih
+// selama ini tidak pernah sampai ke tamu.
+//
+// Satu bulatan warna, karena editor menyimpan satu warna. Gerbangnya menerima
+// catatan saja: pasangan boleh menulis aturan busana tanpa memilih warna.
+const DresscodeSection = ({ data }) => {
+  const dc = data?.dresscode || {}
+  if (!dc.name && !dc.color && !dc.notes) return null
+  return (
+    <section className="w-full py-6 px-4">
+      <Glass className="p-7">
+        <p className="text-center"><Label>Dresscode</Label></p>
+        <div className="flex items-center justify-center gap-4 mt-2">
+          {dc.color && (
+            <span className="flex-shrink-0 rounded-full"
+              style={{
+                width: 46, height: 46, background: dc.color,
+                border: `1px solid ${c.gold}`,
+                boxShadow: `0 0 0 4px rgba(201,162,75,0.12), 0 6px 16px rgba(0,0,0,0.28)`,
+              }} />
+          )}
+          <div style={{ minWidth: 0 }}>
+            {dc.name && (
+              <p style={{ fontFamily: "'Cormorant Upright', serif", fontSize: '1.35rem', fontStyle: 'italic', color: c.cream, margin: 0 }}>
+                {dc.name}
+              </p>
+            )}
+            {dc.notes && (
+              <p className="text-[13px] leading-relaxed font-sans mt-1" style={{ color: c.text, opacity: 0.72, margin: 0 }}>
+                {dc.notes}
+              </p>
+            )}
+          </div>
+        </div>
+      </Glass>
+    </section>
+  )
+}
+
 const LiveStreamSection = ({ data }) => {
   const platforms = data?.livestreamEnabled ? (data?.livestreamPlatforms || []).filter(p => p.url) : []
   if (!platforms.length) return null
@@ -675,6 +761,45 @@ const MotionVideoBg = () => (
   </div>
 )
 
+// ─── BOTTOM NAV ──────────────────────────────────────────────────
+// Sebelumnya tema ini tanpa navigasi bawah: tamu hanya bisa menggulir dari
+// atas ke bawah untuk mencari alamat acara.
+//
+// Fixed murni, tanpa `md:absolute`. Di layar >= 768px varian absolute yang
+// menang, dan navigasinya berlabuh ke dasar dokumen alih-alih ke layar lalu
+// ikut tergulir hilang. Penjangkaran ke --inv-w yang melakukan pekerjaan
+// yang tadinya diminta dari absolute.
+const NAV = [['Home', 'bx-home'], ['Mempelai', 'bx-mempelai'], ['Acara', 'bx-acara'], ['Galeri', 'bx-galeri'], ['RSVP', 'bx-rsvp']]
+
+const scrollToId = (id) => {
+  // Yang menggulir itu div bagian dalam InvitationLayout, bukan jendela;
+  // window.scrollTo di sini selalu tidak berefek.
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const BottomNav = ({ visible }) => (
+  <nav className="fixed flex" style={{
+    bottom: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
+    width: 'min(420px, calc(var(--inv-w) - 28px))', gap: 2, padding: '7px 9px', borderRadius: 999,
+    background: 'rgba(43,8,23,0.78)', border: `1px solid ${c.glassBrd}`,
+    backdropFilter: 'blur(16px) saturate(1.2)', WebkitBackdropFilter: 'blur(16px) saturate(1.2)',
+    boxShadow: '0 14px 32px rgba(0,0,0,0.4)',
+    opacity: visible ? 1 : 0, pointerEvents: visible ? 'auto' : 'none', transition: 'opacity .7s ease .3s',
+  }}>
+    {NAV.map(([label, id]) => (
+      <button key={id} className="bx-nav-btn" onClick={() => scrollToId(id)}
+        style={{
+          flex: 1, padding: '8px 2px', borderRadius: 999, border: 'none', cursor: 'pointer',
+          background: 'transparent', color: c.gold,
+          fontFamily: "'Nunito Sans', sans-serif", fontSize: 9.5, fontWeight: 600,
+          letterSpacing: '.06em', textTransform: 'uppercase',
+        }}>
+        {label}
+      </button>
+    ))}
+  </nav>
+)
+
 // ─── MAIN EXPORT ─────────────────────────────────────────────────
 export default function BordeauxLuxeTheme({
   data, countdown, opened, setOpened,
@@ -729,29 +854,52 @@ export default function BordeauxLuxeTheme({
 
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)}
-                className="fixed top-6 right-4 md:absolute md:top-6 md:right-4 z-50 w-11 h-11 rounded-full flex items-center justify-center transition-all"
-                style={{ background: `linear-gradient(135deg, ${c.gold}, ${c.goldSoft})`, color: c.wineDeep, boxShadow: `0 6px 18px ${c.wineDeep}` }}>
+                className="fixed z-50 w-11 h-11 rounded-full flex items-center justify-center transition-all"
+                style={{
+                  top: 24, right: 'max(16px, calc(50vw - var(--inv-w) / 2 + 16px))',
+                  background: `linear-gradient(135deg, ${c.gold}, ${c.goldSoft})`, color: c.wineDeep, boxShadow: `0 6px 18px ${c.wineDeep}`,
+                }}>
                 {musicPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
             )}
 
             <MotionVideoBg />
 
-            <div className="relative flex flex-col gap-5 pt-8 pb-6" style={{ zIndex: 2 }}>
+            {/* Urutan baku tema Ulema: hero, ayat, mempelai, acara, kisah,
+                galeri, lalu SEMUA informasi tamu berdekatan, baru RSVP, baru
+                penutup.
+
+                Sebelumnya hadiah terselip di antara galeri dan RSVP, sementara
+                live streaming dan turut mengundang justru berada SESUDAH
+                formulir RSVP — tamu diminta mengisi kehadiran lebih dulu, baru
+                sesudah itu diberi tautan siarannya, dan penutup jadi bukan
+                bagian terakhir yang bermakna. */}
+            <div className="relative flex flex-col gap-5 pt-8 pb-28" style={{ zIndex: 2 }}>
+              <HeroSection data={data} bride={bride} groom={groom}
+                countdown={countdown} primaryEvent={primary} />
               <QuoteSection data={data} />
               <ProfileSection data={data} />
-              <CountdownSection countdown={countdown} primaryEvent={primary} bride={bride} groom={groom} />
               <EventsSection events={events} />
               <LoveStorySection data={data} />
               <GallerySection data={data} />
-              <GiftSection data={data} />
-              <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
+
+              <DresscodeSection data={data} />
               <LiveStreamSection data={data} />
+              <GiftSection data={data} />
               <TurutMengundangSection data={data} />
+
+              <WishRsvpSection data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
               <FooterSection bride={bride} groom={groom} />
             </div>
           </motion.div>
         )}
+
+        {/* Di luar motion.div dengan sengaja. `position: fixed` terperangkap
+            oleh ancestor mana pun yang punya transform, dan pembungkus animasi
+            adalah tempat transform paling mungkin muncul — hari ini ia hanya
+            menganimasikan opacity, tapi menaruh nav di luarnya membuat sifat
+            itu tidak perlu terus dijaga. */}
+        <BottomNav visible={opened} />
       </div>
     </InvitationLayout>
   )
