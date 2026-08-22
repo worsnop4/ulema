@@ -324,9 +324,15 @@ const Couple = ({ data }) => {
   )
 }
 
-// ─── EVENTS (tabbed akad / resepsi) ──────────────────────────────
-const Events = ({ akad, resepsi }) => {
-  const list = [akad, resepsi].filter(Boolean)
+// ─── EVENTS (bertab, satu tab per sesi) ──────────────────────────
+// Dulu menerima dua prop, akad = events[0] dan resepsi = events[1], sehingga
+// sesi ketiga hilang tanpa peringatan. AcaraForm membiarkan pasangan menambah
+// sesi sebanyak yang mereka mau.
+//
+// Perbaikannya kecil karena UI tabnya sejak awal sudah me-map atas `list`:
+// begitu seluruh array masuk, sesi ketiga langsung mendapat tabnya sendiri.
+const Events = ({ events }) => {
+  const list = (events || []).filter(Boolean)
   const [tab, setTab] = useState(0)
   if (!list.length) return null
   const ev = list[tab] || list[0]
@@ -652,7 +658,7 @@ const BottomNav = () => {
     ['Galeri', 'aurum-galeri'], ['RSVP', 'aurum-rsvp'], ['Hadiah', 'aurum-gift'],
   ]
   return (
-    <nav className="fixed md:absolute left-1/2 -translate-x-1/2 flex gap-1" style={{ bottom: 16, zIndex: 40, background: 'rgba(10,8,7,.82)', backdropFilter: 'blur(10px)', border: `1px solid ${c.brd22}`, borderRadius: 999, padding: '8px 10px' }}>
+    <nav className="fixed left-1/2 -translate-x-1/2 flex gap-1" style={{ bottom: 16, zIndex: 40, background: 'rgba(10,8,7,.82)', backdropFilter: 'blur(10px)', border: `1px solid ${c.brd22}`, borderRadius: 999, padding: '8px 10px' }}>
       {items.map(([label, id]) => (
         <button key={id} onClick={() => scrollToId(id)} className="uppercase"
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.text3, fontFamily: F.sans, fontSize: 8, fontWeight: 600, letterSpacing: '0.18em', padding: '6px 8px' }}>
@@ -682,9 +688,9 @@ export default function AurumNoirTheme({
 }) {
   const groom = data?.groom?.nickname || 'Raka'
   const bride = data?.bride?.nickname || 'Nadia'
-  const akad = data?.events?.[0]
-  const resepsi = data?.events?.[1]
-  const primary = akad || {}
+  const events = data?.events || []
+  // Sesi pertama tetap jadi acuan hitung mundur dan tanggal di sampul.
+  const primary = events[0] || {}
 
   const handleOpen = () => {
     setAnimateClose(true)
@@ -723,7 +729,7 @@ export default function AurumNoirTheme({
           <motion.div className="flex flex-col w-full relative" style={{ zIndex: 1 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9 }}>
             {data?.music !== false && (
               <button onClick={() => setMusicPlaying(!musicPlaying)} title="Musik"
-                className="fixed md:absolute flex items-center justify-center" style={{ top: 20, right: 16, zIndex: 40, width: 44, height: 44, borderRadius: '50%', background: 'rgba(10,8,7,.7)', backdropFilter: 'blur(8px)', border: `1px solid ${c.brd40}`, cursor: 'pointer' }}>
+                className="fixed flex items-center justify-center" style={{ top: 20, right: 'max(16px, calc(50vw - var(--inv-w) / 2 + 16px))', zIndex: 40, width: 44, height: 44, borderRadius: '50%', background: 'rgba(10,8,7,.7)', backdropFilter: 'blur(8px)', border: `1px solid ${c.brd40}`, cursor: 'pointer' }}>
                 {musicPlaying ? <EqIcon playing /> : <VolumeX size={16} color={c.goldBright} />}
               </button>
             )}
@@ -731,14 +737,21 @@ export default function AurumNoirTheme({
             <Hero data={data} bride={bride} groom={groom} primaryEvent={primary} countdown={countdown} />
             <Quote data={data} />
             <div id="aurum-couple"><Couple data={data} /></div>
-            <div id="aurum-acara"><Events akad={akad} resepsi={resepsi} /></div>
+            <div id="aurum-acara"><Events events={events} /></div>
             <LoveStory data={data} />
-            <Dresscode data={data} />
             <div id="aurum-galeri"><Gallery data={data} /></div>
-            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
-            <Gift data={data} />
+
+            {/* Urutan baku Ulema: seluruh informasi tamu berdekatan, lalu RSVP,
+                lalu penutup. Sebelumnya hadiah, live streaming, dan turut
+                mengundang berada SESUDAH formulir RSVP — tamu diminta mengisi
+                kehadiran dulu, baru sesudah itu diberi tautan siarannya — dan
+                dresscode terselip sendirian di antara kisah dan galeri. */}
+            <Dresscode data={data} />
             <LiveStream data={data} />
+            <Gift data={data} />
             <TurutMengundang data={data} />
+
+            <WishRsvp data={data} wishes={wishes} onSubmitWish={onSubmitWish} />
             <Footer bride={bride} groom={groom} primaryEvent={primary} footerPhoto={data?.meta?.footerPhoto} />
 
             <BottomNav />
