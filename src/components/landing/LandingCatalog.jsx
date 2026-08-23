@@ -121,16 +121,21 @@ export default function LandingCatalog() {
 
                 {/* Card body (Glassmorphism overlay at bottom)
 
-                    Dirapatkan dengan sengaja. Panel ini dulu memakan sekitar 191px
+                    Dirapatkan dua kali. Panel ini semula memakan sekitar 191px
                     dari kartu setinggi 380px — lebih dari separuh — sehingga
                     mockup HP di thumbnail selalu terpotong di bagian bawahnya,
-                    justru bagian yang paling menjual. Yang dipangkas hanya ruang
-                    kosong (padding, jarak antar baris, tinggi tombol) dan ukuran
-                    teks; tidak ada satu pun informasi yang dihilangkan —
-                    deskripsi tetap dua baris, harga coret tetap tampil. */}
+                    justru bagian yang paling menjual. Putaran pertama memangkas
+                    ruang kosong dan ukuran teks; putaran kedua membuang
+                    deskripsi tema sama sekali, menyisakan nama dan harga.
+                    Sekarang sekitar 113px, 30% kartu.
+
+                    Deskripsinya tidak hilang dari sistem — ia tetap tersimpan di
+                    tabel themes dan tetap bisa diedit dari panel admin, hanya
+                    tidak lagi ditampilkan di kartu. Yang membedakan tema di mata
+                    pembeli sekarang thumbnail-nya, dan itu memang yang paling
+                    dilihat. */}
                 <div className="px-4 py-3 z-20 bg-[#1C232E]/60 backdrop-blur-md border-t border-white/10 flex flex-col">
-                  <h3 className="font-semibold text-white text-[15px] leading-snug mb-0.5 drop-shadow-sm line-clamp-1">{t.name}</h3>
-                  <p className="text-gray-300 text-[11px] mb-2 leading-snug drop-shadow-sm line-clamp-2">{t.desc || 'Tema undangan elegan'}</p>
+                  <h3 className="font-semibold text-white text-[15px] leading-snug mb-1.5 drop-shadow-sm line-clamp-1">{t.name}</h3>
                   <div className="flex items-baseline gap-2 mb-2.5">
                     <span className="text-gray-400 text-[10px] line-through">{prices.original}</span>
                     <span className="text-[#DDC497] font-bold text-base drop-shadow-sm">{prices.promo}</span>
