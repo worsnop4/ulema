@@ -378,7 +378,7 @@ const MusicButton = ({ musicPlaying, setMusicPlaying, visible }) => (
 const Quote = ({ data }) => {
   const quote = data?.quote || 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup agar kamu cenderung dan merasa tenteram kepadanya, serta dijadikan-Nya di antaramu rasa kasih dan sayang.'
   return (
-    <div id="vo-quote" className="vo-babak flex items-center justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+    <div id="vo-quote" className="vo-babak flex items-center justify-center" style={{ boxSizing: 'border-box', padding: '86px 26px' }}>
       <div className="relative" style={{
         padding: '52px 30px', borderRadius: 22, background: 'rgba(20,21,15,.42)',
         border: '1px solid rgba(217,188,122,.25)', backdropFilter: 'blur(14px)', textAlign: 'center',
@@ -452,7 +452,7 @@ const PersonCard = ({ person }) => (
 )
 
 const Mempelai = ({ data }) => (
-  <div id="vo-mempelai" className="vo-babak flex flex-col items-center justify-center text-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+  <div id="vo-mempelai" className="vo-babak flex flex-col items-center justify-center text-center" style={{ boxSizing: 'border-box', padding: '86px 26px' }}>
     <p style={{ fontFamily: F.sans, fontSize: 10, letterSpacing: '5px', color: 'rgba(244,239,230,.7)', margin: '0 0 14px' }}>MEMPELAI</p>
     <h2 style={{ fontFamily: F.serif, fontSize: 30, color: c.ivory, margin: '0 0 14px' }}>Assalamualaikum Wr. Wb.</h2>
     <p style={{ fontFamily: F.sans, fontSize: 13, lineHeight: 1.75, color: 'rgba(244,239,230,.7)', maxWidth: 320, margin: '0 0 30px' }}>
@@ -502,7 +502,7 @@ const Acara = ({ data }) => {
   // has filled any event in yet.
   const events = data?.events?.length ? data.events : [null]
   return (
-    <div id="vo-acara" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', gap: 18 }}>
+    <div id="vo-acara" className="vo-babak flex flex-col justify-center" style={{ boxSizing: 'border-box', padding: '86px 26px', gap: 18 }}>
       {events.map((ev, i) => <EventCard key={ev?.id || i} ev={ev || {}} />)}
     </div>
   )
@@ -513,7 +513,7 @@ const LoveStory = ({ data }) => {
   const stories = data?.loveStory || []
   if (!stories.length) return null
   return (
-    <div id="vo-story" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', gap: 14 }}>
+    <div id="vo-story" className="vo-babak flex flex-col justify-center" style={{ boxSizing: 'border-box', padding: '86px 26px', gap: 14 }}>
       {stories.map((s, i) => (
         <div key={s.id || i} className="flex" style={{
           gap: 14, padding: '16px 18px', borderRadius: 20, background: 'rgba(20,21,15,.42)',
@@ -535,7 +535,7 @@ const Galeri = ({ data }) => {
   const photos = data?.gallery || []
   if (!photos.length) return null
   return (
-    <div id="vo-galeri" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+    <div id="vo-galeri" className="vo-babak flex flex-col justify-center" style={{ boxSizing: 'border-box', padding: '86px 26px' }}>
       <div className="grid grid-cols-2" style={{ gap: 10 }}>
         {photos.map((ph, i) => {
           const src = typeof ph === 'string' ? ph : ph?.src
@@ -670,7 +670,7 @@ const FamiliesBlock = ({ data }) => {
 const Informasi = ({ data, flags }) => {
   if (!flags.hasInfo) return null
   return (
-    <div id="vo-info" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px', gap: 14 }}>
+    <div id="vo-info" className="vo-babak flex flex-col justify-center" style={{ boxSizing: 'border-box', padding: '86px 26px', gap: 14 }}>
       {flags.hasDresscode && <DresscodeBlock data={data} />}
       {flags.hasLive && <LiveStreamBlock data={data} />}
       {flags.hasGift && <GiftBlock data={data} />}
@@ -713,7 +713,7 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
   })
 
   return (
-    <div id="vo-rsvp" className="vo-babak flex flex-col justify-center" style={{ minHeight: '100%', boxSizing: 'border-box', padding: '64px 26px' }}>
+    <div id="vo-rsvp" className="vo-babak flex flex-col justify-center" style={{ boxSizing: 'border-box', padding: '86px 26px' }}>
       <form onSubmit={submit} className="flex flex-col" style={{
         gap: 10, padding: 22, borderRadius: 22, background: 'rgba(20,21,15,.5)',
         border: '1px solid rgba(217,188,122,.24)', backdropFilter: 'blur(12px)', marginBottom: 22,
@@ -874,24 +874,17 @@ export default function VelourOliveTheme({
           64% { opacity: 1; }
           96%, 100% { transform: translate3d(135%,0,0) skewX(-12deg); opacity: 0; }
         }
-        /* Was 'proximity', which only snaps when the scroll happens to end near
-           a snap point. Any firmer flick parked the reader between two babak —
-           and because each babak centres its content in a full-height box, that
-           parked view is the empty bottom half of one meeting the empty top
-           half of the next, which is what read as a huge gap. It was never
-           extra space in the markup; it was two half-empty screens shown at
-           once. 'mandatory' makes every rest position a babak boundary, so that
-           view stops being reachable.
+        /* Tidak ada scroll-snap di sini, dan itu perubahan yang disengaja.
+           Sebelumnya tiap babak setinggi satu layar penuh dan dikunci snap.
+           Bentuknya rapi, tapi tamu jadi hanya pernah melihat satu hal pada
+           satu waktu — hitung mundur, doa, dan mempelai tidak pernah bisa
+           muncul bersama dalam satu bingkai seperti di tema-tema lain, dan
+           undangan terasa ditelusuri satu per satu alih-alih dibaca.
 
-           The handoff spec warned against mandatory because a babak taller than
-           the screen could trap the reader, unable to stop and read its lower
-           half. That does not apply: CSS Scroll Snap §6.1 says when a snap area
-           is larger than the snapport, every scroll position in which the area
-           covers the snapport is itself a valid snap position — so overflowing
-           babak (two event cards, a long love story, RSVP above its wish list)
-           scroll freely, and only the short ones are held to their boundary. */
-        .vo-scroll { scroll-snap-type: y mandatory; }
-        .vo-babak { scroll-snap-align: start; }
+           Sekarang babaknya setinggi isinya dan mengalir menyambung; hanya
+           slide awal dan penutup yang mengambil satu layar penuh, karena
+           keduanya memang momen yang berdiri sendiri. Rail titik tetap ada
+           dan tetap bisa ditekan, jadi tamu tidak kehilangan cara melompat. */
       `}</style>
 
       <div id="top" className="relative w-full h-full overflow-hidden"

@@ -265,6 +265,15 @@ dipaksa menonton sembilan chapter.
 | 5 | **Metafora fisik** — amplop dibuka, surat dilipat, kartu ditarik dari saku | Berkesan & bertema | Sedang-tinggi | Transform 3D rentan di Android lawas |
 | 6 | **Buku / page-flip** | Klasik | Tinggi | Perf buruk + konten panjang tidak muat halaman |
 
+> **Catatan lapangan (2026-08-23).** Memories dibangun dengan nomor 1 dan **dibatalkan setelah
+> dilihat di HP**. Deck satu-babak-satu-layar membuat tamu hanya pernah melihat satu hal pada satu
+> waktu: hitung mundur, doa, dan mempelai tidak pernah bisa muncul bersama dalam satu bingkai
+> seperti di tema lain, dan undangan terasa ditelusuri satu per satu alih-alih dibaca. Velour Olive
+> punya gejala yang sama dan ikut diubah. Keduanya sekarang mengalir menyambung, dan yang
+> dipertahankan dari bentuk deck justru bagian terbaiknya: bilah progres yang bisa ditekan dan pil
+> navigasi. **Sebelum memilih paradigma non-scroll, tanyakan dulu apakah tamu perlu melihat dua
+> bagian sekaligus** — untuk undangan, jawabannya ternyata ya.
+
 **Rekomendasi saya: nomor 1, di-hybrid dengan 4.** Story deck sebagai kerangka — tiap chapter
 punya lapisan motion sendiri, transisinya bisa digarap serius — dengan chapter pembuka memakai
 timeline sinematik (poster → intro → loop) seperti Gilded Palace yang sudah terbukti. Chapter RSVP

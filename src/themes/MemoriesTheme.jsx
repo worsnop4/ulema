@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import InvitationLayout from './components/InvitationLayout'
 import { MUSIC_URLS } from '../pages/InvitationTemplate'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
@@ -7,36 +7,25 @@ import { THEMES } from '../config/constants'
 // ═══════════════════════════════════════════════════════════════════
 //  MEMORIES — kategori Motion (MOT-004)
 //
-//  Tema pertama yang tidak menggulir ke bawah sebagai satu halaman
-//  panjang. Undangannya sebuah "story deck": sembilan babak, satu layar
-//  penuh masing-masing, dikunci scroll-snap, dengan bilah progres di atas
-//  seperti Stories dan pil navigasi di bawah.
+//  Undangan yang mengalir menyambung, dengan panggung video yang diam di
+//  belakangnya dan kelopak vektor jatuh di depannya.
 //
-//  Dua hal yang membuat bentuk ini berdiri, dan keduanya tidak kelihatan
-//  dari tampilannya:
+//  Bentuk pertamanya bukan ini. Tema ini lahir sebagai "story deck": sembilan
+//  babak, satu layar penuh masing-masing, dikunci scroll-snap di dalam
+//  scroller milik tema sendiri. Rapi di prototipe, dan salah di tangan tamu —
+//  yang terlihat hanya satu hal pada satu waktu, dan hitung mundur, doa, serta
+//  mempelai tidak pernah bisa muncul bersama dalam satu bingkai seperti di
+//  tema-tema lain. Undangan dibaca mengalir, bukan ditelusuri satu per satu.
 //
-//  1. Deck-nya scroller milik tema sendiri, bukan scroller milik shell.
-//     Tema tidak memiliki div scroller di InvitationLayout, jadi menaruh
-//     scroll-snap di sana berarti menata elemen milik orang lain dari jauh.
-//     Karena tinggi akar tema di sini persis satu layar, scroller shell
-//     tidak pernah punya sesuatu untuk digulir dan tidak pernah bertengkar
-//     dengan deck.
+//  Jadi babaknya sekarang setinggi isinya dan bergulir di scroller milik
+//  shell, sama seperti tema lain; hanya pembuka dan penutup yang mengambil
+//  satu layar penuh. Yang tersisa dari bentuk lama justru bagian terbaiknya:
+//  bilah progres yang bisa ditekan di atas dan pil navigasi di bawah, yang
+//  membuat tamu bisa melompat ke bagian mana pun tanpa menggulir jauh.
 //
-//  2. Tiap babak menyatakan perilaku luapannya. Empat hal di undangan
-//     nyata tidak punya batas atas — ucapan, foto galeri, nama turut
-//     mengundang, dan jumlah acara — dan layar berukuran tetap diam-diam
-//     mengandaikan isinya muat. Babak yang isinya bisa tumbuh memakai
-//     min-height (boleh memanjang), babak yang tingginya dikunci memberi
-//     gulir internal pada daftarnya. Deck tanpa keduanya akan memotong
-//     ucapan ke-empat tanpa ada yang tahu.
-//
-//  Latarnya vektor sepenuhnya: dua gumpalan cahaya yang hanyut, kabut mawar
-//  di atas, cahaya emas yang bernapas di bawah, dan tiga belas kelopak
-//  jatuh. Nol byte aset, tajam di DPI berapa pun, dan punya alpha asli —
-//  hal yang justru tidak dimiliki video generatif. Bila kelak sebuah klip
-//  sinematik ditambahkan, tempatnya di Panggung sebagai lapisan paling
-//  bawah dengan pola poster → intro → loop di GildedPalaceTheme.jsx; sisa
-//  gerak di halaman ini tetap vektor dan tidak perlu diubah.
+//  Babak aktif dilacak dengan IntersectionObserver, bukan scrollTop: yang
+//  menggulir bukan elemen milik tema, dan IntersectionObserver melaporkan apa
+//  yang benar-benar terlihat tanpa perlu tahu siapa yang menggulir.
 // ═══════════════════════════════════════════════════════════════════
 
 // Satu berkas video saja, bukan pasangan intro + loop. Footage-nya cuma 5
@@ -210,21 +199,26 @@ const Portrait = ({ src, alt, initial, w, h, radius }) => (
   </div>
 )
 
-// (a) tinggi dikunci satu layar — isinya harus muat, atau punya gulir sendiri.
-const ScreenFixed = ({ id, children, pad = '64px 26px 86px' }) => (
+// Bagian mengalir mengikuti tinggi isinya, dan itu disengaja.
+//
+// Versi pertama tema ini mengunci satu babak = satu layar penuh dengan
+// scroll-snap. Bentuknya rapi tapi salah untuk undangan: tamu hanya pernah
+// melihat satu hal pada satu waktu, dan hitung mundur, doa, serta mempelai
+// tidak pernah bisa muncul bersama dalam satu bingkai seperti di tema-tema
+// lain. Aliran yang menyambung juga yang membuat undangan terasa dibaca,
+// bukan ditelusuri satu per satu.
+const Section = ({ id, children, pad = '86px 26px' }) => (
   <section id={id} style={{
-    height: 'var(--inv-h)', scrollSnapAlign: 'start',
-    boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
-    justifyContent: 'center', padding: pad, overflowY: 'auto',
+    position: 'relative', zIndex: 1, boxSizing: 'border-box', padding: pad,
   }}>{children}</section>
 )
 
-// (b) boleh tumbuh — dipakai babak yang jumlah isinya ditentukan pasangan.
-const ScreenGrow = ({ id, children, pad = '64px 26px 86px' }) => (
+// Hanya pembuka dan penutup yang mengambil satu layar penuh — keduanya memang
+// momen berdiri sendiri, bukan bacaan yang bersambung.
+const ScreenFull = ({ id, children, pad = '86px 26px' }) => (
   <section id={id} style={{
-    minHeight: 'var(--inv-h)', scrollSnapAlign: 'start',
-    boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
-    justifyContent: 'center', padding: pad,
+    position: 'relative', zIndex: 1, minHeight: 'var(--inv-h)', boxSizing: 'border-box',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: pad,
   }}>{children}</section>
 )
 
@@ -233,7 +227,7 @@ const ScreenGrow = ({ id, children, pad = '64px 26px 86px' }) => (
 // ═══════════════════════════════════════════════════════════════════
 
 const Hero = ({ groomNick, brideNick, dateLabel, guestName, countdown, countdownEnabled, onNext }) => (
-  <ScreenFixed id="me-home" pad="64px 28px 86px">
+  <ScreenFull id="me-home" pad="86px 28px">
     <div className="me-rise" style={{ margin: 'auto 0', width: '100%', textAlign: 'center' }}>
       <Cap>The Wedding Of</Cap>
       <Rule w={44} style={{ margin: '16px auto 22px' }} />
@@ -278,19 +272,19 @@ const Hero = ({ groomNick, brideNick, dateLabel, guestName, countdown, countdown
       fontFamily: 'var(--me-mono)', fontSize: 9, letterSpacing: '.2em',
       textTransform: 'uppercase', color: 'var(--me-ink-soft)',
     }}>geser ke atas ↑</button>
-  </ScreenFixed>
+  </ScreenFull>
 )
 
 const Quote = ({ quote }) => (
-  <ScreenFixed id="me-quote" pad="64px 34px 86px">
-    <div style={{ margin: 'auto 0', textAlign: 'center' }}>
+  <Section id="me-quote" pad="86px 34px">
+    <div style={{ textAlign: 'center' }}>
       <div style={{ fontFamily: 'var(--me-display)', fontSize: 40, color: 'var(--me-blush)', lineHeight: 0.6 }}>&ldquo;</div>
       <p style={{ fontSize: 19, fontStyle: 'italic', lineHeight: 1.75, color: 'var(--me-ink)', margin: '14px 0 0', textWrap: 'pretty' }}>
         {quote}
       </p>
       <Rule style={{ margin: '26px auto 0' }} />
     </div>
-  </ScreenFixed>
+  </Section>
 )
 
 const PersonCard = ({ person, label }) => {
@@ -321,20 +315,20 @@ const PersonCard = ({ person, label }) => {
 }
 
 const Mempelai = ({ data }) => (
-  <ScreenFixed id="me-mempelai">
-    <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 26 }}>
+  <Section id="me-mempelai">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
       <Cap style={{ textAlign: 'center' }}>Mempelai</Cap>
       {(data?.groom?.name || data?.groom?.nickname) && <PersonCard person={data.groom} label="Mempelai Pria" />}
       {(data?.bride?.name || data?.bride?.nickname) && <PersonCard person={data.bride} label="Mempelai Wanita" />}
     </div>
-  </ScreenFixed>
+  </Section>
 )
 
 // Seluruh array dipetakan, bukan events[0] dan events[1]: sudah ada
 // undangan yang menyimpan tiga sesi, dan yang ketiga hilang tanpa jejak.
 const Acara = ({ events }) => (
-  <ScreenGrow id="me-acara">
-    <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 18 }}>
+  <Section id="me-acara">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <Cap style={{ textAlign: 'center' }}>Acara</Cap>
       {events.map((ev, i) => (
         <div key={i} style={{ ...cardStyle, background: 'rgba(255,255,255,.7)', border: '1px solid rgba(198,163,116,.3)', padding: '22px 20px', textAlign: 'center' }}>
@@ -353,12 +347,12 @@ const Acara = ({ events }) => (
         </div>
       ))}
     </div>
-  </ScreenGrow>
+  </Section>
 )
 
 const LoveStory = ({ loveStory }) => (
-  <ScreenGrow id="me-story">
-    <div style={{ margin: 'auto 0' }}>
+  <Section id="me-story">
+    <div>
       <Cap style={{ textAlign: 'center', marginBottom: 22 }}>Cerita Kami</Cap>
       <div style={{ position: 'relative', paddingLeft: 26, display: 'flex', flexDirection: 'column', gap: 22 }}>
         <div style={{ position: 'absolute', left: 5, top: 6, bottom: 6, width: 1, background: 'linear-gradient(180deg, var(--me-gold), rgba(198,163,116,0))' }} />
@@ -372,12 +366,12 @@ const LoveStory = ({ loveStory }) => (
         ))}
       </div>
     </div>
-  </ScreenGrow>
+  </Section>
 )
 
 const Galeri = ({ gallery }) => (
-  <ScreenGrow id="me-galeri" pad="64px 22px 86px">
-    <div style={{ margin: 'auto 0' }}>
+  <Section id="me-galeri" pad="86px 22px">
+    <div>
       <Cap style={{ textAlign: 'center', marginBottom: 18 }}>Galeri</Cap>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {gallery.map((g, i) => (
@@ -387,7 +381,7 @@ const Galeri = ({ gallery }) => (
         ))}
       </div>
     </div>
-  </ScreenGrow>
+  </Section>
 )
 
 // Informasi tamu selalu sebelum RSVP. Alasannya perilaku, bukan estetika:
@@ -404,8 +398,8 @@ const Informasi = ({ data, copiedKey, copy }) => {
     : []
 
   return (
-    <ScreenGrow id="me-info">
-      <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <Section id="me-info">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Cap style={{ textAlign: 'center' }}>Informasi Tamu</Cap>
 
         {hasDresscode && (
@@ -495,7 +489,7 @@ const Informasi = ({ data, copiedKey, copy }) => {
           </div>
         )}
       </div>
-    </ScreenGrow>
+    </Section>
   )
 }
 
@@ -530,8 +524,8 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
   }
 
   return (
-    <ScreenGrow id="me-rsvp">
-      <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Section id="me-rsvp">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Cap style={{ textAlign: 'center' }}>Ucapan &amp; RSVP</Cap>
 
         <form onSubmit={submit} style={{ ...cardStyle, background: 'rgba(255,255,255,.72)', border: '1px solid rgba(198,163,116,.28)', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -589,12 +583,12 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
           )}
         </div>
       </div>
-    </ScreenGrow>
+    </Section>
   )
 }
 
 const Penutup = ({ data, groomNick, brideNick, onHome }) => (
-  <ScreenFixed id="me-penutup" pad="64px 30px 86px">
+  <ScreenFull id="me-penutup" pad="86px 30px 116px">
     <div style={{ margin: 'auto 0', textAlign: 'center' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 26 }}>
         <Portrait src={data?.meta?.footerPhoto} alt="" initial={initialOf(groomNick)}
@@ -612,7 +606,7 @@ const Penutup = ({ data, groomNick, brideNick, onHome }) => (
         Kembali ke awal
       </button>
     </div>
-  </ScreenFixed>
+  </ScreenFull>
 )
 
 // ═══════════════════════════════════════════════════════════════════
@@ -753,7 +747,6 @@ export default function MemoriesTheme({
   musicPlaying, setMusicPlaying, audioRef,
   wishes, onSubmitWish, guestName,
 }) {
-  const deckRef = useRef(null)
   const [active, setActive] = useState(0)
   const [coverGone, setCoverGone] = useState(false)
   const [petals] = useState(seedPetals)
@@ -809,13 +802,29 @@ export default function MemoriesTheme({
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const onScroll = (e) => {
-    const deck = e.currentTarget
-    const kids = Array.from(deck.children).filter(k => k.id)
-    let a = 0
-    kids.forEach((k, i) => { if (k.offsetTop <= deck.scrollTop + 8) a = i })
-    if (a !== active) setActive(a)
-  }
+  // Babak aktif dilacak lewat IntersectionObserver, bukan lewat scrollTop.
+  // Yang menggulir sekarang div milik shell, bukan elemen milik tema, dan
+  // membaca scrollTop dari elemen yang bukan miliknya adalah cara yang rapuh.
+  // IntersectionObserver tidak peduli siapa yang menggulir — ia melaporkan
+  // apa yang benar-benar terlihat, termasuk lewat kliping induk.
+  const chapterKey = chapters.map(ch => ch[0]).join(',')
+  useEffect(() => {
+    const ids = chapterKey.split(',')
+    const els = ids.map(id => document.getElementById(id)).filter(Boolean)
+    if (!els.length) return
+    // rootMargin -50%/-50% meruntuhkan layar jadi satu garis di tengahnya,
+    // sehingga persis satu bagian yang pernah berpotongan: yang benar-benar
+    // sedang dibaca. Pola yang sama dipakai Velour Olive.
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return
+        const i = ids.indexOf(e.target.id)
+        if (i >= 0) setActive(i)
+      })
+    }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 })
+    els.forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [chapterKey])
 
   // Cover dilepas lewat state sendiri, bukan digantung pada !opened: kalau
   // digantung, ia lepas di commit yang sama dengan setOpened dan animasi
@@ -828,11 +837,6 @@ export default function MemoriesTheme({
     setTimeout(() => setCoverGone(true), 820)
   }
 
-  // Deck dikunci selama cover masih terpasang, supaya gulir yang tidak
-  // sengaja tidak memindahkan babak di balik cover.
-  useEffect(() => {
-    if (!coverGone && deckRef.current) deckRef.current.scrollTop = 0
-  }, [coverGone])
 
   return (
     <InvitationLayout layout={THEMES.MEMORIES} data={data}>
@@ -868,9 +872,6 @@ export default function MemoriesTheme({
           --me-dur-slow: 900ms;
           --me-ease: cubic-bezier(.22,.61,.36,1);
         }
-
-        .me-deck { scrollbar-width: none; }
-        .me-deck::-webkit-scrollbar { display: none; }
 
         .me-outline {
           border-radius: 999px;
@@ -920,12 +921,11 @@ export default function MemoriesTheme({
             animation: none !important;
             transition-duration: 1ms !important;
           }
-          .me-root .me-deck { scroll-behavior: auto; }
         }
       `}</style>
 
-      <div className="me-root relative" style={{
-        height: 'var(--inv-h)', flexShrink: 0, overflow: 'hidden',
+      <div className="me-root relative w-full flex flex-col" style={{
+        minHeight: 'var(--inv-h)',
         fontFamily: 'var(--me-body)', color: 'var(--me-ink)', background: 'var(--me-ivory)',
       }}>
         {musicEnabled && (
@@ -936,37 +936,21 @@ export default function MemoriesTheme({
 
         <Progress chapters={chapters} active={active} visible={opened} go={go} />
 
-        {/* mandatory. Sempat diturunkan ke proximity karena saya kira snap
-            wajib akan memerangkap babak yang lebih tinggi dari satu layar —
-            itu keliru. Spesifikasi scroll-snap mengecualikan snap area yang
-            lebih besar dari snapport: setiap posisi di mana area itu menutupi
-            layar adalah posisi snap yang sah, jadi babak panjang tetap bisa
-            digulir sampai habis. Velour Olive sudah membuktikannya di
-            produksi dengan babak minHeight 100% dan snap mandatory.
-            Proximity justru yang menimbulkan masalah nyata: tanpa kuncian,
-            gulir bisa berhenti di ruang kosong antar babak, dan itu yang
-            terbaca sebagai "jeda antar tab terlalu jauh". */}
-        <div ref={deckRef} className="me-deck" onScroll={onScroll} style={{
-          height: 'var(--inv-h)', overflowY: 'auto', overflowX: 'hidden',
-          scrollSnapType: 'y mandatory', position: 'relative', zIndex: 1,
-        }}>
-          <Hero groomNick={groomNick} brideNick={brideNick} dateLabel={dateLabel}
-            guestName={guestName} countdown={countdown}
-            countdownEnabled={(data?.countdownEnabled ?? true) && events.length > 0}
-            onNext={() => go(chapters[Math.min(active + 1, chapters.length - 1)][0])} />
+        <Hero groomNick={groomNick} brideNick={brideNick} dateLabel={dateLabel}
+          guestName={guestName} countdown={countdown}
+          countdownEnabled={(data?.countdownEnabled ?? true) && events.length > 0}
+          onNext={() => go(chapters[Math.min(active + 1, chapters.length - 1)][0])} />
 
-          {hasQuote && <Quote quote={data.quote} />}
-          {hasMempelai && <Mempelai data={data} />}
-          {events.length > 0 && <Acara events={events} />}
-          {loveStory.length > 0 && <LoveStory loveStory={loveStory} />}
-          {gallery.length > 0 && <Galeri gallery={gallery} />}
-          {hasInfo && <Informasi data={data} copiedKey={copiedKey} copy={copy} />}
+        {hasQuote && <Quote quote={data.quote} />}
+        {hasMempelai && <Mempelai data={data} />}
+        {events.length > 0 && <Acara events={events} />}
+        {loveStory.length > 0 && <LoveStory loveStory={loveStory} />}
+        {gallery.length > 0 && <Galeri gallery={gallery} />}
+        {hasInfo && <Informasi data={data} copiedKey={copiedKey} copy={copy} />}
 
-          <RsvpUcapan wishes={wishes} onSubmitWish={onSubmitWish} />
+        <RsvpUcapan wishes={wishes} onSubmitWish={onSubmitWish} />
 
-          <Penutup data={data} groomNick={groomNick} brideNick={brideNick} onHome={() => go('me-home')} />
-
-        </div>
+        <Penutup data={data} groomNick={groomNick} brideNick={brideNick} onHome={() => go('me-home')} />
 
         <BottomNav chapters={chapters} activeId={activeId} visible={opened} go={go} />
         {musicEnabled && <MusicButton musicPlaying={musicPlaying} setMusicPlaying={setMusicPlaying} visible={opened} />}
