@@ -107,7 +107,7 @@ export default function LandingCatalog() {
                     </div>
                   )}
                   {/* Subtle dark gradient overlay at the bottom to ensure text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C232E]/90 via-[#1C232E]/20 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C232E]/80 via-[#1C232E]/10 to-transparent pointer-events-none"></div>
                 </div>
                 
                 {/* Badges Overlay */}
@@ -119,19 +119,27 @@ export default function LandingCatalog() {
                 {/* Spacer to push content to bottom */}
                 <div className="flex-1 z-10 pointer-events-none"></div>
 
-                {/* Card body (Glassmorphism overlay at bottom) */}
-                <div className="p-4 z-20 bg-[#1C232E]/60 backdrop-blur-md border-t border-white/10 flex flex-col">
-                  <h3 className="font-semibold text-white text-base mb-1 drop-shadow-sm">{t.name}</h3>
-                  <p className="text-gray-300 text-xs mb-3 leading-relaxed drop-shadow-sm line-clamp-2">{t.desc || 'Tema undangan elegan'}</p>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-gray-400 text-xs line-through">{prices.original}</span>
-                    <span className="text-[#DDC497] font-bold text-lg drop-shadow-sm">{prices.promo}</span>
+                {/* Card body (Glassmorphism overlay at bottom)
+
+                    Dirapatkan dengan sengaja. Panel ini dulu memakan sekitar 191px
+                    dari kartu setinggi 380px — lebih dari separuh — sehingga
+                    mockup HP di thumbnail selalu terpotong di bagian bawahnya,
+                    justru bagian yang paling menjual. Yang dipangkas hanya ruang
+                    kosong (padding, jarak antar baris, tinggi tombol) dan ukuran
+                    teks; tidak ada satu pun informasi yang dihilangkan —
+                    deskripsi tetap dua baris, harga coret tetap tampil. */}
+                <div className="px-4 py-3 z-20 bg-[#1C232E]/60 backdrop-blur-md border-t border-white/10 flex flex-col">
+                  <h3 className="font-semibold text-white text-[15px] leading-snug mb-0.5 drop-shadow-sm line-clamp-1">{t.name}</h3>
+                  <p className="text-gray-300 text-[11px] mb-2 leading-snug drop-shadow-sm line-clamp-2">{t.desc || 'Tema undangan elegan'}</p>
+                  <div className="flex items-baseline gap-2 mb-2.5">
+                    <span className="text-gray-400 text-[10px] line-through">{prices.original}</span>
+                    <span className="text-[#DDC497] font-bold text-base drop-shadow-sm">{prices.promo}</span>
                   </div>
                   <div className="flex gap-2">
-                    <a href={`/invite/demo?theme=${t.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center border border-gray-400 text-gray-300 hover:bg-white/10 hover:text-white py-2.5 px-2 rounded-xl text-xs font-semibold transition-all">
+                    <a href={`/invite/demo?theme=${t.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center border border-gray-400 text-gray-300 hover:bg-white/10 hover:text-white py-2 px-2 rounded-lg text-[11px] font-semibold transition-all">
                       Lihat Preview
                     </a>
-                    <Link to={`/login?register=true&category=${t.category}&themeName=${encodeURIComponent(t.name)}`} className="order-btn flex-1 text-center bg-[#DDC497] text-[#1C232E] hover:opacity-90 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all shadow-lg">
+                    <Link to={`/login?register=true&category=${t.category}&themeName=${encodeURIComponent(t.name)}`} className="order-btn flex-1 text-center bg-[#DDC497] text-[#1C232E] hover:opacity-90 py-2 px-2 rounded-lg text-[11px] font-semibold transition-all shadow-lg">
                       Pesan Sekarang
                     </Link>
                   </div>
