@@ -81,6 +81,14 @@ const timeOf = (ev) => {
 }
 const initialOf = (s) => (s || '').trim().charAt(0).toUpperCase() || '·'
 
+// giftAddress itu OBJEK { enabled, recipient, phone, address }, bukan string.
+// Ia punya sakelarnya sendiri di RekeningForm, jadi keberadaan objeknya tidak
+// berarti pasangan ingin menampilkannya — objek kosong tetap truthy.
+const giftAddrOf = (data) => {
+  const ga = data?.giftAddress
+  return ga?.enabled && (ga.address || ga.recipient || ga.phone) ? ga : null
+}
+
 // Kelopak di-seed sekali lewat LCG, bukan Math.random() saat render:
 // react-hooks/purity melarang pembacaan tak-murni di badan komponen, dan
 // posisi yang diacak ulang tiap render akan membuat kelopaknya meloncat
@@ -390,7 +398,7 @@ const Informasi = ({ data, copiedKey, copy }) => {
   const hasDresscode = Boolean(dresscode.name || dresscode.notes)
   const live = data?.livestreamEnabled === true ? (data?.livestreamPlatforms || []).filter(l => l?.url) : []
   const accounts = (data?.accounts || []).filter(Boolean)
-  const giftAddress = data?.giftAddress || ''
+  const giftAddr = giftAddrOf(data)
   const families = data?.turutMengundangEnabled === true
     ? (data?.families || []).filter(f => (f?.members || []).some(Boolean))
     : []
@@ -426,7 +434,7 @@ const Informasi = ({ data, copiedKey, copy }) => {
           </div>
         )}
 
-        {(accounts.length > 0 || giftAddress) && (
+        {(accounts.length > 0 || giftAddr) && (
           <div style={cardStyle}>
             <CardTitle>Hadiah</CardTitle>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
@@ -444,10 +452,25 @@ const Informasi = ({ data, copiedKey, copy }) => {
                   }}>{copiedKey === i ? 'Tersalin' : 'Salin'}</button>
                 </div>
               ))}
-              {giftAddress && (
+              {giftAddr && (
                 <div style={{ border: '1px dashed rgba(198,163,116,.5)', borderRadius: 'var(--mm-r-input)', padding: '12px 14px' }}>
                   <div style={{ fontFamily: 'var(--mm-mono)', fontSize: 9.5, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--mm-gold)' }}>Kirim Hadiah</div>
-                  <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--mm-ink)', marginTop: 5 }}>{giftAddress}</div>
+                  {giftAddr.recipient && (
+                    <div style={{ fontSize: 13.5, color: 'var(--mm-ink)', marginTop: 6 }}>Penerima: {giftAddr.recipient}</div>
+                  )}
+                  {giftAddr.phone && (
+                    <div style={{ fontSize: 13, color: 'var(--mm-ink-soft)', marginTop: 2 }}>No. HP: {giftAddr.phone}</div>
+                  )}
+                  {giftAddr.address && (
+                    <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--mm-ink)', marginTop: 5, whiteSpace: 'pre-line' }}>{giftAddr.address}</div>
+                  )}
+                  {giftAddr.address && (
+                    <button onClick={() => copy(String(giftAddr.address), 'addr')} style={{
+                      marginTop: 10, cursor: 'pointer', padding: '8px 14px', borderRadius: 999, border: 'none',
+                      background: 'var(--mm-blush)', color: 'var(--mm-rose-deep)',
+                      fontFamily: 'var(--mm-mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
+                    }}>{copiedKey === 'addr' ? 'Tersalin' : 'Salin Alamat'}</button>
+                  )}
                 </div>
               )}
             </div>
@@ -759,7 +782,7 @@ export default function MemoriesTheme({
   const hasInfo = Boolean(
     data?.dresscode?.name || data?.dresscode?.notes ||
     (data?.livestreamEnabled === true && (data?.livestreamPlatforms || []).some(l => l?.url)) ||
-    (data?.accounts || []).length > 0 || data?.giftAddress ||
+    (data?.accounts || []).length > 0 || giftAddrOf(data) ||
     (data?.turutMengundangEnabled === true && (data?.families || []).some(f => (f?.members || []).some(Boolean)))
   )
 

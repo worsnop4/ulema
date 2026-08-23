@@ -139,9 +139,16 @@ butuh data yang belum ada, **tulis catatan** — jangan diam-diam diasumsikan ad
 ### Galeri — `data.gallery` (array, opsional)
 Tiap item `{ id, src }`. Jumlahnya **tidak terbatas** — bisa 3, bisa 30.
 
-### Hadiah — `data.accounts` (array, opsional) + `data.giftAddress` (string, opsional)
-`type` ("bank"/"ewallet") · `bank` · **`holder`** (bukan `name`) · **`number`** (bukan `no`).
-Sediakan tombol **Salin**. Section tetap tampil kalau hanya `giftAddress` yang diisi.
+### Hadiah — `data.accounts` (array, opsional) + `data.giftAddress` (**objek**, opsional)
+`accounts[]`: `type` ("bank"/"ewallet") · `bank` · **`holder`** (bukan `name`) · **`number`** (bukan `no`).
+Sediakan tombol **Salin** untuk nomornya.
+
+`giftAddress` **bukan string** — ia objek `{ enabled, recipient, phone, address }` dengan sakelarnya
+sendiri. Tampilkan hanya bila `giftAddress.enabled === true` **dan** salah satu dari
+`address`/`recipient`/`phone` terisi: objek kosong tetap truthy, jadi `{giftAddress && …}` akan
+lolos untuk pasangan yang justru mematikannya. `address` bisa berisi baris baru — render dengan
+`white-space: pre-line`. Section tetap tampil kalau hanya alamat ini yang diisi tanpa satu pun
+rekening.
 
 ### RSVP & Ucapan — `data.rsvps` (array) + form kirim
 `name` · **`wish`** · `rsvp` ("hadir"/"tidak_hadir") · `time` ("Baru saja").

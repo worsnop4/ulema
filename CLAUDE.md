@@ -155,6 +155,10 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
 ## Data-shape gotchas (verify against `src/types/invitation.js`, don't assume)
 
 - Gift accounts: `data.accounts` with fields `{ bank, holder, number, type }` (NOT `bankAccounts`/`accountName`).
+- `data.giftAddress` is an **object** `{ enabled, recipient, phone, address }`, not a string, and it
+  carries its own switch. `{giftAddress && …}` is wrong twice over: an empty object is truthy, and
+  rendering it as a child throws "Objects are not valid as a React child" — which the theme error
+  boundary turns into a full-page "koneksi terputus" screen with nothing in the UI naming the cause.
 - Names: `data.bride` / `data.groom` are `Person` objects (`name`, `nickname`, `photo`, `father`, `mother`, …). There is no birth-order field.
 - Wishes/RSVP: `data.rsvps` array.
 - Always use optional chaining (`?.`) when reading invitation data — fields are user-filled and often empty.
