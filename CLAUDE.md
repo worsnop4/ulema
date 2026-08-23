@@ -73,8 +73,21 @@ Keep the master in gitignored `design-assets/`; ship a cut-down `intro` + `loop`
   exactly on frame 0. Dissolving into a forward head moves the loop's start far from the intro's
   end (that seam fell to 23 dB and was visible). Never assume a "static" shot is static — this
   ballroom's frames one second apart measure only 22.5 dB.
+- **A dolly/zoom shot loops by ping-pong, not by a reversed-head dissolve.** The dissolve trick
+  assumes the head and tail are near the same framing; on a push-in they are at very different
+  scales and the cross-fade reads as a double image. Playing the clip forward then backward turns
+  the dolly into a breath and is seamless by construction — drop the duplicated frame at both the
+  turn and the wrap (`reverse,trim=start_frame=1:end_frame=<N>`). Memories measures 45.8 dB at the
+  turn and 37.9 dB at the wrap against a 40.8 dB adjacent-frame baseline.
 - **Verify all three seams with PSNR** (poster→intro, intro→loop, loop wrap). Above ~30 dB the
   difference is compression noise and the swap can be hard-cut; below that it shows.
+- **Generated footage arrives with a watermark and an audio track.** Crop the watermark rather
+  than `delogo` it (delogo smears over busy areas), and strip the audio — a video element carrying
+  sound can have its autoplay refused, and the theme has its own music player.
+- **Measure the footage's own contrast before choosing the veil over it.** Memories' ballroom
+  scores 2.60–4.18 against the theme's ink — failing AA everywhere — so text can never sit on it
+  bare. A flat veil strong enough to fix that washes the video out; a vertical gradient (thin over
+  the band with no text, .80 where centred content actually sits) keeps both.
 - Set the loop's `preload` to `none` until the intro is playing, so opening the page fetches only
   the poster rather than every megabyte at once.
 

@@ -39,6 +39,32 @@ import { THEMES } from '../config/constants'
 //  gerak di halaman ini tetap vektor dan tidak perlu diubah.
 // ═══════════════════════════════════════════════════════════════════
 
+// Satu berkas video saja, bukan pasangan intro + loop. Footage-nya cuma 5
+// detik dolly maju tanpa babak "kedatangan", jadi tidak ada yang bisa
+// diceritakan sebuah intro; momen pembukaannya sudah dipegang cover.
+//
+// Loop-nya ping-pong: maju lalu mundur, 240 frame / 10 detik. Untuk gerakan
+// dolly ini itu satu-satunya cara yang benar — melarutkan ekor ke kepala yang
+// dibalik (cara Gilded Palace) mempertemukan dua frame dengan skala yang jauh
+// berbeda dan akan terbaca sebagai bayangan ganda. Ping-pong justru mengubah
+// dolly-nya jadi tarikan napas: masuk, keluar, terus begitu.
+//
+// Ketiga sambungannya diukur terhadap baseline footage-nya sendiri, bukan
+// terhadap ambang tetap. Dua frame bersebelahan di tengah adegan ini mencetak
+// 40,8 dB; titik baliknya 45,8 dB dan titik putarannya 37,9 dB. Keduanya
+// setara gerak frame-ke-frame biasa, jadi tidak ada sentakan di mana pun.
+//
+// 784x1112 pada CRF 24 veryslow: 2,03 MB, VMAF 91,8 diukur pada ukuran tampil.
+// Sumbernya 784x1176 dan tidak di-downscale — di kolom 480px pada layar 3x
+// video ini sudah di bawah kerapatan tampilan, jadi memperkecilnya hanya
+// merusak tanpa menghemat yang berarti. 64 baris terbawah dipotong: di situ
+// letak watermark generatornya. Trek audio bawaannya dibuang — tema ini punya
+// pemutar musiknya sendiri, dan video ber-audio bisa membuat autoplay ditolak.
+const A = {
+  poster: '/themes/Motion/theme-5/poster.jpg',
+  loop:   '/themes/Motion/theme-5/loop.mp4',
+}
+
 // ─── DATE HELPERS ────────────────────────────────────────────────
 const ID_DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 const ID_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -81,42 +107,47 @@ const seedPetals = () => {
 // ikut tergulir pergi. Trio left/transform/--inv-w yang menjangkarkannya ke
 // kolom undangan, bukan ke jendela — di desktop kolomnya hanya 480px di
 // tengah layar yang bisa 1920px.
-const Panggung = ({ petals }) => (
+const Panggung = ({ petals, stageOn, still }) => (
   <div className="fixed pointer-events-none" style={{
     top: 0, left: '50%', transform: 'translateX(-50%)',
     width: 'var(--inv-w)', height: 'var(--inv-h)', zIndex: 0, overflow: 'hidden',
   }}>
-    <div style={{ position: 'absolute', inset: 0, background: 'var(--mm-ivory)' }} />
+    {/* Poster selalu terpasang, videonya baru menyusul. Frame pertama loop
+        diambil dari poster ini, jadi saat video mengambil alih tidak ada yang
+        berubah di layar — dan tamu yang tidak pernah membuka undangannya tidak
+        pernah mengunduh 2 MB-nya. */}
+    <div style={{ position: 'absolute', inset: 0, background: `center/cover no-repeat url('${A.poster}')` }} />
 
-    <div className="mm-blob" style={{
-      position: 'absolute', top: '-18%', left: '-24%', width: '86%', height: '46%',
-      borderRadius: '50%', filter: 'blur(58px)', opacity: 0.85,
-      background: 'radial-gradient(circle, rgba(217,160,164,.62), rgba(217,160,164,0) 70%)',
-      animation: 'mm-drift-a 26s ease-in-out infinite',
-    }} />
-    <div className="mm-blob" style={{
-      position: 'absolute', bottom: '-14%', right: '-22%', width: '80%', height: '42%',
-      borderRadius: '50%', filter: 'blur(64px)', opacity: 0.7,
-      background: 'radial-gradient(circle, rgba(198,163,116,.5), rgba(198,163,116,0) 70%)',
-      animation: 'mm-drift-b 32s ease-in-out infinite',
-    }} />
+    {stageOn && !still && (
+      <video className="mm-stage-video" autoPlay muted loop playsInline preload="auto" poster={A.poster}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}>
+        <source src={A.loop} type="video/mp4" />
+      </video>
+    )}
 
+    {/* Tabir ivory, dan ketebalannya dihitung bukan dikira. Teks undangan
+        berdiri langsung di atas gambar ini, dan videonya sendiri jatuh di
+        kontras 2,60–4,18 untuk warna teks utama — gagal AA di seluruh pita.
+        Tabirnya bergradasi karena rata membuat aulanya hambar: tipis di 18%
+        teratas supaya kanopi bunganya tetap hidup (di sana tidak ada teks yang
+        berdiri), lalu menebal ke .80 dari 34% ke bawah, tempat semua konten
+        yang di-tengah-kan sebenarnya duduk. Pada .80 di pita tergelap: teks
+        utama 8,19 dan teks sekunder 5,2 — keduanya lolos AA. */}
     <div style={{
       position: 'absolute', inset: 0,
-      background: 'radial-gradient(120% 70% at 50% -10%, rgba(251,247,244,.20) 0%, rgba(251,247,244,.86) 58%, var(--mm-ivory) 100%)',
+      background: 'linear-gradient(180deg, rgba(251,247,244,.46) 0%, rgba(251,247,244,.54) 18%, rgba(251,247,244,.80) 34%, rgba(251,247,244,.82) 100%)',
     }} />
+
     <div style={{
-      position: 'absolute', top: 0, left: 0, right: 0, height: '34%',
-      background: 'linear-gradient(180deg, rgba(217,160,164,.42) 0%, rgba(247,228,227,.16) 62%, transparent 100%)',
-    }} />
-    <div className="mm-glow" style={{
       position: 'absolute', bottom: 0, left: 0, right: 0, height: '16%',
       background: 'linear-gradient(0deg, rgba(198,163,116,.18) 0%, transparent 100%)',
       animation: 'mm-breathe 9s ease-in-out infinite',
     }} />
 
+    {/* Kelopak tetap vektor, tidak ikut ke dalam video: alpha-nya asli, tajam
+        di DPI berapa pun, dan warnanya ikut palet tema. */}
     {petals.map(p => (
-      <div key={p.key} className="mm-petal" style={{
+      <div key={p.key} style={{
         position: 'absolute', top: '-6%', left: `${p.left}%`,
         width: p.size, height: p.size * 0.72, opacity: p.op,
         borderRadius: '60% 40% 55% 45% / 55% 62% 38% 45%',
@@ -577,7 +608,7 @@ const Cover = ({ data, groomNick, brideNick, dateLabel, guestName, onOpen, anima
       position: 'absolute', inset: 0,
       background: data?.meta?.coverPhoto
         ? `center/cover no-repeat url('${data.meta.coverPhoto}')`
-        : 'linear-gradient(160deg, #F0D7D6, #EACFCE)',
+        : `center/cover no-repeat url('${A.poster}')`,
     }} />
     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(156,96,104,.34) 0%, rgba(251,247,244,.72) 62%, var(--mm-ivory) 100%)' }} />
 
@@ -703,6 +734,16 @@ export default function MemoriesTheme({
   const [active, setActive] = useState(0)
   const [coverGone, setCoverGone] = useState(false)
   const [petals] = useState(seedPetals)
+
+  // Videonya baru dipasang setelah undangan dibuka: sebelum itu yang tampil
+  // poster 149 KB, bukan loop 2 MB.
+  const [stageOn, setStageOn] = useState(false)
+
+  // Dibaca lewat lazy initializer, bukan saat render: membaca matchMedia di
+  // badan komponen adalah pembacaan tak-murni yang dilarang react-hooks/purity.
+  const [reduceMotion] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+  )
   const { copiedKey, copy } = useCopyToClipboard()
 
   const groomNick = data?.groom?.nickname || data?.groom?.name || 'Mempelai Pria'
@@ -759,6 +800,7 @@ export default function MemoriesTheme({
   const handleOpen = () => {
     setAnimateClose?.(true)
     setOpened?.(true)
+    setStageOn(true)
     if (musicEnabled) setMusicPlaying?.(true)
     setTimeout(() => setCoverGone(true), 820)
   }
@@ -781,7 +823,12 @@ export default function MemoriesTheme({
           --mm-rose-deep: #9C6068;
           --mm-gold: #C6A374;
           --mm-ink: #4B3A3C;
-          --mm-ink-soft: #836F71;
+          /* Digelapkan dari #836F71 milik prototipe. Warna itu sudah hanya
+             mencapai kontras 4,40 di atas ivory polos — di bawah ambang AA
+             sebelum ada video sama sekali — dan di atas panggung bertabir ia
+             turun ke 3,8. #645154 mencetak 4,91 di pita tergelap dan 6,28 di
+             atas kartu, dan tetap terbaca lebih ringan dari --mm-ink. */
+          --mm-ink-soft: #645154;
 
           --mm-display: 'Italiana', serif;
           --mm-body: 'Cormorant Garamond', serif;
@@ -805,7 +852,11 @@ export default function MemoriesTheme({
         .mm-outline {
           border-radius: 999px;
           border: 1px solid var(--mm-rose);
-          background: transparent;
+          /* Bukan transparan. Sebagian besar tombol ini duduk di atas kartu,
+             tapi "Kembali ke awal" di penutup berdiri langsung di atas
+             panggung, dan rose-deep di sana hanya 3,9 — kurang untuk teks
+             sekecil 9,5px. Isi tipis ini mengangkatnya tanpa mengubah bentuk. */
+          background: rgba(255,255,255,.55);
           color: var(--mm-rose-deep);
           font-family: var(--mm-mono);
           font-size: 9.5px;
@@ -815,6 +866,8 @@ export default function MemoriesTheme({
           transition: background var(--mm-dur) var(--mm-ease);
         }
         .mm-outline:hover { background: var(--mm-blush); }
+
+        .mm-stage-video { animation: mm-in 900ms var(--mm-ease) both; }
 
         .mm-root button:focus-visible,
         .mm-root a:focus-visible,
@@ -834,15 +887,6 @@ export default function MemoriesTheme({
           0%   { transform: translate3d(0, -10%, 0) rotate(0deg); }
           100% { transform: translate3d(26px, calc(var(--inv-h) + 60px), 0) rotate(260deg); }
         }
-        @keyframes mm-drift-a {
-          0%, 100% { transform: translate3d(0, 0, 0); }
-          50%      { transform: translate3d(9%, 5%, 0); }
-        }
-        @keyframes mm-drift-b {
-          0%, 100% { transform: translate3d(0, 0, 0); }
-          50%      { transform: translate3d(-8%, -6%, 0); }
-        }
-
         .mm-rise { animation: mm-up var(--mm-dur-slow) var(--mm-ease) both; }
 
         /* Tamu yang meminta gerak dikurangi tetap mendapat halaman yang utuh:
@@ -865,7 +909,7 @@ export default function MemoriesTheme({
           <audio ref={audioRef} src={data?.musicUrl || MUSIC_URLS[data?.musicId || 1] || MUSIC_URLS[1]} loop />
         )}
 
-        <Panggung petals={petals} />
+        <Panggung petals={petals} stageOn={stageOn} still={reduceMotion} />
 
         <Progress chapters={chapters} active={active} visible={opened} go={go} />
 
