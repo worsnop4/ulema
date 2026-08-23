@@ -127,7 +127,7 @@ const Panggung = ({ petals, stageOn, still }) => (
     <div style={{ position: 'absolute', inset: 0, background: `center/cover no-repeat url('${A.poster}')` }} />
 
     {stageOn && !still && (
-      <video className="mm-stage-video" autoPlay muted loop playsInline preload="auto" poster={A.poster}
+      <video className="me-stage-video" autoPlay muted loop playsInline preload="auto" poster={A.poster}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}>
         <source src={A.loop} type="video/mp4" />
       </video>
@@ -149,7 +149,7 @@ const Panggung = ({ petals, stageOn, still }) => (
     <div style={{
       position: 'absolute', bottom: 0, left: 0, right: 0, height: '16%',
       background: 'linear-gradient(0deg, rgba(198,163,116,.18) 0%, transparent 100%)',
-      animation: 'mm-breathe 9s ease-in-out infinite',
+      animation: 'me-breathe 9s ease-in-out infinite',
     }} />
 
     {/* Kelopak tetap vektor, tidak ikut ke dalam video: alpha-nya asli, tajam
@@ -159,8 +159,8 @@ const Panggung = ({ petals, stageOn, still }) => (
         position: 'absolute', top: '-6%', left: `${p.left}%`,
         width: p.size, height: p.size * 0.72, opacity: p.op,
         borderRadius: '60% 40% 55% 45% / 55% 62% 38% 45%',
-        background: 'linear-gradient(140deg, #FBE9E8, var(--mm-rose))',
-        animation: `mm-fall ${p.dur.toFixed(1)}s linear ${p.delay.toFixed(1)}s infinite`,
+        background: 'linear-gradient(140deg, #FBE9E8, var(--me-rose))',
+        animation: `me-fall ${p.dur.toFixed(1)}s linear ${p.delay.toFixed(1)}s infinite`,
       }} />
     ))}
   </div>
@@ -172,17 +172,17 @@ const Panggung = ({ petals, stageOn, still }) => (
 
 const Cap = ({ children, style = {} }) => (
   <div style={{
-    fontFamily: 'var(--mm-mono)', fontSize: 'var(--mm-fs-cap)', letterSpacing: '.3em',
-    textTransform: 'uppercase', color: 'var(--mm-ink-soft)', ...style,
+    fontFamily: 'var(--me-mono)', fontSize: 'var(--me-fs-cap)', letterSpacing: '.3em',
+    textTransform: 'uppercase', color: 'var(--me-ink-soft)', ...style,
   }}>{children}</div>
 )
 
 const Rule = ({ w = 36, style = {} }) => (
-  <div style={{ height: 1, width: w, background: 'var(--mm-gold)', ...style }} />
+  <div style={{ height: 1, width: w, background: 'var(--me-gold)', ...style }} />
 )
 
 const CardTitle = ({ children }) => (
-  <div style={{ fontFamily: 'var(--mm-display)', fontSize: 'var(--mm-fs-h2)', lineHeight: 1.25, color: 'var(--mm-rose-deep)' }}>
+  <div style={{ fontFamily: 'var(--me-display)', fontSize: 'var(--me-fs-h2)', lineHeight: 1.25, color: 'var(--me-rose-deep)' }}>
     {children}
   </div>
 )
@@ -190,7 +190,7 @@ const CardTitle = ({ children }) => (
 const cardStyle = {
   background: 'rgba(255,255,255,.66)',
   border: '1px solid rgba(198,163,116,.26)',
-  borderRadius: 'var(--mm-r-card)',
+  borderRadius: 'var(--me-r-card)',
   padding: 18,
 }
 
@@ -201,26 +201,26 @@ const cardStyle = {
 const Portrait = ({ src, alt, initial, w, h, radius }) => (
   <div style={{
     width: w, height: h, flex: '0 0 auto', borderRadius: radius, overflow: 'hidden',
-    background: 'linear-gradient(150deg, var(--mm-blush), #F0D7D6)',
+    background: 'linear-gradient(150deg, var(--me-blush), #F0D7D6)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   }}>
     {src
       ? <img src={src} alt={alt} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-      : <span style={{ fontFamily: 'var(--mm-display)', fontSize: Math.round(w * 0.42), color: 'var(--mm-rose-deep)', opacity: 0.55 }}>{initial}</span>}
+      : <span style={{ fontFamily: 'var(--me-display)', fontSize: Math.round(w * 0.42), color: 'var(--me-rose-deep)', opacity: 0.55 }}>{initial}</span>}
   </div>
 )
 
 // (a) tinggi dikunci satu layar — isinya harus muat, atau punya gulir sendiri.
-const ScreenFixed = ({ id, children, pad = '92px 26px' }) => (
+const ScreenFixed = ({ id, children, pad = '64px 26px 86px' }) => (
   <section id={id} style={{
-    height: 'var(--inv-h)', scrollSnapAlign: 'start', scrollSnapStop: 'always',
+    height: 'var(--inv-h)', scrollSnapAlign: 'start',
     boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
     justifyContent: 'center', padding: pad, overflowY: 'auto',
   }}>{children}</section>
 )
 
 // (b) boleh tumbuh — dipakai babak yang jumlah isinya ditentukan pasangan.
-const ScreenGrow = ({ id, children, pad = '92px 26px' }) => (
+const ScreenGrow = ({ id, children, pad = '64px 26px 86px' }) => (
   <section id={id} style={{
     minHeight: 'var(--inv-h)', scrollSnapAlign: 'start',
     boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
@@ -233,20 +233,20 @@ const ScreenGrow = ({ id, children, pad = '92px 26px' }) => (
 // ═══════════════════════════════════════════════════════════════════
 
 const Hero = ({ groomNick, brideNick, dateLabel, guestName, countdown, countdownEnabled, onNext }) => (
-  <ScreenFixed id="mm-home" pad="92px 28px">
-    <div className="mm-rise" style={{ margin: 'auto 0', width: '100%', textAlign: 'center' }}>
+  <ScreenFixed id="me-home" pad="64px 28px 86px">
+    <div className="me-rise" style={{ margin: 'auto 0', width: '100%', textAlign: 'center' }}>
       <Cap>The Wedding Of</Cap>
       <Rule w={44} style={{ margin: '16px auto 22px' }} />
-      <h1 style={{ fontFamily: 'var(--mm-display)', fontSize: 'var(--mm-fs-display)', lineHeight: 1.05, margin: 0, color: 'var(--mm-ink)' }}>
+      <h1 style={{ fontFamily: 'var(--me-display)', fontSize: 'var(--me-fs-display)', lineHeight: 1.05, margin: 0, color: 'var(--me-ink)' }}>
         {groomNick}
       </h1>
-      <div style={{ fontStyle: 'italic', fontSize: 19, color: 'var(--mm-rose)', margin: '6px 0' }}>dan</div>
-      <h1 style={{ fontFamily: 'var(--mm-display)', fontSize: 'var(--mm-fs-display)', lineHeight: 1.05, margin: 0, color: 'var(--mm-ink)' }}>
+      <div style={{ fontStyle: 'italic', fontSize: 19, color: 'var(--me-rose)', margin: '6px 0' }}>dan</div>
+      <h1 style={{ fontFamily: 'var(--me-display)', fontSize: 'var(--me-fs-display)', lineHeight: 1.05, margin: 0, color: 'var(--me-ink)' }}>
         {brideNick}
       </h1>
 
       {dateLabel && (
-        <div style={{ marginTop: 26, fontSize: 'var(--mm-fs-body)', letterSpacing: '.06em', color: 'var(--mm-ink-soft)' }}>
+        <div style={{ marginTop: 26, fontSize: 'var(--me-fs-body)', letterSpacing: '.06em', color: 'var(--me-ink-soft)' }}>
           {dateLabel}
         </div>
       )}
@@ -257,35 +257,35 @@ const Hero = ({ groomNick, brideNick, dateLabel, guestName, countdown, countdown
             <div key={label} style={{
               flex: 1, maxWidth: 74, padding: '12px 0', textAlign: 'center',
               background: 'rgba(255,255,255,.66)', border: '1px solid rgba(198,163,116,.34)',
-              borderRadius: 'var(--mm-r-card)',
+              borderRadius: 'var(--me-r-card)',
             }}>
-              <div style={{ fontFamily: 'var(--mm-display)', fontSize: 24, lineHeight: 1, color: 'var(--mm-rose-deep)' }}>{v ?? 0}</div>
-              <div style={{ fontFamily: 'var(--mm-mono)', fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mm-ink-soft)', marginTop: 6 }}>{label}</div>
+              <div style={{ fontFamily: 'var(--me-display)', fontSize: 24, lineHeight: 1, color: 'var(--me-rose-deep)' }}>{v ?? 0}</div>
+              <div style={{ fontFamily: 'var(--me-mono)', fontSize: 8.5, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--me-ink-soft)', marginTop: 6 }}>{label}</div>
             </div>
           ))}
         </div>
       )}
 
       {guestName && (
-        <div style={{ marginTop: 30, fontSize: 13, color: 'var(--mm-ink-soft)' }}>
-          Kepada Yth. <span style={{ color: 'var(--mm-ink)' }}>{guestName}</span>
+        <div style={{ marginTop: 30, fontSize: 13, color: 'var(--me-ink-soft)' }}>
+          Kepada Yth. <span style={{ color: 'var(--me-ink)' }}>{guestName}</span>
         </div>
       )}
     </div>
 
     <button onClick={onNext} style={{
       background: 'transparent', border: 'none', cursor: 'pointer', padding: '10px 0',
-      fontFamily: 'var(--mm-mono)', fontSize: 9, letterSpacing: '.2em',
-      textTransform: 'uppercase', color: 'var(--mm-ink-soft)',
+      fontFamily: 'var(--me-mono)', fontSize: 9, letterSpacing: '.2em',
+      textTransform: 'uppercase', color: 'var(--me-ink-soft)',
     }}>geser ke atas ↑</button>
   </ScreenFixed>
 )
 
 const Quote = ({ quote }) => (
-  <ScreenFixed id="mm-quote" pad="92px 34px">
+  <ScreenFixed id="me-quote" pad="64px 34px 86px">
     <div style={{ margin: 'auto 0', textAlign: 'center' }}>
-      <div style={{ fontFamily: 'var(--mm-display)', fontSize: 40, color: 'var(--mm-blush)', lineHeight: 0.6 }}>&ldquo;</div>
-      <p style={{ fontSize: 19, fontStyle: 'italic', lineHeight: 1.75, color: 'var(--mm-ink)', margin: '14px 0 0', textWrap: 'pretty' }}>
+      <div style={{ fontFamily: 'var(--me-display)', fontSize: 40, color: 'var(--me-blush)', lineHeight: 0.6 }}>&ldquo;</div>
+      <p style={{ fontSize: 19, fontStyle: 'italic', lineHeight: 1.75, color: 'var(--me-ink)', margin: '14px 0 0', textWrap: 'pretty' }}>
         {quote}
       </p>
       <Rule style={{ margin: '26px auto 0' }} />
@@ -301,17 +301,17 @@ const PersonCard = ({ person, label }) => {
         initial={initialOf(person?.nickname || person?.name)}
         w={92} h={118} radius="48px 48px 12px 12px" />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--mm-display)', fontSize: 'var(--mm-fs-h2)', lineHeight: 1.25, color: 'var(--mm-ink)', textWrap: 'pretty' }}>
+        <div style={{ fontFamily: 'var(--me-display)', fontSize: 'var(--me-fs-h2)', lineHeight: 1.25, color: 'var(--me-ink)', textWrap: 'pretty' }}>
           {person?.name || person?.nickname || label}
         </div>
         {parents && (
-          <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--mm-ink-soft)', marginTop: 8 }}>
+          <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--me-ink-soft)', marginTop: 8 }}>
             Putra/Putri dari {parents}
           </div>
         )}
         {person?.instagram && (
           <a href={`https://instagram.com/${person.instagram}`} target="_blank" rel="noreferrer"
-            style={{ display: 'inline-block', marginTop: 10, fontFamily: 'var(--mm-mono)', fontSize: 9.5, letterSpacing: '.08em', color: 'var(--mm-rose-deep)' }}>
+            style={{ display: 'inline-block', marginTop: 10, fontFamily: 'var(--me-mono)', fontSize: 9.5, letterSpacing: '.08em', color: 'var(--me-rose-deep)' }}>
             @{person.instagram}
           </a>
         )}
@@ -321,7 +321,7 @@ const PersonCard = ({ person, label }) => {
 }
 
 const Mempelai = ({ data }) => (
-  <ScreenFixed id="mm-mempelai">
+  <ScreenFixed id="me-mempelai">
     <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 26 }}>
       <Cap style={{ textAlign: 'center' }}>Mempelai</Cap>
       {(data?.groom?.name || data?.groom?.nickname) && <PersonCard person={data.groom} label="Mempelai Pria" />}
@@ -333,19 +333,19 @@ const Mempelai = ({ data }) => (
 // Seluruh array dipetakan, bukan events[0] dan events[1]: sudah ada
 // undangan yang menyimpan tiga sesi, dan yang ketiga hilang tanpa jejak.
 const Acara = ({ events }) => (
-  <ScreenGrow id="mm-acara">
+  <ScreenGrow id="me-acara">
     <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 18 }}>
       <Cap style={{ textAlign: 'center' }}>Acara</Cap>
       {events.map((ev, i) => (
         <div key={i} style={{ ...cardStyle, background: 'rgba(255,255,255,.7)', border: '1px solid rgba(198,163,116,.3)', padding: '22px 20px', textAlign: 'center' }}>
           <CardTitle>{ev?.name || (i === 0 ? 'Akad Nikah' : i === 1 ? 'Resepsi' : `Acara ${i + 1}`)}</CardTitle>
-          {dateOf(ev) && <div style={{ marginTop: 10, fontSize: 'var(--mm-fs-body)', color: 'var(--mm-ink)' }}>{dateOf(ev)}</div>}
-          {timeOf(ev) && <div style={{ marginTop: 4, fontSize: 13.5, color: 'var(--mm-ink-soft)' }}>{timeOf(ev)}</div>}
+          {dateOf(ev) && <div style={{ marginTop: 10, fontSize: 'var(--me-fs-body)', color: 'var(--me-ink)' }}>{dateOf(ev)}</div>}
+          {timeOf(ev) && <div style={{ marginTop: 4, fontSize: 13.5, color: 'var(--me-ink-soft)' }}>{timeOf(ev)}</div>}
           <Rule w={28} style={{ margin: '14px auto' }} />
-          {ev?.venue && <div style={{ fontSize: 'var(--mm-fs-body)', color: 'var(--mm-ink)' }}>{ev.venue}</div>}
-          {ev?.address && <div style={{ marginTop: 5, fontSize: 13, lineHeight: 1.6, color: 'var(--mm-ink-soft)', textWrap: 'pretty' }}>{ev.address}</div>}
+          {ev?.venue && <div style={{ fontSize: 'var(--me-fs-body)', color: 'var(--me-ink)' }}>{ev.venue}</div>}
+          {ev?.address && <div style={{ marginTop: 5, fontSize: 13, lineHeight: 1.6, color: 'var(--me-ink-soft)', textWrap: 'pretty' }}>{ev.address}</div>}
           {ev?.maps && (
-            <a href={ev.maps} target="_blank" rel="noreferrer" className="mm-outline"
+            <a href={ev.maps} target="_blank" rel="noreferrer" className="me-outline"
               style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px' }}>
               Lihat Peta
             </a>
@@ -357,17 +357,17 @@ const Acara = ({ events }) => (
 )
 
 const LoveStory = ({ loveStory }) => (
-  <ScreenGrow id="mm-story">
+  <ScreenGrow id="me-story">
     <div style={{ margin: 'auto 0' }}>
       <Cap style={{ textAlign: 'center', marginBottom: 22 }}>Cerita Kami</Cap>
       <div style={{ position: 'relative', paddingLeft: 26, display: 'flex', flexDirection: 'column', gap: 22 }}>
-        <div style={{ position: 'absolute', left: 5, top: 6, bottom: 6, width: 1, background: 'linear-gradient(180deg, var(--mm-gold), rgba(198,163,116,0))' }} />
+        <div style={{ position: 'absolute', left: 5, top: 6, bottom: 6, width: 1, background: 'linear-gradient(180deg, var(--me-gold), rgba(198,163,116,0))' }} />
         {loveStory.map((s, i) => (
           <div key={i} style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', left: -26, top: 5, width: 11, height: 11, borderRadius: 999, background: 'var(--mm-blush)', border: '1px solid var(--mm-gold)' }} />
-            {s?.year && <div style={{ fontFamily: 'var(--mm-mono)', fontSize: 9.5, letterSpacing: '.16em', color: 'var(--mm-gold)' }}>{s.year}</div>}
-            {s?.title && <div style={{ fontFamily: 'var(--mm-display)', fontSize: 'var(--mm-fs-h2)', color: 'var(--mm-ink)', marginTop: 4 }}>{s.title}</div>}
-            {s?.desc && <p style={{ margin: '6px 0 0', fontSize: 14.5, lineHeight: 1.7, color: 'var(--mm-ink-soft)', textWrap: 'pretty' }}>{s.desc}</p>}
+            <div style={{ position: 'absolute', left: -26, top: 5, width: 11, height: 11, borderRadius: 999, background: 'var(--me-blush)', border: '1px solid var(--me-gold)' }} />
+            {s?.year && <div style={{ fontFamily: 'var(--me-mono)', fontSize: 9.5, letterSpacing: '.16em', color: 'var(--me-gold)' }}>{s.year}</div>}
+            {s?.title && <div style={{ fontFamily: 'var(--me-display)', fontSize: 'var(--me-fs-h2)', color: 'var(--me-ink)', marginTop: 4 }}>{s.title}</div>}
+            {s?.desc && <p style={{ margin: '6px 0 0', fontSize: 14.5, lineHeight: 1.7, color: 'var(--me-ink-soft)', textWrap: 'pretty' }}>{s.desc}</p>}
           </div>
         ))}
       </div>
@@ -376,12 +376,12 @@ const LoveStory = ({ loveStory }) => (
 )
 
 const Galeri = ({ gallery }) => (
-  <ScreenGrow id="mm-galeri" pad="92px 22px">
+  <ScreenGrow id="me-galeri" pad="64px 22px 86px">
     <div style={{ margin: 'auto 0' }}>
       <Cap style={{ textAlign: 'center', marginBottom: 18 }}>Galeri</Cap>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {gallery.map((g, i) => (
-          <div key={g?.id || i} style={{ aspectRatio: '3 / 4', borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(150deg, var(--mm-blush), #F0D7D6)' }}>
+          <div key={g?.id || i} style={{ aspectRatio: '3 / 4', borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(150deg, var(--me-blush), #F0D7D6)' }}>
             {g?.src && <img src={g.src} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
           </div>
         ))}
@@ -404,7 +404,7 @@ const Informasi = ({ data, copiedKey, copy }) => {
     : []
 
   return (
-    <ScreenGrow id="mm-info">
+    <ScreenGrow id="me-info">
       <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Cap style={{ textAlign: 'center' }}>Informasi Tamu</Cap>
 
@@ -413,11 +413,11 @@ const Informasi = ({ data, copiedKey, copy }) => {
             <CardTitle>Dresscode</CardTitle>
             {dresscode.name && (
               <div className="flex" style={{ alignItems: 'center', gap: 10, marginTop: 10 }}>
-                <div style={{ width: 20, height: 20, borderRadius: 999, border: '1px solid rgba(75,58,60,.18)', background: dresscode.color || 'var(--mm-blush)' }} />
-                <span style={{ fontSize: 'var(--mm-fs-body)', color: 'var(--mm-ink)' }}>{dresscode.name}</span>
+                <div style={{ width: 20, height: 20, borderRadius: 999, border: '1px solid rgba(75,58,60,.18)', background: dresscode.color || 'var(--me-blush)' }} />
+                <span style={{ fontSize: 'var(--me-fs-body)', color: 'var(--me-ink)' }}>{dresscode.name}</span>
               </div>
             )}
-            {dresscode.notes && <p style={{ margin: '10px 0 0', fontSize: 13.5, lineHeight: 1.65, color: 'var(--mm-ink-soft)' }}>{dresscode.notes}</p>}
+            {dresscode.notes && <p style={{ margin: '10px 0 0', fontSize: 13.5, lineHeight: 1.65, color: 'var(--me-ink-soft)' }}>{dresscode.notes}</p>}
           </div>
         )}
 
@@ -426,7 +426,7 @@ const Informasi = ({ data, copiedKey, copy }) => {
             <CardTitle>Live Streaming</CardTitle>
             <div className="flex" style={{ flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
               {live.map((l, i) => (
-                <a key={i} href={l.url} target="_blank" rel="noreferrer" className="mm-outline" style={{ padding: '9px 16px' }}>
+                <a key={i} href={l.url} target="_blank" rel="noreferrer" className="me-outline" style={{ padding: '9px 16px' }}>
                   {l.type || 'Tonton Live'}
                 </a>
               ))}
@@ -439,36 +439,36 @@ const Informasi = ({ data, copiedKey, copy }) => {
             <CardTitle>Hadiah</CardTitle>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
               {accounts.map((a, i) => (
-                <div key={i} style={{ border: '1px dashed rgba(198,163,116,.5)', borderRadius: 'var(--mm-r-input)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div key={i} style={{ border: '1px dashed rgba(198,163,116,.5)', borderRadius: 'var(--me-r-input)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--mm-mono)', fontSize: 9.5, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--mm-gold)' }}>{a.bank}</div>
-                    <div style={{ fontSize: 16, letterSpacing: '.06em', color: 'var(--mm-ink)', marginTop: 4, wordBreak: 'break-all' }}>{a.number}</div>
-                    {a.holder && <div style={{ fontSize: 13, color: 'var(--mm-ink-soft)' }}>a.n. {a.holder}</div>}
+                    <div style={{ fontFamily: 'var(--me-mono)', fontSize: 9.5, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--me-gold)' }}>{a.bank}</div>
+                    <div style={{ fontSize: 16, letterSpacing: '.06em', color: 'var(--me-ink)', marginTop: 4, wordBreak: 'break-all' }}>{a.number}</div>
+                    {a.holder && <div style={{ fontSize: 13, color: 'var(--me-ink-soft)' }}>a.n. {a.holder}</div>}
                   </div>
                   <button onClick={() => copy(String(a.number || ''), i)} style={{
                     cursor: 'pointer', padding: '8px 14px', borderRadius: 999, border: 'none',
-                    background: 'var(--mm-blush)', color: 'var(--mm-rose-deep)',
-                    fontFamily: 'var(--mm-mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
+                    background: 'var(--me-blush)', color: 'var(--me-rose-deep)',
+                    fontFamily: 'var(--me-mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
                   }}>{copiedKey === i ? 'Tersalin' : 'Salin'}</button>
                 </div>
               ))}
               {giftAddr && (
-                <div style={{ border: '1px dashed rgba(198,163,116,.5)', borderRadius: 'var(--mm-r-input)', padding: '12px 14px' }}>
-                  <div style={{ fontFamily: 'var(--mm-mono)', fontSize: 9.5, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--mm-gold)' }}>Kirim Hadiah</div>
+                <div style={{ border: '1px dashed rgba(198,163,116,.5)', borderRadius: 'var(--me-r-input)', padding: '12px 14px' }}>
+                  <div style={{ fontFamily: 'var(--me-mono)', fontSize: 9.5, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--me-gold)' }}>Kirim Hadiah</div>
                   {giftAddr.recipient && (
-                    <div style={{ fontSize: 13.5, color: 'var(--mm-ink)', marginTop: 6 }}>Penerima: {giftAddr.recipient}</div>
+                    <div style={{ fontSize: 13.5, color: 'var(--me-ink)', marginTop: 6 }}>Penerima: {giftAddr.recipient}</div>
                   )}
                   {giftAddr.phone && (
-                    <div style={{ fontSize: 13, color: 'var(--mm-ink-soft)', marginTop: 2 }}>No. HP: {giftAddr.phone}</div>
+                    <div style={{ fontSize: 13, color: 'var(--me-ink-soft)', marginTop: 2 }}>No. HP: {giftAddr.phone}</div>
                   )}
                   {giftAddr.address && (
-                    <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--mm-ink)', marginTop: 5, whiteSpace: 'pre-line' }}>{giftAddr.address}</div>
+                    <div style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--me-ink)', marginTop: 5, whiteSpace: 'pre-line' }}>{giftAddr.address}</div>
                   )}
                   {giftAddr.address && (
                     <button onClick={() => copy(String(giftAddr.address), 'addr')} style={{
                       marginTop: 10, cursor: 'pointer', padding: '8px 14px', borderRadius: 999, border: 'none',
-                      background: 'var(--mm-blush)', color: 'var(--mm-rose-deep)',
-                      fontFamily: 'var(--mm-mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
+                      background: 'var(--me-blush)', color: 'var(--me-rose-deep)',
+                      fontFamily: 'var(--me-mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
                     }}>{copiedKey === 'addr' ? 'Tersalin' : 'Salin Alamat'}</button>
                   )}
                 </div>
@@ -485,8 +485,8 @@ const Informasi = ({ data, copiedKey, copy }) => {
             <div style={{ maxHeight: 200, overflowY: 'auto', marginTop: 12, display: 'flex', flexDirection: 'column', gap: 14 }}>
               {families.map((f, i) => (
                 <div key={i}>
-                  {f?.side && <div style={{ fontFamily: 'var(--mm-mono)', fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--mm-gold)' }}>{f.side}</div>}
-                  <div style={{ fontSize: 13.5, lineHeight: 1.75, color: 'var(--mm-ink-soft)', marginTop: 5 }}>
+                  {f?.side && <div style={{ fontFamily: 'var(--me-mono)', fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--me-gold)' }}>{f.side}</div>}
+                  <div style={{ fontSize: 13.5, lineHeight: 1.75, color: 'var(--me-ink-soft)', marginTop: 5 }}>
                     {(f?.members || []).filter(Boolean).join(' · ')}
                   </div>
                 </div>
@@ -501,9 +501,9 @@ const Informasi = ({ data, copiedKey, copy }) => {
 
 const fieldStyle = {
   width: '100%', boxSizing: 'border-box', padding: '13px 14px',
-  fontFamily: 'var(--mm-body)', fontSize: 15, color: 'var(--mm-ink)',
-  background: 'var(--mm-ivory)', border: '1px solid rgba(198,163,116,.34)',
-  borderRadius: 'var(--mm-r-input)', outline: 'none',
+  fontFamily: 'var(--me-body)', fontSize: 15, color: 'var(--me-ink)',
+  background: 'var(--me-ivory)', border: '1px solid rgba(198,163,116,.34)',
+  borderRadius: 'var(--me-r-input)', outline: 'none',
 }
 
 const RsvpUcapan = ({ wishes, onSubmitWish }) => {
@@ -530,7 +530,7 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
   }
 
   return (
-    <ScreenGrow id="mm-rsvp">
+    <ScreenGrow id="me-rsvp">
       <div style={{ margin: 'auto 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Cap style={{ textAlign: 'center' }}>Ucapan &amp; RSVP</Cap>
 
@@ -543,11 +543,11 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
               return (
                 <button key={val} type="button" onClick={() => setAttendance(val)} style={{
                   flex: 1, textAlign: 'center', cursor: 'pointer', padding: '12px 0', borderRadius: 999,
-                  fontFamily: 'var(--mm-mono)', fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase',
-                  border: `1px solid ${on ? 'var(--mm-rose-deep)' : 'rgba(198,163,116,.4)'}`,
-                  background: on ? 'var(--mm-blush)' : 'transparent',
-                  color: on ? 'var(--mm-rose-deep)' : 'var(--mm-ink-soft)',
-                  transition: 'all var(--mm-dur) var(--mm-ease)',
+                  fontFamily: 'var(--me-mono)', fontSize: 9.5, letterSpacing: '.12em', textTransform: 'uppercase',
+                  border: `1px solid ${on ? 'var(--me-rose-deep)' : 'rgba(198,163,116,.4)'}`,
+                  background: on ? 'var(--me-blush)' : 'transparent',
+                  color: on ? 'var(--me-rose-deep)' : 'var(--me-ink-soft)',
+                  transition: 'all var(--me-dur) var(--me-ease)',
                 }}>{label}</button>
               )
             })}
@@ -558,8 +558,8 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
 
           <button type="submit" disabled={!canSend} style={{
             cursor: canSend ? 'pointer' : 'not-allowed', textAlign: 'center', padding: 14,
-            borderRadius: 999, border: 'none', background: 'var(--mm-rose-deep)', color: '#FFF6F4',
-            fontFamily: 'var(--mm-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase',
+            borderRadius: 999, border: 'none', background: 'var(--me-rose-deep)', color: '#FFF6F4',
+            fontFamily: 'var(--me-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase',
             opacity: canSend ? 1 : 0.55,
           }}>{busy ? 'Mengirim…' : sent ? 'Terkirim' : 'Kirim'}</button>
         </form>
@@ -569,21 +569,21 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
         <div style={{ maxHeight: 230, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 2 }}>
           {list.map((w, i) => (
             <div key={i} style={{
-              background: 'rgba(255,255,255,.55)', borderLeft: '1px solid var(--mm-blush)',
-              borderRadius: '0 var(--mm-r-input) var(--mm-r-input) 0', padding: '12px 14px',
+              background: 'rgba(255,255,255,.55)', borderLeft: '1px solid var(--me-blush)',
+              borderRadius: '0 var(--me-r-input) var(--me-r-input) 0', padding: '12px 14px',
             }}>
               <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontFamily: 'var(--mm-display)', fontSize: 16, color: 'var(--mm-ink)' }}>{w?.name}</span>
-                {w?.time && <span style={{ fontFamily: 'var(--mm-mono)', fontSize: 8.5, letterSpacing: '.1em', color: 'var(--mm-ink-soft)' }}>{w.time}</span>}
+                <span style={{ fontFamily: 'var(--me-display)', fontSize: 16, color: 'var(--me-ink)' }}>{w?.name}</span>
+                {w?.time && <span style={{ fontFamily: 'var(--me-mono)', fontSize: 8.5, letterSpacing: '.1em', color: 'var(--me-ink-soft)' }}>{w.time}</span>}
               </div>
-              <div style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--mm-ink-soft)', marginTop: 5, textWrap: 'pretty' }}>{w?.wish}</div>
-              <div style={{ fontFamily: 'var(--mm-mono)', fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--mm-gold)', marginTop: 7 }}>
+              <div style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--me-ink-soft)', marginTop: 5, textWrap: 'pretty' }}>{w?.wish}</div>
+              <div style={{ fontFamily: 'var(--me-mono)', fontSize: 8.5, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--me-gold)', marginTop: 7 }}>
                 {w?.rsvp === 'tidak_hadir' ? 'Berhalangan' : 'Hadir'}
               </div>
             </div>
           ))}
           {list.length === 0 && (
-            <div style={{ textAlign: 'center', fontSize: 13.5, fontStyle: 'italic', color: 'var(--mm-ink-soft)', padding: '10px 0' }}>
+            <div style={{ textAlign: 'center', fontSize: 13.5, fontStyle: 'italic', color: 'var(--me-ink-soft)', padding: '10px 0' }}>
               Jadi yang pertama mengirim ucapan.
             </div>
           )}
@@ -594,21 +594,21 @@ const RsvpUcapan = ({ wishes, onSubmitWish }) => {
 }
 
 const Penutup = ({ data, groomNick, brideNick, onHome }) => (
-  <ScreenFixed id="mm-penutup" pad="92px 30px">
+  <ScreenFixed id="me-penutup" pad="64px 30px 86px">
     <div style={{ margin: 'auto 0', textAlign: 'center' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 26 }}>
         <Portrait src={data?.meta?.footerPhoto} alt="" initial={initialOf(groomNick)}
           w={132} h={172} radius="80px 80px 14px 14px" />
       </div>
-      <p style={{ fontSize: 15, lineHeight: 1.8, color: 'var(--mm-ink-soft)', margin: 0, textWrap: 'pretty' }}>
+      <p style={{ fontSize: 15, lineHeight: 1.8, color: 'var(--me-ink-soft)', margin: 0, textWrap: 'pretty' }}>
         Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara berkenan hadir
         untuk memberikan doa restu.
       </p>
       <Rule style={{ margin: '24px auto' }} />
-      <div style={{ fontFamily: 'var(--mm-display)', fontSize: 30, color: 'var(--mm-ink)' }}>
+      <div style={{ fontFamily: 'var(--me-display)', fontSize: 30, color: 'var(--me-ink)' }}>
         {groomNick} &amp; {brideNick}
       </div>
-      <button onClick={onHome} className="mm-outline" style={{ marginTop: 30, padding: '11px 22px' }}>
+      <button onClick={onHome} className="me-outline" style={{ marginTop: 30, padding: '11px 22px' }}>
         Kembali ke awal
       </button>
     </div>
@@ -624,8 +624,8 @@ const Cover = ({ data, groomNick, brideNick, dateLabel, guestName, onOpen, anima
     position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
     width: 'var(--inv-w)', height: 'var(--inv-h)', zIndex: 12,
     display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-    padding: '92px 30px', boxSizing: 'border-box', overflow: 'hidden', background: 'var(--mm-ivory)',
-    animation: animateClose ? 'mm-cover-out 780ms var(--mm-ease) forwards' : 'mm-in 500ms var(--mm-ease) both',
+    padding: '64px 30px', boxSizing: 'border-box', overflow: 'hidden', background: 'var(--me-ivory)',
+    animation: animateClose ? 'me-cover-out 780ms var(--me-ease) forwards' : 'me-in 500ms var(--me-ease) both',
   }}>
     <div style={{
       position: 'absolute', inset: 0,
@@ -633,33 +633,33 @@ const Cover = ({ data, groomNick, brideNick, dateLabel, guestName, onOpen, anima
         ? `center/cover no-repeat url('${data.meta.coverPhoto}')`
         : `center/cover no-repeat url('${A.poster}')`,
     }} />
-    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(156,96,104,.34) 0%, rgba(251,247,244,.72) 62%, var(--mm-ivory) 100%)' }} />
+    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(156,96,104,.34) 0%, rgba(251,247,244,.72) 62%, var(--me-ivory) 100%)' }} />
 
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, overflow: 'hidden' }}>
-      <div className="mm-shimmer" style={{
+      <div className="me-shimmer" style={{
         width: '40%', height: '100%',
         background: 'linear-gradient(90deg, transparent, rgba(198,163,116,.8), transparent)',
-        animation: 'mm-shimmer 4.5s var(--mm-ease) infinite',
+        animation: 'me-shimmer 4.5s var(--me-ease) infinite',
       }} />
     </div>
 
-    <div className="mm-rise" style={{ position: 'relative', zIndex: 1, margin: 'auto 0', textAlign: 'center' }}>
+    <div className="me-rise" style={{ position: 'relative', zIndex: 1, margin: 'auto 0', textAlign: 'center' }}>
       <Cap style={{ letterSpacing: '.32em' }}>Undangan Pernikahan</Cap>
       <Rule w={40} style={{ margin: '18px auto 24px' }} />
-      <div style={{ fontFamily: 'var(--mm-display)', fontSize: 42, lineHeight: 1.08, color: 'var(--mm-ink)' }}>{groomNick}</div>
-      <div style={{ fontStyle: 'italic', fontSize: 18, color: 'var(--mm-rose)', margin: '4px 0' }}>&amp;</div>
-      <div style={{ fontFamily: 'var(--mm-display)', fontSize: 42, lineHeight: 1.08, color: 'var(--mm-ink)' }}>{brideNick}</div>
-      {dateLabel && <div style={{ marginTop: 22, fontSize: 14, letterSpacing: '.08em', color: 'var(--mm-ink-soft)' }}>{dateLabel}</div>}
+      <div style={{ fontFamily: 'var(--me-display)', fontSize: 42, lineHeight: 1.08, color: 'var(--me-ink)' }}>{groomNick}</div>
+      <div style={{ fontStyle: 'italic', fontSize: 18, color: 'var(--me-rose)', margin: '4px 0' }}>&amp;</div>
+      <div style={{ fontFamily: 'var(--me-display)', fontSize: 42, lineHeight: 1.08, color: 'var(--me-ink)' }}>{brideNick}</div>
+      {dateLabel && <div style={{ marginTop: 22, fontSize: 14, letterSpacing: '.08em', color: 'var(--me-ink-soft)' }}>{dateLabel}</div>}
       {guestName && (
         <>
-          <div style={{ marginTop: 34, fontSize: 12.5, color: 'var(--mm-ink-soft)' }}>Kepada Yth.</div>
-          <div style={{ fontFamily: 'var(--mm-display)', fontSize: 23, color: 'var(--mm-ink)', marginTop: 3 }}>{guestName}</div>
+          <div style={{ marginTop: 34, fontSize: 12.5, color: 'var(--me-ink-soft)' }}>Kepada Yth.</div>
+          <div style={{ fontFamily: 'var(--me-display)', fontSize: 23, color: 'var(--me-ink)', marginTop: 3 }}>{guestName}</div>
         </>
       )}
       <button onClick={onOpen} style={{
         marginTop: 34, cursor: 'pointer', padding: '15px 34px', borderRadius: 999, border: 'none',
-        background: 'var(--mm-rose-deep)', color: '#FFF6F4',
-        fontFamily: 'var(--mm-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase',
+        background: 'var(--me-rose-deep)', color: '#FFF6F4',
+        fontFamily: 'var(--me-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase',
       }}>Buka Undangan</button>
     </div>
   </div>
@@ -682,14 +682,14 @@ const Progress = ({ chapters, active, visible, go }) => (
     {chapters.map(([id, label], i) => (
       <button key={id} title={label} onClick={() => go(id)} style={{
         flex: 1, height: 2, borderRadius: 2, border: 'none', padding: 0, cursor: 'pointer',
-        background: i <= active ? 'var(--mm-gold)' : 'rgba(198,163,116,.26)',
-        transition: 'background var(--mm-dur) var(--mm-ease)',
+        background: i <= active ? 'var(--me-gold)' : 'rgba(198,163,116,.26)',
+        transition: 'background var(--me-dur) var(--me-ease)',
       }} />
     ))}
   </div>
 )
 
-const NAV_IDS = ['mm-home', 'mm-mempelai', 'mm-acara', 'mm-galeri', 'mm-rsvp']
+const NAV_IDS = ['me-home', 'me-mempelai', 'me-acara', 'me-galeri', 'me-rsvp']
 
 const BottomNav = ({ chapters, activeId, visible, go }) => {
   const items = chapters.filter(([id]) => NAV_IDS.includes(id))
@@ -710,10 +710,10 @@ const BottomNav = ({ chapters, activeId, visible, go }) => {
           return (
             <button key={id} onClick={() => go(id)} style={{
               cursor: 'pointer', padding: '8px 13px', borderRadius: 999, border: 'none', whiteSpace: 'nowrap',
-              fontFamily: 'var(--mm-mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
-              color: on ? '#FFF6F4' : 'var(--mm-ink-soft)',
-              background: on ? 'var(--mm-rose-deep)' : 'transparent',
-              transition: 'all var(--mm-dur) var(--mm-ease)',
+              fontFamily: 'var(--me-mono)', fontSize: 9, letterSpacing: '.12em', textTransform: 'uppercase',
+              color: on ? '#FFF6F4' : 'var(--me-ink-soft)',
+              background: on ? 'var(--me-rose-deep)' : 'transparent',
+              transition: 'all var(--me-dur) var(--me-ease)',
             }}>{label}</button>
           )
         })}
@@ -734,10 +734,10 @@ const MusicButton = ({ musicPlaying, setMusicPlaying, visible }) => (
     {[0, 1, 2].map(i => (
       <span key={i} style={{
         display: 'block', width: 3, height: 12, borderRadius: 2,
-        background: musicPlaying ? 'var(--mm-rose-deep)' : 'var(--mm-ink-soft)',
+        background: musicPlaying ? 'var(--me-rose-deep)' : 'var(--me-ink-soft)',
         transformOrigin: 'bottom',
         transform: musicPlaying ? undefined : 'scaleY(.35)',
-        animation: musicPlaying ? `mm-eq ${0.62 + i * 0.15}s ease-in-out infinite` : 'none',
+        animation: musicPlaying ? `me-eq ${0.62 + i * 0.15}s ease-in-out infinite` : 'none',
       }} />
     ))}
   </button>
@@ -790,15 +790,15 @@ export default function MemoriesTheme({
   // dibangun dari daftar yang sama, jadi keduanya tidak pernah menunjuk ke
   // babak yang tidak ada.
   const chapters = [
-    ['mm-home', 'Home', true],
-    ['mm-quote', 'Quote', hasQuote],
-    ['mm-mempelai', 'Mempelai', hasMempelai],
-    ['mm-acara', 'Acara', events.length > 0],
-    ['mm-story', 'Story', loveStory.length > 0],
-    ['mm-galeri', 'Galeri', gallery.length > 0],
-    ['mm-info', 'Info', hasInfo],
-    ['mm-rsvp', 'RSVP', true],
-    ['mm-penutup', 'Penutup', true],
+    ['me-home', 'Home', true],
+    ['me-quote', 'Quote', hasQuote],
+    ['me-mempelai', 'Mempelai', hasMempelai],
+    ['me-acara', 'Acara', events.length > 0],
+    ['me-story', 'Story', loveStory.length > 0],
+    ['me-galeri', 'Galeri', gallery.length > 0],
+    ['me-info', 'Info', hasInfo],
+    ['me-rsvp', 'RSVP', true],
+    ['me-penutup', 'Penutup', true],
   ].filter(x => x[2]).map(x => [x[0], x[1]])
 
   const activeId = chapters[active]?.[0]
@@ -839,94 +839,94 @@ export default function MemoriesTheme({
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Italiana&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400&display=swap');
 
-        .mm-root {
-          --mm-ivory: #FBF7F4;
-          --mm-blush: #F7E4E3;
-          --mm-rose: #D9A0A4;
-          --mm-rose-deep: #9C6068;
-          --mm-gold: #C6A374;
-          --mm-ink: #4B3A3C;
+        .me-root {
+          --me-ivory: #FBF7F4;
+          --me-blush: #F7E4E3;
+          --me-rose: #D9A0A4;
+          --me-rose-deep: #9C6068;
+          --me-gold: #C6A374;
+          --me-ink: #4B3A3C;
           /* Digelapkan dari #836F71 milik prototipe. Warna itu sudah hanya
              mencapai kontras 4,40 di atas ivory polos — di bawah ambang AA
              sebelum ada video sama sekali — dan di atas panggung bertabir ia
              turun ke 3,8. #645154 mencetak 4,91 di pita tergelap dan 6,28 di
-             atas kartu, dan tetap terbaca lebih ringan dari --mm-ink. */
-          --mm-ink-soft: #645154;
+             atas kartu, dan tetap terbaca lebih ringan dari --me-ink. */
+          --me-ink-soft: #645154;
 
-          --mm-display: 'Italiana', serif;
-          --mm-body: 'Cormorant Garamond', serif;
-          --mm-mono: 'IBM Plex Mono', monospace;
-          --mm-fs-display: 46px;
-          --mm-fs-h2: 21px;
-          --mm-fs-body: 15.5px;
-          --mm-fs-cap: 10.5px;
+          --me-display: 'Italiana', serif;
+          --me-body: 'Cormorant Garamond', serif;
+          --me-mono: 'IBM Plex Mono', monospace;
+          --me-fs-display: 46px;
+          --me-fs-h2: 21px;
+          --me-fs-body: 15.5px;
+          --me-fs-cap: 10.5px;
 
-          --mm-r-card: 20px;
-          --mm-r-input: 12px;
+          --me-r-card: 20px;
+          --me-r-input: 12px;
 
-          --mm-dur: 520ms;
-          --mm-dur-slow: 900ms;
-          --mm-ease: cubic-bezier(.22,.61,.36,1);
+          --me-dur: 520ms;
+          --me-dur-slow: 900ms;
+          --me-ease: cubic-bezier(.22,.61,.36,1);
         }
 
-        .mm-deck { scrollbar-width: none; }
-        .mm-deck::-webkit-scrollbar { display: none; }
+        .me-deck { scrollbar-width: none; }
+        .me-deck::-webkit-scrollbar { display: none; }
 
-        .mm-outline {
+        .me-outline {
           border-radius: 999px;
-          border: 1px solid var(--mm-rose);
+          border: 1px solid var(--me-rose);
           /* Bukan transparan. Sebagian besar tombol ini duduk di atas kartu,
              tapi "Kembali ke awal" di penutup berdiri langsung di atas
              panggung, dan rose-deep di sana hanya 3,9 — kurang untuk teks
              sekecil 9,5px. Isi tipis ini mengangkatnya tanpa mengubah bentuk. */
           background: rgba(255,255,255,.55);
-          color: var(--mm-rose-deep);
-          font-family: var(--mm-mono);
+          color: var(--me-rose-deep);
+          font-family: var(--me-mono);
           font-size: 9.5px;
           letter-spacing: .14em;
           text-transform: uppercase;
           cursor: pointer;
-          transition: background var(--mm-dur) var(--mm-ease);
+          transition: background var(--me-dur) var(--me-ease);
         }
-        .mm-outline:hover { background: var(--mm-blush); }
+        .me-outline:hover { background: var(--me-blush); }
 
-        .mm-stage-video { animation: mm-in 900ms var(--mm-ease) both; }
+        .me-stage-video { animation: me-in 900ms var(--me-ease) both; }
 
-        .mm-root button:focus-visible,
-        .mm-root a:focus-visible,
-        .mm-root input:focus-visible,
-        .mm-root textarea:focus-visible {
-          outline: 2px solid var(--mm-rose-deep);
+        .me-root button:focus-visible,
+        .me-root a:focus-visible,
+        .me-root input:focus-visible,
+        .me-root textarea:focus-visible {
+          outline: 2px solid var(--me-rose-deep);
           outline-offset: 2px;
         }
 
-        @keyframes mm-up { from { opacity: 0; transform: translate3d(0, 16px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-        @keyframes mm-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes mm-cover-out { to { opacity: 0; transform: translate3d(0, -4%, 0); } }
-        @keyframes mm-shimmer { 0% { transform: translate3d(-60%, 0, 0); } 100% { transform: translate3d(160%, 0, 0); } }
-        @keyframes mm-breathe { 0%, 100% { opacity: .55; } 50% { opacity: .9; } }
-        @keyframes mm-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
-        @keyframes mm-fall {
+        @keyframes me-up { from { opacity: 0; transform: translate3d(0, 16px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+        @keyframes me-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes me-cover-out { to { opacity: 0; transform: translate3d(0, -4%, 0); } }
+        @keyframes me-shimmer { 0% { transform: translate3d(-60%, 0, 0); } 100% { transform: translate3d(160%, 0, 0); } }
+        @keyframes me-breathe { 0%, 100% { opacity: .55; } 50% { opacity: .9; } }
+        @keyframes me-eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+        @keyframes me-fall {
           0%   { transform: translate3d(0, -10%, 0) rotate(0deg); }
           100% { transform: translate3d(26px, calc(var(--inv-h) + 60px), 0) rotate(260deg); }
         }
-        .mm-rise { animation: mm-up var(--mm-dur-slow) var(--mm-ease) both; }
+        .me-rise { animation: me-up var(--me-dur-slow) var(--me-ease) both; }
 
         /* Tamu yang meminta gerak dikurangi tetap mendapat halaman yang utuh:
            tidak ada satu pun gaya dasar di tema ini yang dimulai dari
            opacity 0, jadi mematikan animasinya tidak menyembunyikan apa pun. */
         @media (prefers-reduced-motion: reduce) {
-          .mm-root *, .mm-root *::before, .mm-root *::after {
+          .me-root *, .me-root *::before, .me-root *::after {
             animation: none !important;
             transition-duration: 1ms !important;
           }
-          .mm-root .mm-deck { scroll-behavior: auto; }
+          .me-root .me-deck { scroll-behavior: auto; }
         }
       `}</style>
 
-      <div className="mm-root relative" style={{
+      <div className="me-root relative" style={{
         height: 'var(--inv-h)', flexShrink: 0, overflow: 'hidden',
-        fontFamily: 'var(--mm-body)', color: 'var(--mm-ink)', background: 'var(--mm-ivory)',
+        fontFamily: 'var(--me-body)', color: 'var(--me-ink)', background: 'var(--me-ivory)',
       }}>
         {musicEnabled && (
           <audio ref={audioRef} src={data?.musicUrl || MUSIC_URLS[data?.musicId || 1] || MUSIC_URLS[1]} loop />
@@ -936,16 +936,19 @@ export default function MemoriesTheme({
 
         <Progress chapters={chapters} active={active} visible={opened} go={go} />
 
-        {/* proximity, bukan mandatory. Snap wajib mengunci ke awal babak
-            setiap gulir berhenti, dan babak yang boleh tumbuh — Acara dengan
-            tiga sesi, RSVP dengan form plus daftar ucapan — lebih tinggi dari
-            satu layar. Bagian bawahnya jadi tidak pernah bisa dicapai: tamu
-            menggulir turun, jarinya lepas, dan halaman memantul kembali ke
-            atas babak yang sama. Dengan proximity babak setinggi satu layar
-            tetap mengunci dan yang lebih panjang bisa digulir sampai habis. */}
-        <div ref={deckRef} className="mm-deck" onScroll={onScroll} style={{
+        {/* mandatory. Sempat diturunkan ke proximity karena saya kira snap
+            wajib akan memerangkap babak yang lebih tinggi dari satu layar —
+            itu keliru. Spesifikasi scroll-snap mengecualikan snap area yang
+            lebih besar dari snapport: setiap posisi di mana area itu menutupi
+            layar adalah posisi snap yang sah, jadi babak panjang tetap bisa
+            digulir sampai habis. Velour Olive sudah membuktikannya di
+            produksi dengan babak minHeight 100% dan snap mandatory.
+            Proximity justru yang menimbulkan masalah nyata: tanpa kuncian,
+            gulir bisa berhenti di ruang kosong antar babak, dan itu yang
+            terbaca sebagai "jeda antar tab terlalu jauh". */}
+        <div ref={deckRef} className="me-deck" onScroll={onScroll} style={{
           height: 'var(--inv-h)', overflowY: 'auto', overflowX: 'hidden',
-          scrollSnapType: 'y proximity', position: 'relative', zIndex: 1,
+          scrollSnapType: 'y mandatory', position: 'relative', zIndex: 1,
         }}>
           <Hero groomNick={groomNick} brideNick={brideNick} dateLabel={dateLabel}
             guestName={guestName} countdown={countdown}
@@ -961,9 +964,8 @@ export default function MemoriesTheme({
 
           <RsvpUcapan wishes={wishes} onSubmitWish={onSubmitWish} />
 
-          <Penutup data={data} groomNick={groomNick} brideNick={brideNick} onHome={() => go('mm-home')} />
+          <Penutup data={data} groomNick={groomNick} brideNick={brideNick} onHome={() => go('me-home')} />
 
-          <div style={{ height: 74 }} />
         </div>
 
         <BottomNav chapters={chapters} activeId={activeId} visible={opened} go={go} />
