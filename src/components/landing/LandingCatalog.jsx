@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { getThemes } from '../../hooks/useSharedInvitation'
 import { fetchPricing } from '../../services/billingService'
 import { waLink } from '../../config/constants'
 
+const CATEGORIES = [
+  { id: 'Special', label: 'SPECIAL' },
+  { id: 'Luxury', label: 'LUXURY' },
+  { id: 'Motion', label: '3D MOTION' },
+  { id: 'Adat', label: 'TEMA ADAT' },
+]
+
+const FALLBACK_PRICING = { Special: 99000, Adat: 110000, Motion: 140000, Luxury: 175000 }
+
 export default function LandingCatalog() {
-  const navigate = useNavigate()
   const [themes, setThemes] = useState(() => getThemes())
-  const [pricing, setPricing] = useState({ Special: 99000, Adat: 110000, Motion: 140000, Luxury: 175000 })
+  const [pricing, setPricing] = useState(FALLBACK_PRICING)
   const [activeTab, setActiveTab] = useState('Special')
 
   useEffect(() => {
@@ -20,147 +28,130 @@ export default function LandingCatalog() {
     }
   }, [])
 
-  // Authoritative prices from the DB (public-readable).
+  // Harga otoritatif dari database — jangan pernah di-hardcode di sini.
   useEffect(() => { fetchPricing().then(setPricing) }, [])
 
-  const categories = [
-    { id: 'Special', label: '⭐ SPECIAL' },
-    { id: 'Luxury', label: '💎 LUXURY' },
-    { id: 'Motion', label: '🎬 3D MOTION' },
-    { id: 'Adat', label: '🪁 TEMA ADAT' },
-  ]
-
-  const getPriceByCategory = (cat) => {
-    let p = pricing[cat] || 99000
-    if (cat === 'Special' && !pricing.Special) p = 99000
-    if (cat === 'Adat' && !pricing.Adat) p = 110000
-    if (cat === 'Motion' && !pricing.Motion) p = 140000
-    if (cat === 'Luxury' && !pricing.Luxury) p = 175000
+  const priceOf = (cat) => {
+    const p = pricing[cat] || FALLBACK_PRICING[cat] || 99000
     return {
       promo: `Rp ${(p / 1000).toLocaleString('id-ID')}k`,
-      original: `Rp ${((p * 2) / 1000).toLocaleString('id-ID')}k`
+      original: `Rp ${((p * 2) / 1000).toLocaleString('id-ID')}k`,
     }
   }
 
-  const filteredThemes = useMemo(() => {
-    return themes.filter(t => t.category === activeTab && t.visible !== false)
-  }, [themes, activeTab])
-
-  // Scroll reveal logic
-  useEffect(() => {
-    const revealEls = document.querySelectorAll('.reveal')
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible')
-          observer.unobserve(e.target)
-        }
-      })
-    }, { threshold: 0.1 })
-    
-    revealEls.forEach(el => observer.observe(el))
-    return () => observer.disconnect()
-  }, [filteredThemes])
+  const filteredThemes = useMemo(
+    () => themes.filter(t => t.category === activeTab && t.visible !== false),
+    [themes, activeTab]
+  )
 
   return (
-    <section id="catalog" className="py-16 md:py-24 bg-cream">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 reveal">
-          <div className="section-badge-teal inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-wider uppercase">
-            Katalog Tema
+    <section id="katalog" className="font-jost" style={{
+      padding: 'clamp(72px, 11vw, 150px) clamp(20px, 5vw, 64px)',
+      background: '#0E1116', borderTop: '1px solid rgba(221,196,151,0.12)',
+    }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div className="flex flex-wrap items-end justify-between" style={{ gap: 20, marginBottom: 'clamp(36px, 5vw, 64px)' }}>
+          <div>
+            <span style={{ fontSize: 10, letterSpacing: '0.4em', color: '#DDC497' }}>KATALOG TEMA</span>
+            <h2 className="font-marcellus" style={{
+              fontWeight: 400, fontSize: 'clamp(30px, 4.4vw, 56px)', margin: '16px 0 10px', color: '#FBF8F1',
+            }}>Pilih Tema Favoritmu</h2>
+            <p style={{ fontSize: 14, fontWeight: 300, color: '#8A93A1', margin: 0, maxWidth: 460 }}>
+              Ratusan pilihan tema yang bisa disesuaikan dengan selera dan budayamu.
+            </p>
           </div>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Pilih Tema Favoritmu</h2>
-          <p className="text-gray-500 max-w-xl mx-auto text-sm sm:text-base">
-            Ratusan pilihan tema yang bisa disesuaikan dengan selera dan budayamu.
-          </p>
+
+          {/* Chip kategori sekaligus tab — bentuknya pill outline, bukan
+              underline seperti versi terang. */}
+          <div className="flex flex-wrap" style={{ gap: 8 }} role="tablist">
+            {CATEGORIES.map(cat => {
+              const on = activeTab === cat.id
+              return (
+                <button key={cat.id} role="tab" aria-selected={on} onClick={() => setActiveTab(cat.id)}
+                  style={{
+                    fontSize: 10, letterSpacing: '0.2em', cursor: 'pointer', borderRadius: 999,
+                    padding: '9px 16px', transition: 'all .3s ease',
+                    color: on ? '#0B0D11' : 'rgba(232,228,218,0.75)',
+                    background: on ? 'linear-gradient(135deg, #C4A771, #E7D3AA)' : 'transparent',
+                    border: `1px solid ${on ? 'transparent' : 'rgba(221,196,151,0.3)'}`,
+                  }}>
+                  {cat.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center justify-center gap-1 sm:gap-2 mb-10 overflow-x-auto pb-2" role="tablist">
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveTab(cat.id)}
-              className={`tab-btn flex-shrink-0 flex items-center gap-1.5 px-4 py-2 font-semibold text-sm transition-colors ${activeTab === cat.id ? 'active text-teal-700' : 'text-gray-600 hover:text-teal-700'}`}
-              role="tab"
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Card Grids per tab */}
-        <div id="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[300px] transition-opacity duration-300">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 22 }}>
           {filteredThemes.length > 0 ? filteredThemes.map(t => {
-            const prices = getPriceByCategory(t.category)
+            const prices = priceOf(t.category)
             const gradientBg = `linear-gradient(135deg, ${t.colors?.[0] || '#134e4a'}, ${t.colors?.[1] || '#d4a96a'})`
 
             return (
-              <div key={t.id} className="theme-card relative h-[380px] rounded-2xl overflow-hidden shadow-sm flex flex-col group">
-                {/* Background visual covering entire card */}
-                <div className="absolute inset-0 z-0 bg-gray-100">
+              <div key={t.id} className="theme-card relative overflow-hidden" style={{
+                border: '1px solid rgba(221,196,151,0.16)', borderRadius: 22, background: '#10141A',
+              }}>
+                <div className="relative overflow-hidden" style={{ height: 300 }}>
                   {t.thumbnail ? (
-                    <img src={t.thumbnail} alt={t.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={t.thumbnail} alt={t.name} loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center" style={{ background: gradientBg }}>
                       <span className="text-6xl opacity-90 drop-shadow-md">{t.emoji}</span>
                     </div>
                   )}
-                  {/* Subtle dark gradient overlay at the bottom to ensure text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C232E]/80 via-[#1C232E]/10 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                    background: 'linear-gradient(to top, rgba(11,13,17,0.94) 0%, rgba(11,13,17,0.1) 55%, transparent 100%)',
+                  }} />
+                  <span className="absolute" style={{
+                    top: 14, left: 14, fontSize: 9, letterSpacing: '0.22em', color: '#DDC497',
+                    border: '1px solid rgba(221,196,151,0.4)', padding: '6px 12px', borderRadius: 999,
+                    background: 'rgba(11,13,17,0.6)',
+                  }}>{CATEGORIES.find(c => c.id === t.category)?.label || t.category}</span>
+                  <span className="absolute" style={{
+                    top: 14, right: 14, fontSize: 9, letterSpacing: '0.14em', color: '#0B0D11',
+                    background: '#DDC497', padding: '6px 11px', borderRadius: 999,
+                  }}>-50%</span>
                 </div>
-                
-                {/* Badges Overlay */}
-                <div className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-20 shadow-md">-50%</div>
-                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur shadow-md text-sm px-2.5 py-1 rounded-lg z-20 flex items-center gap-1 text-gray-900 font-medium">
-                  {t.emoji}
-                </div>
 
-                {/* Spacer to push content to bottom */}
-                <div className="flex-1 z-10 pointer-events-none"></div>
-
-                {/* Card body (Glassmorphism overlay at bottom)
-
-                    Dirapatkan dua kali. Panel ini semula memakan sekitar 191px
-                    dari kartu setinggi 380px — lebih dari separuh — sehingga
-                    mockup HP di thumbnail selalu terpotong di bagian bawahnya,
-                    justru bagian yang paling menjual. Putaran pertama memangkas
-                    ruang kosong dan ukuran teks; putaran kedua membuang
-                    deskripsi tema sama sekali, menyisakan nama dan harga.
-                    Sekarang sekitar 113px, 30% kartu.
-
-                    Deskripsinya tidak hilang dari sistem — ia tetap tersimpan di
-                    tabel themes dan tetap bisa diedit dari panel admin, hanya
-                    tidak lagi ditampilkan di kartu. Yang membedakan tema di mata
-                    pembeli sekarang thumbnail-nya, dan itu memang yang paling
-                    dilihat. */}
-                <div className="px-4 py-3 z-20 bg-[#1C232E]/60 backdrop-blur-md border-t border-white/10 flex flex-col">
-                  <h3 className="font-semibold text-white text-[15px] leading-snug mb-1.5 drop-shadow-sm line-clamp-1">{t.name}</h3>
-                  <div className="flex items-baseline gap-2 mb-2.5">
-                    <span className="text-gray-400 text-[10px] line-through">{prices.original}</span>
-                    <span className="text-[#DDC497] font-bold text-base drop-shadow-sm">{prices.promo}</span>
+                <div style={{ padding: '20px 20px 24px' }}>
+                  <h3 className="font-marcellus line-clamp-1" style={{
+                    fontWeight: 400, fontSize: 20, margin: '0 0 10px', color: '#F2EFE7',
+                  }}>{t.name}</h3>
+                  <div className="flex items-baseline" style={{ gap: 10, marginBottom: 18 }}>
+                    <span style={{ fontSize: 12, color: '#6C7480', textDecoration: 'line-through' }}>{prices.original}</span>
+                    <span className="font-marcellus" style={{ fontSize: 22, color: '#DDC497' }}>{prices.promo}</span>
                   </div>
-                  <div className="flex gap-2">
-                    <a href={`/invite/demo?theme=${t.id}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center border border-gray-400 text-gray-300 hover:bg-white/10 hover:text-white py-2 px-2 rounded-lg text-[11px] font-semibold transition-all">
-                      Lihat Preview
-                    </a>
-                    <Link to={`/login?register=true&category=${t.category}&themeName=${encodeURIComponent(t.name)}`} className="order-btn flex-1 text-center bg-[#DDC497] text-[#1C232E] hover:opacity-90 py-2 px-2 rounded-lg text-[11px] font-semibold transition-all shadow-lg">
-                      Pesan Sekarang
-                    </Link>
+                  <div className="flex" style={{ gap: 8 }}>
+                    <a href={`/invite/demo?theme=${t.id}`} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 text-center transition-colors hover:text-foyer-gold" style={{
+                        fontSize: 10, letterSpacing: '0.16em', color: '#C8CCD3',
+                        border: '1px solid rgba(200,204,211,0.28)', padding: '12px 8px', borderRadius: 999,
+                      }}>PREVIEW</a>
+                    <Link to={`/login?register=true&category=${t.category}&themeName=${encodeURIComponent(t.name)}`}
+                      className="order-btn flex-1 text-center transition-opacity hover:opacity-90" style={{
+                        fontSize: 10, letterSpacing: '0.16em', color: '#0B0D11',
+                        background: 'linear-gradient(135deg, #C4A771, #E7D3AA)', padding: '12px 8px', borderRadius: 999,
+                      }}>PESAN</Link>
                   </div>
                 </div>
               </div>
             )
           }) : (
-            <div className="col-span-full text-center text-gray-400 py-10">
+            <div className="col-span-full text-center" style={{ color: '#6C7480', padding: '40px 0' }}>
               Belum ada tema di kategori ini.
             </div>
           )}
         </div>
 
-        <div className="text-center mt-10">
-          <a href={waLink()} target="_blank" rel="noopener noreferrer" className="catalog-see-all-link inline-flex items-center gap-2 border-2 font-bold px-8 py-3 rounded-full transition-all text-sm" style={{ borderColor: 'rgba(221,196,151,0.5)', color: '#DDC497' }}>
-            Konsultasi Tema &rarr;
+        <div className="text-center" style={{ marginTop: 'clamp(40px, 5vw, 60px)' }}>
+          <a href={waLink('Halo Ulema! Saya ingin konsultasi tema undangan')}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center transition-colors" style={{
+              gap: 8, fontSize: 11, letterSpacing: '0.22em', color: '#DDC497',
+              border: '1px solid rgba(221,196,151,0.4)', padding: '15px 32px', borderRadius: 999,
+            }}>
+            KONSULTASI TEMA →
           </a>
         </div>
       </div>

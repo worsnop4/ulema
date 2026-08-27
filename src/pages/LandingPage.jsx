@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import './LandingPage.css'
+import LandingCurtain from '../components/landing/LandingCurtain'
 import LandingNavbar from '../components/landing/LandingNavbar'
 import LandingHero from '../components/landing/LandingHero'
 import LandingFeatures from '../components/landing/LandingFeatures'
@@ -20,13 +21,14 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="bg-[#F4F6F5] text-[#1F2937] min-h-screen">
+    <div className="foyer bg-foyer-ink text-foyer-body min-h-screen font-jost overflow-hidden">
+      <LandingCurtain />
       <LandingNavbar />
       <LandingHero />
       <LandingFeatures />
-      <LandingTestimonials />
       <LandingCatalog />
       <LandingHowItWorks />
+      <LandingTestimonials />
       <LandingFAQ />
       <LandingFooter />
 

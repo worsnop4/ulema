@@ -36,6 +36,20 @@ export default {
         },
         coral: { DEFAULT: '#e07c5a', light: '#f0a080' },
         cream: { DEFAULT: '#FFFBF0', dark: '#F5E6DA' },
+        foyer: {
+          ink:       '#0B0D11',
+          panel:     '#0E1116',
+          card:      '#10141A',
+          gold:      '#DDC497',
+          goldDeep:  '#C4A771',
+          goldLight: '#E7D3AA',
+          cream:     '#FBF8F1',
+          creamSoft: '#EDE9DF',
+          body:      '#E8E4DA',
+          muted:     '#8A93A1',
+          muted2:    '#6C7480',
+          nav:       '#A9AFB9',
+        },
         special: {
           cream: '#fefae0',
           sage: '#685952',
@@ -49,6 +63,9 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        marcellus: ['Marcellus', 'Georgia', 'serif'],
+        jost: ['Jost', 'Inter', 'system-ui', 'sans-serif'],
+        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       boxShadow: {
         card: '0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.04)',

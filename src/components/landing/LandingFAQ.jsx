@@ -1,80 +1,63 @@
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
+import LandingStars from './LandingStars'
 
-const faqData = [
-  {
-    q: 'Berapa lama proses pembuatan undangan?',
-    a: 'Proses pembuatan undangan sangat cepat! Setelah pembayaran dikonfirmasi, kamu bisa langsung mengisi data di dashboard. Undangan siap disebar dalam **waktu kurang dari 5 menit**. Tidak perlu menunggu berjam-jam atau berhari-hari.'
-  },
-  {
-    q: 'Apakah bisa custom nama tamu di setiap undangan?',
-    a: 'Ya, tentu! Fitur **Custom Nama Tamu** sudah termasuk di semua paket. Kamu cukup input daftar tamu, dan sistem kami akan otomatis membuat link unik dengan nama tamu masing-masing. Undangan terasa personal dan berkesan.'
-  },
-  {
-    q: 'Berapa banyak tamu yang bisa diundang?',
-    a: 'Semua paket kami mendukung **sebar undangan tanpa batas**. Tidak ada batasan jumlah tamu yang bisa kamu undang. Bagikan ke ribuan tamu sekalipun tanpa biaya tambahan.'
-  },
-  {
-    q: 'Apakah ada garansi uang kembali?',
-    a: 'Ya! Kami memberikan **garansi uang kembali 100%** jika kamu tidak puas dengan layanan kami dalam 7 hari pertama setelah pembelian. Kepuasanmu adalah prioritas utama kami.'
-  },
-  {
-    q: 'Metode pembayaran apa saja yang diterima?',
-    a: 'Kami menerima berbagai metode pembayaran: **Transfer Bank** (BCA, Mandiri, BNI, BRI), **QRIS**, **GoPay**, **OVO**, **Dana**, dan **ShopeePay**. Proses konfirmasi cepat dan otomatis.'
-  },
-  {
-    q: 'Berapa lama masa aktif undangan?',
-    a: 'Masa aktif undangan bervariasi tergantung paket yang kamu pilih: mulai dari **6 bulan hingga 12 bulan**. Undanganmu tetap bisa diakses oleh tamu selama masa aktif tersebut. Masa aktif dihitung sejak tanggal aktivasi, bukan tanggal acara.'
-  }
+// Markup `**tebal**` di versi lama dibuang, bukan dirender: di palet ini
+// penegasan datang dari warna emas, dan bintang literal akan terbaca
+// sebagai salah ketik.
+const FAQS = [
+  ['Berapa lama proses pembuatan undangan?',
+   'Setelah pembayaran dikonfirmasi, kamu bisa langsung mengisi data di dashboard. Undangan siap disebar dalam waktu kurang dari 5 menit.'],
+  ['Apakah bisa custom nama tamu di setiap undangan?',
+   'Ya. Fitur Custom Nama Tamu sudah termasuk di semua paket — input daftar tamu, sistem membuat tautan unik untuk masing-masing.'],
+  ['Berapa banyak tamu yang bisa diundang?',
+   'Semua paket mendukung sebar undangan tanpa batas. Bagikan ke ribuan tamu tanpa biaya tambahan.'],
+  ['Apakah ada garansi uang kembali?',
+   'Ya, garansi uang kembali 100% dalam 7 hari pertama setelah pembelian.'],
+  ['Metode pembayaran apa saja yang diterima?',
+   'Transfer bank (BCA, Mandiri, BNI, BRI), QRIS, GoPay, OVO, Dana, dan ShopeePay. Konfirmasi cepat dan otomatis.'],
+  ['Berapa lama masa aktif undangan?',
+   'Mulai dari 6 hingga 12 bulan tergantung paket, dihitung sejak tanggal aktivasi.'],
 ]
 
 export default function LandingFAQ() {
-  const [openIndex, setOpenIndex] = useState(null)
-
-  useEffect(() => {
-    const revealEls = document.querySelectorAll('.reveal')
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible')
-          observer.unobserve(e.target)
-        }
-      })
-    }, { threshold: 0.1 })
-    
-    revealEls.forEach(el => observer.observe(el))
-    return () => observer.disconnect()
-  }, [])
+  const [open, setOpen] = useState(null)
 
   return (
-    <section id="faq" className="py-16 md:py-24 bg-cream">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14 reveal">
-          <div className="section-badge-teal inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-4 tracking-wider uppercase">
-            FAQ
-          </div>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Pertanyaan yang Sering Ditanyakan</h2>
+    <section id="faq" className="relative overflow-hidden font-jost" style={{
+      padding: 'clamp(72px, 11vw, 150px) clamp(20px, 5vw, 64px)', background: '#0E1116',
+    }}>
+      <LandingStars count={22} seed={4517} />
+
+      <div className="relative" style={{ zIndex: 1, maxWidth: 820, margin: '0 auto' }}>
+        <div className="text-center" style={{ marginBottom: 'clamp(38px, 5vw, 64px)' }}>
+          <span style={{ fontSize: 10, letterSpacing: '0.4em', color: '#DDC497' }}>FAQ</span>
+          <h2 className="font-marcellus" style={{
+            fontWeight: 400, fontSize: 'clamp(28px, 4vw, 50px)', margin: '18px 0 0', color: '#FBF8F1',
+          }}>Pertanyaan yang Sering Ditanyakan</h2>
         </div>
 
-        <div className="space-y-3 reveal">
-          {faqData.map((faq, index) => {
-            const isOpen = openIndex === index
+        <div className="flex flex-col">
+          {FAQS.map(([q, a], i) => {
+            const isOpen = open === i
             return (
-              <div key={index} className="faq-item bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all">
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="faq-toggle w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-semibold text-gray-800 text-sm sm:text-base pr-4">{faq.q}</span>
-                  <span 
-                    className={`faq-icon flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-lg font-bold ${isOpen ? 'open rotate-45' : ''} transition-transform`} 
-                    style={{ background: 'rgba(160,170,184,0.15)', color: '#DDC497' }}
-                  >
-                    +
+              <div key={q} style={{ borderTop: '1px solid rgba(221,196,151,0.16)' }}>
+                <button onClick={() => setOpen(isOpen ? null : i)} aria-expanded={isOpen}
+                  className="w-full flex items-center justify-between text-left font-jost"
+                  style={{
+                    gap: 20, background: 'transparent', border: 0, cursor: 'pointer',
+                    padding: '24px 0', fontSize: 15, fontWeight: 400, color: '#EDE9DF',
+                  }}>
+                  <span>{q}</span>
+                  <span className="font-marcellus" style={{ flexShrink: 0, fontSize: 18, color: '#DDC497' }}>
+                    {isOpen ? '−' : '+'}
                   </span>
                 </button>
-                <div className={`faq-body px-6 ${isOpen ? 'open' : ''}`} style={{ maxHeight: isOpen ? '600px' : '0', overflow: 'hidden', transition: 'max-height 0.4s ease' }}>
-                  <p className="text-gray-600 text-sm leading-relaxed pb-5" dangerouslySetInnerHTML={{ __html: faq.a.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-                </div>
+                {isOpen && (
+                  <p style={{
+                    fontSize: 13, fontWeight: 300, lineHeight: 1.85, color: '#8A93A1',
+                    margin: 0, padding: '0 44px 26px 0',
+                  }}>{a}</p>
+                )}
               </div>
             )
           })}
