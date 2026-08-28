@@ -162,9 +162,13 @@ export default function LandingFeatures() {
             background: 'linear-gradient(135deg, #C4A771, #E7D3AA)', padding: '17px 36px', borderRadius: 999,
           }}>KLAIM DISKON SEKARANG</a>
 
+          {/* Tiga angka ini adalah satu kalimat, bukan tiga kartu terpisah:
+              dibuat -> disebar -> selesai. Ditumpuk ke bawah, urutannya
+              hilang. Jadi kolomnya dikunci tiga, dan yang mengecil di HP
+              adalah kotak dan hurufnya. */}
           <div id="stats-counter-section" style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 14, marginTop: 'clamp(44px, 6vw, 70px)',
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 'clamp(6px, 1.6vw, 14px)', marginTop: 'clamp(44px, 6vw, 70px)',
           }}>
             {[
               [<AnimatedCounter key="a" target={2456} start={statsStarted} />, 'Undangan Dibuat'],
@@ -173,11 +177,16 @@ export default function LandingFeatures() {
             ].map(([value, label]) => (
               <div key={label} style={{
                 background: '#0B0D11', border: '1px solid rgba(221,196,151,0.14)',
-                borderRadius: 18, padding: '28px 22px',
+                borderRadius: 'clamp(12px, 2vw, 18px)',
+                padding: 'clamp(14px, 3vw, 28px) clamp(6px, 2vw, 22px)',
               }}>
-                <span className="font-marcellus block" style={{ fontSize: 'clamp(28px, 3.6vw, 40px)', color: '#FBF8F1' }}>{value}</span>
+                <span className="font-marcellus block" style={{
+                  fontSize: 'clamp(15px, 4.4vw, 40px)', lineHeight: 1.1, color: '#FBF8F1',
+                }}>{value}</span>
                 <span className="block" style={{
-                  fontSize: 9, letterSpacing: '0.28em', textTransform: 'uppercase', color: '#8A93A1', marginTop: 8,
+                  fontSize: 'clamp(7px, 1.9vw, 9px)', letterSpacing: 'clamp(0.06em, 0.4vw, 0.28em)',
+                  lineHeight: 1.5, textTransform: 'uppercase', color: '#8A93A1',
+                  marginTop: 'clamp(4px, 1vw, 8px)',
                 }}>{label}</span>
               </div>
             ))}
@@ -206,17 +215,34 @@ export default function LandingFeatures() {
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 14 }}>
+          {/* Lebar minimum kolom ikut menyusut di layar sempit. Dengan 230px
+              tetap, auto-fit hanya muat satu kolom di HP dan kartunya jadi
+              selebar layar; clamp menjaganya tetap dua. */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(130px, 26vw, 230px), 1fr))',
+            gap: 'clamp(8px, 1.6vw, 14px)',
+          }}>
             {FEATURES.map(([title, desc], i) => (
               <div key={title} className="feature-card flex flex-col" style={{
-                background: '#0E1116', border: '1px solid rgba(221,196,151,0.14)', borderRadius: 18,
-                padding: '34px 28px 38px', gap: 12, transition: 'background 0.4s ease',
+                background: '#0E1116', border: '1px solid rgba(221,196,151,0.14)',
+                borderRadius: 'clamp(12px, 2vw, 18px)',
+                padding: 'clamp(16px, 3vw, 34px) clamp(12px, 2.4vw, 28px) clamp(18px, 3.4vw, 38px)',
+                gap: 'clamp(6px, 1.2vw, 12px)', transition: 'background 0.4s ease',
               }}>
-                <span className="font-marcellus" style={{ fontSize: 12, letterSpacing: '0.2em', color: 'rgba(221,196,151,0.55)' }}>
+                <span className="font-marcellus" style={{
+                  fontSize: 'clamp(9px, 2.2vw, 12px)', letterSpacing: '0.2em', color: 'rgba(221,196,151,0.55)',
+                }}>
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <h3 className="font-marcellus" style={{ fontWeight: 400, fontSize: 20, margin: 0, color: '#F2EFE7' }}>{title}</h3>
-                <p style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.7, color: '#8A93A1', margin: 0 }}>{desc}</p>
+                <h3 className="font-marcellus" style={{
+                  fontWeight: 400, fontSize: 'clamp(13px, 3.4vw, 20px)', lineHeight: 1.25,
+                  margin: 0, color: '#F2EFE7',
+                }}>{title}</h3>
+                <p style={{
+                  fontSize: 'clamp(10px, 2.6vw, 13px)', fontWeight: 300, lineHeight: 1.6,
+                  color: '#8A93A1', margin: 0,
+                }}>{desc}</p>
               </div>
             ))}
           </div>
