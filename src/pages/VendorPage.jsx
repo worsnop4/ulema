@@ -100,6 +100,25 @@ const HeadlineText = ({ text, accent }) => {
   })
 }
 
+/** Latar foto satu blok: sudut tajam, tanpa jarak, plus scrim gradien
+ *  yang membuat teks di atasnya terbaca. */
+const PhotoBand = ({ photos, eager = false }) => {
+  const list = photos.slice(0, 3)
+  if (!list.length) return null
+  return (
+    <>
+      <div className="vp-band-photos" data-count={list.length} aria-hidden="true">
+        {list.map((src, k) => (
+          <div key={k}>
+            <img src={src} alt="" loading={eager && k === 0 ? 'eager' : 'lazy'} />
+          </div>
+        ))}
+      </div>
+      <div className="vp-band-scrim" />
+    </>
+  )
+}
+
 const Arrow = ({ dir, onClick, label }) => (
   <button onClick={onClick} aria-label={label}
     className="flex items-center justify-center vp-btn vp-btn-outline"
@@ -229,8 +248,18 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
     : null
   const ig = vendor.instagram ? String(vendor.instagram).replace(/^@/, '') : null
 
-  const heroPhotos = arr(vendor.hero_photos).filter(x => typeof x === 'string' && x)
-  const hero3 = heroPhotos.length >= 3 ? heroPhotos.slice(0, 3) : photos.slice(0, 3).map(p => p.full)
+  const listed = (v) => arr(v).filter(x => typeof x === 'string' && x)
+  const heroPhotos = listed(vendor.hero_photos)
+  const hero3 = heroPhotos.length ? heroPhotos.slice(0, 3) : photos.slice(0, 3).map(p => p.full)
+
+  // Blok Tentang memakai tiga foto juga. Kalau tidak ditentukan, ambil dari
+  // ekor galeri supaya tidak mengulang foto yang sudah dipakai hero.
+  const aboutListed = listed(vendor.about_photos)
+  const aboutPhotos = aboutListed.length
+    ? aboutListed.slice(0, 3)
+    : (vendor.about_photo_url
+        ? [vendor.about_photo_url, ...photos.slice(-2).map(p => p.full)].slice(0, 3)
+        : photos.slice(-3).map(p => p.full))
 
   const stats = arr(vendor.stats).filter(s => s?.value)
   const facts = arr(vendor.facts).filter(f => f?.label)
@@ -312,22 +341,24 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section id="top" className="vp-hero relative grid" style={{
-        gridTemplateColumns: '1fr 0.95fr', gap: 28, alignItems: 'stretch',
+      <section id="top" className="vp-band flex" style={{
+        minHeight: 'min(88vh, 780px)', alignItems: 'stretch',
         padding: 'clamp(28px, 4vw, 44px) clamp(18px, 3vw, 28px) clamp(38px, 5vw, 56px)',
-        backgroundImage: 'radial-gradient(120% 90% at 8% 6%, rgba(201,169,124,0.22) 0%, rgba(201,169,124,0.07) 34%, rgba(13,11,10,0) 68%), linear-gradient(180deg, rgba(255,250,242,0.05) 0%, rgba(13,11,10,0) 42%)',
       }}>
+        <PhotoBand photos={hero3} eager />
+
         <div className="absolute pointer-events-none" style={{
           left: '-6%', top: '-12%', width: '46%', height: '70%',
-          background: 'radial-gradient(closest-side, rgba(201,169,124,0.3), rgba(201,169,124,0) 100%)',
+          background: 'radial-gradient(closest-side, rgba(201,169,124,0.26), rgba(201,169,124,0) 100%)',
           filter: 'blur(60px)',
         }} />
 
-        <div className="relative flex flex-col justify-between" style={{
+        <div className="vp-band-text relative flex flex-col justify-between" style={{
+          zIndex: 2, flex: 1, maxWidth: '46%',
           gap: 'clamp(28px, 4vw, 48px)', padding: 'clamp(16px, 3vw, 36px) 12px 12px',
         }}>
           <Eyebrow style={{ letterSpacing: '0.32em' }}>
-            {vendor.category}{vendor.city ? ` · ${vendor.city}` : ''}
+            {vendor.category}{vendor.city ? ` \u00B7 ${vendor.city}` : ''}
           </Eyebrow>
 
           <div>
@@ -341,7 +372,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
                 : vendor.name}
             </h1>
             {vendor.tagline && (
-              <p style={{ margin: 0, maxWidth: '44ch', fontSize: 15, lineHeight: 1.9, color: 'rgba(234,224,212,0.66)' }}>
+              <p style={{ margin: 0, maxWidth: '44ch', fontSize: 15, lineHeight: 1.9, color: 'rgba(234,224,212,0.72)' }}>
                 {vendor.tagline}
               </p>
             )}
@@ -354,30 +385,11 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
             }}>Lihat galeri</a>
             <a href={packageCount ? '#paket' : '#kontak'} className="font-archivo vp-btn vp-btn-ghost" style={{
               fontSize: 10, letterSpacing: '0.26em', textTransform: 'uppercase',
-              border: '1px solid rgba(234,224,212,0.28)', padding: '17px 30px', borderRadius: 999,
+              border: '1px solid rgba(234,224,212,0.38)', padding: '17px 30px', borderRadius: 999,
+              background: 'rgba(13,11,10,0.35)',
             }}>{packageCount ? 'Paket & harga' : 'Hubungi kami'}</a>
           </div>
         </div>
-
-        {hero3.length > 0 && (
-          <div className="vp-hero-photos relative grid" style={{ gridTemplateColumns: '1.15fr 1fr', gap: 14 }}>
-            <div className="overflow-hidden" style={{
-              borderRadius: 28, background: C.well, boxShadow: '0 26px 60px rgba(0,0,0,0.5)',
-            }}>
-              <img src={hero3[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </div>
-            <div className="grid" style={{ gridTemplateRows: '1fr 1fr', gap: 14 }}>
-              {hero3.slice(1, 3).map((src, k) => (
-                <div key={k} className="overflow-hidden" style={{
-                  borderRadius: 28, background: C.well, boxShadow: '0 26px 60px rgba(0,0,0,0.5)',
-                }}>
-                  <img src={src} alt="" loading="lazy"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </section>
 
       {/* ── Statistik ────────────────────────────────────────────── */}
@@ -506,21 +518,13 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
 
       {/* ── Tentang ──────────────────────────────────────────────── */}
       {(vendor.description || facts.length > 0) && (
-        <section id="tentang" className="vp-about grid" style={{
-          gridTemplateColumns: '1fr 1.15fr', gap: 'clamp(28px, 4vw, 56px)', alignItems: 'start',
-          padding: '24px clamp(18px, 3vw, 28px) clamp(56px, 8vw, 96px)',
+        <section id="tentang" className="vp-band vp-band--flip flex justify-end" style={{
+          minHeight: 'min(72vh, 660px)', alignItems: 'center',
+          padding: 'clamp(44px, 7vw, 88px) clamp(18px, 3vw, 28px)',
         }}>
-          {(vendor.about_photo_url || photos.length > 0) && (
-            <div className="overflow-hidden" style={{
-              aspectRatio: '4 / 5', borderRadius: 28, background: C.well,
-              boxShadow: '0 30px 70px rgba(0,0,0,0.55)',
-            }}>
-              <img src={vendor.about_photo_url || photos[photos.length - 1]?.full} alt="" loading="lazy"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-            </div>
-          )}
+          <PhotoBand photos={aboutPhotos} />
 
-          <div style={{ paddingTop: 8 }}>
+          <div className="vp-band-text relative" style={{ zIndex: 2, flex: 1, maxWidth: '46%' }}>
             <Eyebrow style={{ marginBottom: 22 }}>Tentang</Eyebrow>
             {vendor.about_title && (
               <h2 className="font-archivo" style={{
@@ -531,7 +535,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
             {String(vendor.description || '').split('\n').filter(Boolean).map((para, k) => (
               <p key={k} style={{
                 margin: '0 0 18px', fontSize: 15, lineHeight: 1.9,
-                color: C.body, maxWidth: '56ch', textWrap: 'pretty',
+                color: 'rgba(234,224,212,0.76)', maxWidth: '56ch', textWrap: 'pretty',
               }}>{para}</p>
             ))}
 
@@ -539,7 +543,9 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
               <div className="vp-facts grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 18 }}>
                 {facts.map((f, k) => (
                   <div key={k} style={{
-                    border: `1px solid ${C.line}`, borderRadius: 20, padding: '22px 24px', background: C.surface,
+                    border: `1px solid ${C.line}`, borderRadius: 20, padding: '22px 24px',
+                    background: 'rgba(17,14,12,0.82)', backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
                   }}>
                     <p className="font-archivo" style={{
                       margin: '0 0 6px', fontSize: 9, letterSpacing: '0.24em',
