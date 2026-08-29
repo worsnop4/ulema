@@ -100,6 +100,18 @@ const HeadlineText = ({ text, accent }) => {
   })
 }
 
+const Arrow = ({ dir, onClick, label }) => (
+  <button onClick={onClick} aria-label={label}
+    className="flex items-center justify-center vp-btn vp-btn-outline"
+    style={{
+      flex: '0 0 auto', width: 42, height: 42, borderRadius: '50%',
+      background: 'transparent', border: `1px solid ${C.goldLine}`,
+      color: C.goldSoft, fontSize: 16, cursor: 'pointer',
+    }}>
+    {dir === 'prev' ? '\u2039' : '\u203A'}
+  </button>
+)
+
 const Eyebrow = ({ children, style }) => (
   <p className="font-archivo" style={{
     margin: 0, fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
@@ -185,6 +197,9 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
   const photos = normPhotos(vendor.gallery)
   const [i, setI] = useState(0)
   const [lightbox, setLightbox] = useState(null)
+  // Kategori paket yang dipilih, dan paket ke berapa di dalamnya.
+  const [pkgGroup, setPkgGroup] = useState(0)
+  const [pkgIndex, setPkgIndex] = useState(0)
   const paused = useRef(false)
 
   const n = photos.length
@@ -224,6 +239,30 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
   const testimonials = arr(vendor.testimonials).filter(t => t?.quote)
   const hasPrice = vendor.price_from || vendor.price_to
   const useMosaic = n >= MOSAIC_MIN_PHOTOS
+
+  // Kategori aktif dan paket aktif, dijaga tetap di dalam rentang supaya
+  // berpindah kategori tidak pernah menunjuk paket yang tidak ada.
+  const curGroup = packageGroups.length ? Math.min(pkgGroup, packageGroups.length - 1) : 0
+  const group = packageGroups[curGroup]
+  const items = group?.items || []
+  const curIndex = items.length ? pkgIndex % items.length : 0
+
+  const visiblePkgs = items.length === 0 ? []
+    : items.length === 1 ? [{ p: items[0], center: true, slot: 'c' }]
+    : items.length === 2 ? [
+        { p: items[curIndex], center: true, slot: 'c' },
+        { p: items[(curIndex + 1) % 2], center: false, slot: 'n' },
+      ]
+    : [
+        { p: items[(curIndex - 1 + items.length) % items.length], center: false, slot: 'p' },
+        { p: items[curIndex], center: true, slot: 'c' },
+        { p: items[(curIndex + 1) % items.length], center: false, slot: 'n' },
+      ]
+
+  const pkgWaHref = (p) => wa
+    ? `https://wa.me/${wa}?text=${encodeURIComponent(
+        `Halo ${vendor.name}, saya tertarik dengan paket ${p.name} (${p.price}). Boleh minta info ketersediaan tanggalnya?`)}`
+    : null
 
   // 36 ubin dari n foto. Langkah 7 relatif prima terhadap 20, jadi seluruh
   // arsip lewat sekali sebelum ada yang terulang.
@@ -531,53 +570,104 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
               )}
             </div>
 
-            {packageGroups.map((g, gi) => (
-            <div key={gi} style={{ marginTop: gi === 0 ? 0 : 'clamp(32px, 5vw, 52px)' }}>
-              {g.group && (
-                <div className="flex flex-wrap items-baseline" style={{ gap: 16, marginBottom: 20 }}>
-                  <p className="font-archivo" style={{
-                    margin: 0, fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase',
-                    color: C.goldLabel,
-                  }}>{g.group}</p>
-                  <span style={{ flex: 1, minWidth: 40, height: 1, background: 'rgba(201,169,124,0.28)' }} />
-                  {g.note && (
-                    <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: C.faint }}>{g.note}</p>
-                  )}
-                </div>
+            {/* Tab kategori. Enam kelompok yang ditampilkan sekaligus
+                membanjiri halaman, jadi satu kelompok saja per waktu. */}
+            {packageGroups.length > 1 && (
+              <div className="flex flex-wrap" style={{ gap: 8, marginBottom: 28 }} role="tablist">
+                {packageGroups.map((g, k) => {
+                  const on = k === curGroup
+                  return (
+                    <button key={k} role="tab" aria-selected={on}
+                      onClick={() => { setPkgGroup(k); setPkgIndex(0) }}
+                      className="font-archivo vp-btn" style={{
+                        fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
+                        cursor: 'pointer', borderRadius: 999, padding: '10px 18px',
+                        color: on ? C.onGold : 'rgba(234,224,212,0.75)',
+                        background: on ? 'linear-gradient(135deg, #C4A771, #E7D3AA)' : 'transparent',
+                        border: `1px solid ${on ? 'transparent' : 'rgba(201,169,124,0.3)'}`,
+                      }}>{g.group || `Paket ${k + 1}`}</button>
+                  )
+                })}
+              </div>
+            )}
+
+            {group?.note && (
+              <p style={{ margin: '0 0 22px', fontSize: 13, lineHeight: 1.7, color: C.faint }}>
+                {group.note}
+              </p>
+            )}
+
+            {/* Panah adalah saudara flex dari barisnya, bukan elemen absolute
+                -- itu yang mencegah kartu samping menabraknya di layar sempit. */}
+            <div className="flex items-center" style={{ gap: 'clamp(6px, 1.6vw, 18px)' }}>
+              {items.length > 1 && (
+                <Arrow dir="prev" label="Paket sebelumnya"
+                  onClick={() => setPkgIndex(v => (v - 1 + items.length) % items.length)} />
               )}
 
-              <div className="vp-tiers grid" style={{
-                gridTemplateColumns: `repeat(${Math.min(g.items.length, 3)}, 1fr)`, gap: 16,
-              }}>
-              {g.items.map((p, k) => (
-                <div key={k} className="flex flex-col" style={{
-                  borderRadius: 26, padding: 'clamp(26px, 4vw, 36px) clamp(20px, 3vw, 30px)', gap: 26,
-                  border: `1px solid ${p.highlight ? 'rgba(201,169,124,0.55)' : 'rgba(234,224,212,0.12)'}`,
-                  background: p.highlight
-                    ? 'linear-gradient(180deg, rgba(201,169,124,0.12), rgba(201,169,124,0.02))'
-                    : 'transparent',
-                }}>
-                  <div>
-                    <p className="font-archivo" style={{
-                      margin: '0 0 14px', fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase',
-                      color: p.highlight ? C.goldLabel : 'rgba(234,224,212,0.55)',
-                    }}>{p.name}{p.note ? ` · ${p.note}` : ''}</p>
-                    <p className="font-archivo" style={{
-                      margin: 0, fontSize: 'clamp(26px, 3.2vw, 32px)', fontWeight: 300,
-                      letterSpacing: '0.02em', color: p.highlight ? C.hi3 : C.hi2,
-                    }}>{p.price}</p>
-                  </div>
-                  <ul className="grid" style={{
-                    margin: 0, padding: 0, listStyle: 'none', gap: 12, fontSize: 14, lineHeight: 1.6,
-                    color: p.highlight ? 'rgba(234,224,212,0.82)' : 'rgba(234,224,212,0.72)',
+              <div className="flex justify-center items-stretch overflow-hidden"
+                style={{ flex: 1, minWidth: 0, gap: 'clamp(10px, 1.6vw, 18px)' }}>
+                {visiblePkgs.map(({ p, center, slot }) => (
+                  <div key={slot} className="flex flex-col" style={{
+                    flex: '0 0 auto', width: center ? 'min(400px, 100%)' : 'clamp(180px, 24vw, 300px)',
+                    borderRadius: 26, padding: 'clamp(24px, 3.4vw, 36px) clamp(20px, 2.6vw, 30px)',
+                    border: `1px solid ${center ? 'rgba(201,169,124,0.5)' : 'rgba(234,224,212,0.12)'}`,
+                    background: center
+                      ? 'linear-gradient(180deg, rgba(201,169,124,0.1), rgba(201,169,124,0.015))'
+                      : 'transparent',
+                    boxShadow: center ? '0 24px 60px rgba(0,0,0,0.5)' : 'none',
+                    opacity: center ? 1 : 0.4,
+                    transform: `scale(${center ? 1 : 0.96})`,
+                    transition: 'all .5s cubic-bezier(0.2, 0.8, 0.2, 1)',
                   }}>
-                    {arr(p.features).map((f, j) => <li key={j}>{f}</li>)}
-                  </ul>
-                </div>
-              ))}
+                    <p className="font-archivo" style={{
+                      margin: '0 0 12px', fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase',
+                      color: center ? C.goldLabel : 'rgba(234,224,212,0.55)',
+                    }}>{p.name}{p.note ? ` \u00B7 ${p.note}` : ''}</p>
+
+                    <p className="font-archivo" style={{
+                      margin: '0 0 24px', fontSize: center ? 'clamp(26px, 3.2vw, 34px)' : 'clamp(19px, 2.2vw, 24px)',
+                      fontWeight: 300, letterSpacing: '0.02em', color: center ? C.hi3 : C.hi2,
+                    }}>{p.price}</p>
+
+                    <ul className="grid" style={{
+                      margin: 0, padding: 0, listStyle: 'none', gap: 10, flex: 1,
+                      fontSize: center ? 14 : 13, lineHeight: 1.6,
+                      color: center ? 'rgba(234,224,212,0.85)' : 'rgba(234,224,212,0.7)',
+                    }}>
+                      {arr(p.features).map((f, j) => <li key={j}>{f}</li>)}
+                    </ul>
+
+                    {center && waHref && (
+                      <a href={pkgWaHref(p)} target="_blank" rel="noopener noreferrer"
+                        onClick={() => onTrack('wa_click')}
+                        className="font-archivo vp-btn vp-btn-gold text-center" style={{
+                          marginTop: 28, fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase',
+                          background: C.gold, color: C.onGold, padding: '16px 24px', borderRadius: 999,
+                        }}>Ambil paket</a>
+                    )}
+                  </div>
+                ))}
               </div>
+
+              {items.length > 1 && (
+                <Arrow dir="next" label="Paket berikutnya"
+                  onClick={() => setPkgIndex(v => (v + 1) % items.length)} />
+              )}
             </div>
-            ))}
+
+            {items.length > 1 && (
+              <div className="flex justify-center" style={{ gap: 7, marginTop: 30 }}>
+                {items.map((p, k) => (
+                  <button key={k} onClick={() => setPkgIndex(k)} aria-label={`Paket ${k + 1}`}
+                    style={{
+                      width: k === curIndex ? 30 : 10, height: 3, borderRadius: 999, border: 0, padding: 0,
+                      cursor: 'pointer', transition: 'all 0.35s ease',
+                      background: k === curIndex ? C.gold : 'rgba(201,169,124,0.28)',
+                    }} />
+                ))}
+              </div>
+            )}
 
             {vendor.package_footnote && (
               <p style={{ margin: '28px 0 0', fontSize: 13, color: C.faint }}>{vendor.package_footnote}</p>
