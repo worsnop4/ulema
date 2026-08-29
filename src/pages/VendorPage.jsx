@@ -54,6 +54,29 @@ const normPhotos = (gallery) => {
 }
 
 const arr = (v) => (Array.isArray(v) ? v : [])
+
+/**
+ * Packages arrive either flat — [{name, price, features}] — or grouped:
+ * [{group, note, items:[…]}]. A vendor with one price list wants the flat
+ * form; a photographer whose list is genuinely split into Prewedding /
+ * Wedding / All-in loses real information if that split is flattened away.
+ * Both normalise to the grouped shape so the renderer only knows one.
+ */
+const normPackages = (packages) => {
+  const raw = arr(packages)
+  const grouped = raw.filter(g => Array.isArray(g?.items))
+  if (grouped.length) {
+    return grouped
+      .map(g => ({
+        group: g.group || '',
+        note: g.note || '',
+        items: arr(g.items).filter(p => p?.name),
+      }))
+      .filter(g => g.items.length)
+  }
+  const flat = raw.filter(p => p?.name)
+  return flat.length ? [{ group: '', note: '', items: flat }] : []
+}
 const rp = (n) => `Rp ${Number(n).toLocaleString('id-ID')}`
 
 /** Headline dengan satu potongan dicetak emas. Kalau potongannya tidak
@@ -196,7 +219,8 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
 
   const stats = arr(vendor.stats).filter(s => s?.value)
   const facts = arr(vendor.facts).filter(f => f?.label)
-  const packages = arr(vendor.packages).filter(p => p?.name)
+  const packageGroups = normPackages(vendor.packages)
+  const packageCount = packageGroups.reduce((n, g) => n + g.items.length, 0)
   const testimonials = arr(vendor.testimonials).filter(t => t?.quote)
   const hasPrice = vendor.price_from || vendor.price_to
   const useMosaic = n >= MOSAIC_MIN_PHOTOS
@@ -210,7 +234,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
   const NAV = [
     ['#galeri', 'Galeri'],
     vendor.description || facts.length ? ['#tentang', 'Tentang'] : null,
-    packages.length ? ['#paket', 'Paket'] : null,
+    packageCount ? ['#paket', 'Paket'] : null,
     testimonials.length ? ['#testimoni', 'Testimoni'] : null,
   ].filter(Boolean)
 
@@ -289,10 +313,10 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
               fontSize: 10, letterSpacing: '0.26em', textTransform: 'uppercase',
               background: C.gold, color: C.onGold, padding: '17px 30px', borderRadius: 999,
             }}>Lihat galeri</a>
-            <a href={packages.length ? '#paket' : '#kontak'} className="font-archivo vp-btn vp-btn-ghost" style={{
+            <a href={packageCount ? '#paket' : '#kontak'} className="font-archivo vp-btn vp-btn-ghost" style={{
               fontSize: 10, letterSpacing: '0.26em', textTransform: 'uppercase',
               border: '1px solid rgba(234,224,212,0.28)', padding: '17px 30px', borderRadius: 999,
-            }}>{packages.length ? 'Paket & harga' : 'Hubungi kami'}</a>
+            }}>{packageCount ? 'Paket & harga' : 'Hubungi kami'}</a>
           </div>
         </div>
 
@@ -492,7 +516,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
       )}
 
       {/* ── Paket ────────────────────────────────────────────────── */}
-      {packages.length > 0 && (
+      {packageCount > 0 && (
         <section id="paket" style={{ padding: '0 clamp(18px, 3vw, 28px) clamp(56px, 8vw, 96px)' }}>
           <div style={{
             borderRadius: 36, background: C.panel, border: '1px solid rgba(234,224,212,0.09)',
@@ -507,10 +531,25 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
               )}
             </div>
 
-            <div className="vp-tiers grid" style={{
-              gridTemplateColumns: `repeat(${Math.min(packages.length, 3)}, 1fr)`, gap: 16,
-            }}>
-              {packages.map((p, k) => (
+            {packageGroups.map((g, gi) => (
+            <div key={gi} style={{ marginTop: gi === 0 ? 0 : 'clamp(32px, 5vw, 52px)' }}>
+              {g.group && (
+                <div className="flex flex-wrap items-baseline" style={{ gap: 16, marginBottom: 20 }}>
+                  <p className="font-archivo" style={{
+                    margin: 0, fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase',
+                    color: C.goldLabel,
+                  }}>{g.group}</p>
+                  <span style={{ flex: 1, minWidth: 40, height: 1, background: 'rgba(201,169,124,0.28)' }} />
+                  {g.note && (
+                    <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: C.faint }}>{g.note}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="vp-tiers grid" style={{
+                gridTemplateColumns: `repeat(${Math.min(g.items.length, 3)}, 1fr)`, gap: 16,
+              }}>
+              {g.items.map((p, k) => (
                 <div key={k} className="flex flex-col" style={{
                   borderRadius: 26, padding: 'clamp(26px, 4vw, 36px) clamp(20px, 3vw, 30px)', gap: 26,
                   border: `1px solid ${p.highlight ? 'rgba(201,169,124,0.55)' : 'rgba(234,224,212,0.12)'}`,
@@ -536,7 +575,9 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
                   </ul>
                 </div>
               ))}
+              </div>
             </div>
+            ))}
 
             {vendor.package_footnote && (
               <p style={{ margin: '28px 0 0', fontSize: 13, color: C.faint }}>{vendor.package_footnote}</p>

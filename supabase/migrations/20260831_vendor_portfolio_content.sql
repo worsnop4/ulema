@@ -30,7 +30,7 @@ comment on column public.vendors.stats is
 comment on column public.vendors.facts is
   '[{"label":"Basis","value":"Banjar, Jawa Barat"}]';
 comment on column public.vendors.packages is
-  '[{"name":"Signature","price":"Rp 15.000.000","note":"paling dipilih","highlight":true,"features":["..."]}]';
+  'Datar: [{"name":...,"price":...,"note":...,"highlight":true,"features":[...]}]. Atau berkelompok kalau daftar harganya memang terbagi: [{"group":"Prewedding","note":"...","items":[{...}]}].';
 comment on column public.vendors.testimonials is
   '[{"quote":"...","author":"Anindya & Reza - Jakarta, 2025"}]';
 comment on column public.vendors.gallery is
