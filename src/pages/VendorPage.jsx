@@ -100,22 +100,15 @@ const HeadlineText = ({ text, accent }) => {
   })
 }
 
-/** Latar foto satu blok: sudut tajam, tanpa jarak, plus scrim gradien
- *  yang membuat teks di atasnya terbaca. */
-const PhotoBand = ({ photos, eager = false }) => {
-  const list = photos.slice(0, 3)
-  if (!list.length) return null
+/** Satu foto potret sebagai latar blok, dengan scrim gradien yang meleburkan
+ *  tepinya ke latar halaman dan membuat teks di atasnya terbaca. */
+const PhotoBand = ({ src, eager = false }) => {
+  if (!src) return null
   return (
-    <>
-      <div className="vp-band-photos" data-count={list.length} aria-hidden="true">
-        {list.map((src, k) => (
-          <div key={k}>
-            <img src={src} alt="" loading={eager && k === 0 ? 'eager' : 'lazy'} />
-          </div>
-        ))}
-      </div>
-      <div className="vp-band-scrim" />
-    </>
+    <div className="vp-band-photo" aria-hidden="true">
+      <img src={src} alt="" loading={eager ? 'eager' : 'lazy'} />
+      <span className="vp-band-scrim" />
+    </div>
   )
 }
 
@@ -248,18 +241,15 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
     : null
   const ig = vendor.instagram ? String(vendor.instagram).replace(/^@/, '') : null
 
+  // Satu foto per pita. hero_photos dan about_photos tetap berupa larik supaya
+  // vendor bisa mengganti pilihannya tanpa migrasi -- yang dipakai elemen
+  // pertama.
   const listed = (v) => arr(v).filter(x => typeof x === 'string' && x)
-  const heroPhotos = listed(vendor.hero_photos)
-  const hero3 = heroPhotos.length ? heroPhotos.slice(0, 3) : photos.slice(0, 3).map(p => p.full)
-
-  // Blok Tentang memakai tiga foto juga. Kalau tidak ditentukan, ambil dari
-  // ekor galeri supaya tidak mengulang foto yang sudah dipakai hero.
-  const aboutListed = listed(vendor.about_photos)
-  const aboutPhotos = aboutListed.length
-    ? aboutListed.slice(0, 3)
-    : (vendor.about_photo_url
-        ? [vendor.about_photo_url, ...photos.slice(-2).map(p => p.full)].slice(0, 3)
-        : photos.slice(-3).map(p => p.full))
+  const heroPhoto = listed(vendor.hero_photos)[0] || photos[0]?.full || null
+  const aboutPhoto = listed(vendor.about_photos)[0]
+    || vendor.about_photo_url
+    || photos[photos.length - 1]?.full
+    || null
 
   const stats = arr(vendor.stats).filter(s => s?.value)
   const facts = arr(vendor.facts).filter(f => f?.label)
@@ -345,7 +335,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
         minHeight: 'min(88vh, 780px)', alignItems: 'stretch',
         padding: 'clamp(28px, 4vw, 44px) clamp(18px, 3vw, 28px) clamp(38px, 5vw, 56px)',
       }}>
-        <PhotoBand photos={hero3} eager />
+        <PhotoBand src={heroPhoto} eager />
 
         <div className="absolute pointer-events-none" style={{
           left: '-6%', top: '-12%', width: '46%', height: '70%',
@@ -522,7 +512,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
           minHeight: 'min(72vh, 660px)', alignItems: 'center',
           padding: 'clamp(44px, 7vw, 88px) clamp(18px, 3vw, 28px)',
         }}>
-          <PhotoBand photos={aboutPhotos} />
+          <PhotoBand src={aboutPhoto} />
 
           <div className="vp-band-text relative" style={{ zIndex: 2, flex: 1, maxWidth: '46%' }}>
             <Eyebrow style={{ marginBottom: 22 }}>Tentang</Eyebrow>
