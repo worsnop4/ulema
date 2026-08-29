@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { fetchPricing, savePricingDB, fetchVouchers, createVoucherDB, deleteVoucherDB } from '../../services/billingService'
-import { Settings, Percent, Plus, Trash2 } from 'lucide-react'
+import { fetchPricing, savePricingDB, fetchVouchers, createVoucherDB, deleteVoucherDB, fetchAllWithdrawals, setWithdrawalStatus } from '../../services/billingService'
+import { Settings, Percent, Plus, Trash2, Wallet } from 'lucide-react'
+
+const ADMIN_WD_STATUS = {
+  pending:    { label: 'Menunggu',   cls: 'bg-amber-100 text-amber-700' },
+  processing: { label: 'Diproses',   cls: 'bg-blue-100 text-blue-700' },
+  paid:       { label: 'Ditransfer', cls: 'bg-green-100 text-green-700' },
+  rejected:   { label: 'Ditolak',    cls: 'bg-red-100 text-red-700' },
+}
 
 export default function AdminFinance() {
   const [vouchers, setVouchers] = useState([])
+  const [withdrawals, setWithdrawals] = useState([])
   const [message, setMessage] = useState('')
 
   // Pricing Form State (single object → direct setter, DB-backed)
@@ -17,10 +25,12 @@ export default function AdminFinance() {
   const [voucherMaxUse, setVoucherMaxUse] = useState(100)
 
   const reloadVouchers = async () => setVouchers(await fetchVouchers())
+  const reloadWithdrawals = async () => setWithdrawals(await fetchAllWithdrawals())
 
   useEffect(() => {
     fetchPricing().then(setPricing)
     fetchVouchers().then(setVouchers)
+    fetchAllWithdrawals().then(setWithdrawals)
   }, [])
 
   const handleSavePricing = async (e) => {
@@ -62,6 +72,18 @@ export default function AdminFinance() {
     await deleteVoucherDB(id)
     await reloadVouchers()
   }
+
+  // Saldo sudah dipotong saat vendor mengajukan, jadi tombol-tombol ini hanya
+  // menggerakkan status — bukan memindahkan uang. Transfernya tetap manual.
+  const handleWithdrawStatus = async (id, status) => {
+    const { error } = await setWithdrawalStatus(id, status)
+    if (error) { setMessage('❌ Gagal memperbarui status: ' + error.message); setTimeout(() => setMessage(''), 4000); return }
+    await reloadWithdrawals()
+    setMessage('✅ Status penarikan diperbarui.')
+    setTimeout(() => setMessage(''), 3000)
+  }
+
+  const pendingCount = withdrawals.filter(w => w.status === 'pending' || w.status === 'processing').length
 
   return (
     <div className="space-y-6">
@@ -158,6 +180,50 @@ export default function AdminFinance() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Antrean Penarikan Komisi */}
+      <div className="bg-white rounded-2xl border border-surface-border shadow-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <Wallet size={15} className="text-brand-600" />
+          <h2 className="font-semibold text-slate-800 text-sm">Penarikan Komisi</h2>
+          {pendingCount > 0 && (
+            <span className="badge text-[10px] bg-amber-100 text-amber-700">{pendingCount} menunggu</span>
+          )}
+        </div>
+        <div className="divide-y divide-slate-100">
+          {withdrawals.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 text-xs">📭 Belum ada permintaan penarikan.</div>
+          ) : withdrawals.map(w => (
+            <div key={w.id} className="px-5 py-4 flex flex-wrap items-center gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <p className="font-semibold text-slate-800 text-sm">
+                  Rp {Number(w.amount).toLocaleString('id-ID')}
+                  <span className="font-normal text-slate-400 text-xs"> · {w.profiles?.name || w.profiles?.email || w.user_id}</span>
+                </p>
+                <p className="text-[11px] text-slate-500 font-mono">
+                  {w.payment_method} {w.account_number} a.n. {w.account_name}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  {new Date(w.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+              <span className={`badge text-[10px] ${ADMIN_WD_STATUS[w.status]?.cls || 'bg-slate-100 text-slate-600'}`}>
+                {ADMIN_WD_STATUS[w.status]?.label || w.status}
+              </span>
+              {w.status !== 'paid' && w.status !== 'rejected' && (
+                <div className="flex gap-2">
+                  <button onClick={() => handleWithdrawStatus(w.id, 'paid')} className="btn-primary py-1.5 text-xs">
+                    Tandai Ditransfer
+                  </button>
+                  <button onClick={() => handleWithdrawStatus(w.id, 'rejected')} className="btn-secondary py-1.5 text-xs">
+                    Tolak
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

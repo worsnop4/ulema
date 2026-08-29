@@ -69,7 +69,9 @@ export default async function handler(req, res) {
         .eq('id', tx.user_id)
 
       // Count voucher usage (atomic, so concurrent settlements can't over-count).
-      if (tx.voucher_code) {
+      // referrer_id set means voucher_code holds a referral code, not a voucher
+      // — those have no quota and must not touch the vouchers table.
+      if (tx.voucher_code && !tx.referrer_id) {
         await supabase.rpc('increment_voucher_usage', { p_code: tx.voucher_code })
       }
 

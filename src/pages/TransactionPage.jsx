@@ -472,12 +472,12 @@ export default function TransactionPage() {
 
               {/* Voucher code */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kode Voucher</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kode Voucher / Referral</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     className="form-input text-sm uppercase"
-                    placeholder="Contoh: HAPPYWEDDING"
+                    placeholder="Kode promo atau kode vendor"
                     value={voucherCode}
                     onChange={e => setVoucherCode(e.target.value)}
                   />

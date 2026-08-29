@@ -3,6 +3,14 @@ import { Share2, Copy, Check, Users, TrendingUp, AlertCircle } from 'lucide-reac
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../App'
 import { ADMIN_WHATSAPP, REFERRAL_MIN_WITHDRAWAL, REFERRAL_COMMISSION_RATE } from '../config/constants'
+import { requestWithdrawal, fetchMyWithdrawals } from '../services/billingService'
+
+const WITHDRAW_STATUS = {
+  pending:    { label: 'Menunggu diproses', cls: 'bg-amber-100 text-amber-700' },
+  processing: { label: 'Sedang ditransfer', cls: 'bg-blue-100 text-blue-700' },
+  paid:       { label: 'Sudah ditransfer',  cls: 'bg-green-100 text-green-700' },
+  rejected:   { label: 'Ditolak',           cls: 'bg-red-100 text-red-700' },
+}
 
 export default function ReferralPage() {
   const { user } = useAuth()
@@ -12,6 +20,7 @@ export default function ReferralPage() {
   // Tarif akun ini, bukan tarif global — vendor memakai angkanya sendiri.
   const [commissionRate, setCommissionRate] = useState(REFERRAL_COMMISSION_RATE)
   const [orders, setOrders] = useState([])
+  const [withdrawals, setWithdrawals] = useState([])
   const [loading, setLoading] = useState(true)
 
   const [showWithdraw, setShowWithdraw] = useState(false)
@@ -62,6 +71,10 @@ export default function ReferralPage() {
       setOrders(mapped)
     }
 
+    // Riwayat penarikan. Tanpa ini saldo yang dipotong tidak punya jejak
+    // apa pun di layar, dan vendor cuma melihat angkanya hilang.
+    setWithdrawals(await fetchMyWithdrawals())
+
     setLoading(false)
   }
 
@@ -80,30 +93,37 @@ export default function ReferralPage() {
     }
     
     setWithdrawing(true)
-    const { data, error } = await supabase.from('withdrawals').insert([{
-      user_id: user.id,
-      amount: walletBalance,
-      payment_method: withdrawForm.method,
-      account_number: withdrawForm.accNumber,
-      account_name: withdrawForm.accName
-    }])
+    const amount = walletBalance
+
+    // Satu panggilan: potong saldo dan catat permintaannya sekaligus. Versi
+    // lama melakukannya sebagai dua panggilan terpisah dari browser, jadi
+    // kegagalan di antara keduanya meninggalkan saldo dan catatan yang
+    // bertentangan soal uang sungguhan.
+    const { error } = await requestWithdrawal({
+      amount,
+      method: withdrawForm.method,
+      accountNumber: withdrawForm.accNumber,
+      accountName: withdrawForm.accName,
+    })
 
     if (!error) {
-      // Kurangi saldo
-      await supabase.from('profiles').update({ wallet_balance: 0 }).eq('id', user.id)
       setWalletBalance(0)
-      
-      // Arahkan ke WA admin
-      const message = `Halo Admin Ulema! Saya ingin menarik komisi referral saya sebesar Rp ${walletBalance.toLocaleString('id-ID')} ke rekening ${withdrawForm.method} - ${withdrawForm.accNumber} a.n. ${withdrawForm.accName}. Mohon diproses ya.`
+      setWithdrawals(await fetchMyWithdrawals())
+
+      const message = `Halo Admin Ulema! Saya ingin menarik komisi referral saya sebesar Rp ${amount.toLocaleString('id-ID')} ke rekening ${withdrawForm.method} - ${withdrawForm.accNumber} a.n. ${withdrawForm.accName}. Mohon diproses ya.`
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank')
-      
+
       setShowWithdraw(false)
-      alert('Permintaan penarikan berhasil! Admin akan memproses segera.')
+      alert('Permintaan penarikan tercatat! Statusnya bisa kamu pantau di daftar Penarikan Komisi.')
     } else {
       alert('Gagal memproses penarikan: ' + error.message)
     }
     setWithdrawing(false)
   }
+
+  const pendingWithdrawTotal = withdrawals
+    .filter(w => w.status === 'pending' || w.status === 'processing')
+    .reduce((sum, w) => sum + Number(w.amount || 0), 0)
 
   const referralLink = `https://ulema.id/r/${referralCode}`
   const totalCommission = orders.filter(o => o.status !== 'pending').reduce((sum, o) => sum + o.commission, 0)
@@ -222,6 +242,44 @@ export default function ReferralPage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Penarikan Komisi — inilah jejak yang dulu tidak ada. Saldo dipotong
+          begitu permintaan dibuat, jadi tanpa daftar ini uangnya seolah
+          menghilang sampai admin selesai mentransfer. */}
+      <div className="bg-white rounded-2xl border border-surface-border shadow-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+          <h2 className="font-semibold text-slate-800 text-sm">Penarikan Komisi</h2>
+          {pendingWithdrawTotal > 0 && (
+            <span className="badge text-[10px] bg-amber-100 text-amber-700">
+              Rp {pendingWithdrawTotal.toLocaleString('id-ID')} sedang diproses
+            </span>
+          )}
+        </div>
+        <div className="divide-y divide-slate-100">
+          {withdrawals.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-sm">Belum ada penarikan.</div>
+          ) : withdrawals.map(w => {
+            const s = WITHDRAW_STATUS[w.status] || WITHDRAW_STATUS.pending
+            return (
+              <div key={w.id} className="px-5 py-4 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-800 text-sm">
+                    Rp {Number(w.amount).toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    {w.payment_method} · {w.account_number} a.n. {w.account_name}
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Diminta {new Date(w.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {w.processed_at && ` · Diproses ${new Date(w.processed_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                  </p>
+                </div>
+                <span className={`badge text-[10px] flex-shrink-0 ${s.cls}`}>{s.label}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

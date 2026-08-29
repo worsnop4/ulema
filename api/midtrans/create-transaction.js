@@ -67,6 +67,10 @@ export default async function handler(req, res) {
         if (refUser) {
           discount = REFERRAL_DISCOUNT_AMOUNT
           referrerId = refUser.id
+          // Record the code itself too. Without it the row carries a discount
+          // with no code, so the invoice shows a nameless deduction and
+          // reconciling a vendor's commission means joining on referrer_id.
+          appliedVoucher = rawCode
         } else {
           return res.status(400).json({ error: 'Kode promo/referral tidak valid atau kuota habis.' })
         }
