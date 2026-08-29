@@ -153,5 +153,8 @@ export const waLink = (text) =>
 
 // Referral system config
 export const REFERRAL_DISCOUNT_AMOUNT = 10000   // Rp discount for the buyer
-export const REFERRAL_COMMISSION_RATE = 0.20     // 20% commission for referrer
+// Default commission. Per-account overrides live in profiles.commission_rate
+// (vendors are set to 0.400); the authoritative copy used to actually pay is
+// DEFAULT_COMMISSION_RATE in api/midtrans/notification.js.
+export const REFERRAL_COMMISSION_RATE = 0.20     // 20% default commission for referrer
 export const REFERRAL_MIN_WITHDRAWAL  = 50000    // Minimum balance to withdraw

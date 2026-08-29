@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react'
 import { Share2, Copy, Check, Users, TrendingUp, AlertCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../App'
-import { ADMIN_WHATSAPP, REFERRAL_MIN_WITHDRAWAL } from '../config/constants'
+import { ADMIN_WHATSAPP, REFERRAL_MIN_WITHDRAWAL, REFERRAL_COMMISSION_RATE } from '../config/constants'
 
 export default function ReferralPage() {
   const { user } = useAuth()
   const [copied, setCopied] = useState(false)
   const [referralCode, setReferralCode] = useState('')
   const [walletBalance, setWalletBalance] = useState(0)
+  // Tarif akun ini, bukan tarif global — vendor memakai angkanya sendiri.
+  const [commissionRate, setCommissionRate] = useState(REFERRAL_COMMISSION_RATE)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -26,7 +28,7 @@ export default function ReferralPage() {
     setLoading(true)
     
     // 1. Dapatkan kode referral dan saldo dari profile
-    const { data: profile } = await supabase.from('profiles').select('referral_code, wallet_balance, name').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('profiles').select('referral_code, wallet_balance, name, commission_rate').eq('id', user.id).single()
     
     let currentCode = profile?.referral_code
     if (!currentCode) {
@@ -38,6 +40,7 @@ export default function ReferralPage() {
     
     setReferralCode(currentCode)
     setWalletBalance(profile?.wallet_balance || 0)
+    setCommissionRate(Number(profile?.commission_rate ?? REFERRAL_COMMISSION_RATE))
 
     // 2. Dapatkan riwayat referral
     const { data: history } = await supabase.from('referral_history')
@@ -189,7 +192,7 @@ export default function ReferralPage() {
         </div>
         <p className="text-[11px] text-slate-400 font-mono break-all">{referralLink}</p>
         <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-          <p className="text-xs font-semibold text-amber-700">💰 Komisi: 20% untuk setiap pembelian</p>
+          <p className="text-xs font-semibold text-amber-700">💰 Komisi: {Math.round(commissionRate * 100)}% untuk setiap pembelian</p>
           <p className="text-[11px] text-amber-600 mt-0.5">Komisi langsung masuk ke saldo akunmu setelah pesanan temanmu disetujui (lunas). Temanmu juga mendapat diskon Rp 10.000!</p>
         </div>
       </div>

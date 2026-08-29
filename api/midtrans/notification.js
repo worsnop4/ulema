@@ -16,7 +16,7 @@ import { createClient } from '@supabase/supabase-js'
 import { sendEmail, emailShell, emailButton, emailHeading } from '../_lib/resend.js'
 
 const DURATION_MONTHS = 12
-const REFERRAL_COMMISSION_RATE = 0.20 // mirror of src/config/constants.js
+const DEFAULT_COMMISSION_RATE = 0.20 // fallback when profiles.commission_rate is NULL; mirror of src/config/constants.js
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -74,8 +74,13 @@ export default async function handler(req, res) {
       }
 
       // Pay the referrer their commission (mirrors the manual-approval path).
+      // The rate lives on the recipient's profile: vendors carry their own,
+      // ordinary referrers leave it NULL and get the default.
       if (tx.referrer_id) {
-        const commission = Math.round((tx.amount || 0) * REFERRAL_COMMISSION_RATE)
+        const { data: refProfile } = await supabase
+          .from('profiles').select('commission_rate').eq('id', tx.referrer_id).maybeSingle()
+        const rate = Number(refProfile?.commission_rate ?? DEFAULT_COMMISSION_RATE)
+        const commission = Math.round((tx.amount || 0) * rate)
         await supabase.from('referral_history').insert({
           referrer_id: tx.referrer_id,
           referred_user_id: tx.user_id,
