@@ -15,6 +15,7 @@ const TransactionPage = lazy(() => import('./pages/TransactionPage'))
 const ReferralPage = lazy(() => import('./pages/ReferralPage'))
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const GuestsPage = lazy(() => import('./pages/GuestsPage'))
+const VendorPage = lazy(() => import('./pages/VendorPage'))
 
 
 // Simple auth context
@@ -102,6 +103,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             {/* Public invitation page — no auth needed, guests open this */}
             <Route path="/invite/:slug" element={<InvitationTemplate />} />
+            <Route path="/vendor/:slug" element={<VendorPage />} />
             <Route path="/dashboard" element={
               <ProtectedRoute><DashboardLayout /></ProtectedRoute>
             }>
