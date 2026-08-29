@@ -1,5 +1,6 @@
 // Vercel Edge Middleware — serves real Open Graph meta tags to link-preview
-// bots (WhatsApp, Facebook, Twitter, etc.) for /invite/:slug pages.
+// bots (WhatsApp, Facebook, Twitter, etc.) for /invite/:slug and
+// /vendor/:slug pages.
 //
 // Why this exists: this app is a client-rendered SPA (single static
 // index.html for every route). Link-preview crawlers read only the raw HTML
@@ -10,7 +11,7 @@
 // bot — real visitors are untouched and continue straight to the SPA.
 
 export const config = {
-  matcher: '/invite/:slug*',
+  matcher: ['/invite/:slug*', '/vendor/:slug*'],
 }
 
 const BOT_USER_AGENT_PATTERNS = [
@@ -68,6 +69,31 @@ async function fetchInvitationData(slug) {
   }
 }
 
+async function fetchVendorData(slug) {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey || !slug) return null
+
+  try {
+    // Only visible vendors get a preview — an unfinished portfolio must not
+    // become shareable just because someone guessed the slug.
+    const endpoint = `${supabaseUrl}/rest/v1/vendors`
+      + `?select=name,category,city,tagline,cover_url,logo_url`
+      + `&slug=eq.${encodeURIComponent(slug)}&visible=is.true&limit=1`
+    const res = await fetch(endpoint, {
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+    })
+    if (!res.ok) return null
+    const rows = await res.json()
+    return rows?.[0] || null
+  } catch {
+    return null
+  }
+}
+
 export default async function middleware(request) {
   const userAgent = request.headers.get('user-agent') || ''
   if (!isBot(userAgent)) {
@@ -75,6 +101,21 @@ export default async function middleware(request) {
   }
 
   const url = new URL(request.url)
+  const pageUrlBase = `${url.origin}${url.pathname}`
+
+  // ── Vendor portfolio ───────────────────────────────────────────────────
+  const vendorMatch = url.pathname.match(/^\/vendor\/([^/]+)/)
+  if (vendorMatch) {
+    const v = await fetchVendorData(decodeURIComponent(vendorMatch[1]))
+    return ogResponse({
+      title: v ? `${v.name} — ${v.category}${v.city ? ` ${v.city}` : ''}` : 'Vendor Pernikahan — Ulema',
+      description: v?.tagline || 'Lihat portofolio dan hubungi kami untuk hari bahagiamu.',
+      image: v?.cover_url || v?.logo_url || `${url.origin}/hero/hero1.jpg`,
+      pageUrl: pageUrlBase,
+    })
+  }
+
+  // ── Invitation ─────────────────────────────────────────────────────────
   const match = url.pathname.match(/^\/invite\/([^/]+)/)
   const rawSlug = match ? decodeURIComponent(match[1]) : null
 
@@ -84,7 +125,6 @@ export default async function middleware(request) {
     ? `demo-theme-${url.searchParams.get('theme') || '1'}`
     : rawSlug
 
-  const pageUrl = `${url.origin}${url.pathname}`
   const defaultImage = `${url.origin}/hero/hero1.jpg`
 
   let title = 'Undangan Pernikahan Digital'
@@ -102,6 +142,10 @@ export default async function middleware(request) {
       || data.bride?.photo || data.groom?.photo || defaultImage
   }
 
+  return ogResponse({ title, description, image, pageUrl: pageUrlBase })
+}
+
+function ogResponse({ title, description, image, pageUrl }) {
   const html = `<!doctype html>
 <html lang="id">
 <head>
