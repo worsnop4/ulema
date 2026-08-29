@@ -65,6 +65,8 @@ export default {
         serif: ['"Playfair Display"', 'Georgia', 'serif'],
         marcellus: ['Marcellus', 'Georgia', 'serif'],
         jost: ['Jost', 'Inter', 'system-ui', 'sans-serif'],
+        archivo: ['Archivo', 'sans-serif'],
+        karla: ['Karla', 'sans-serif'],
         cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       boxShadow: {

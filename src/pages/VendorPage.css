@@ -1,0 +1,76 @@
+/* Halaman portofolio vendor.
+ *
+ * Handoff-nya hanya mendesain lebar desktop dan menandai mobile sebagai butir
+ * terbuka. Yang di bawah ini adalah sisi mobilenya. Sebagian besar tata letak
+ * bisa diselesaikan dengan clamp() langsung di komponen; yang tidak bisa cuma
+ * mosaik galeri, karena jumlah ubinnya harus ikut berubah -- grid yang tidak
+ * pas jumlah selnya akan menumbuhkan baris implisit dan merusak rasionya.
+ *
+ * Ubinnya tetap 36 di DOM; yang kelebihan disembunyikan per breakpoint.
+ * Elemen display:none tidak menempati sel grid, jadi hitungannya tetap pas. */
+
+/* ── Mosaik galeri ────────────────────────────────────────────────────── */
+.vm-grid {
+  position: relative;
+  display: grid;
+  grid-auto-flow: row dense;
+  gap: 6px;
+  /* 9 kolom x 6 baris = 54 sel; foto tengah memakai 18, sisa 36 ubin. */
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  aspect-ratio: 9 / 6;
+}
+.vm-center { grid-column: 4 / span 3; grid-row: 1 / span 6; }
+
+@media (max-width: 1023px) {
+  /* 7 x 6 = 42 sel, tengah 18, sisa 24 ubin. */
+  .vm-grid { grid-template-columns: repeat(7, 1fr); aspect-ratio: 7 / 6; gap: 5px; }
+  .vm-center { grid-column: 3 / span 3; }
+  .vm-grid > *:nth-child(n + 26) { display: none; }
+}
+
+@media (max-width: 639px) {
+  /* 5 x 6 = 30 sel, tengah 18, sisa 12 ubin. */
+  .vm-grid { grid-template-columns: repeat(5, 1fr); aspect-ratio: 5 / 6; gap: 4px; }
+  .vm-center { grid-column: 2 / span 3; }
+  .vm-grid > *:nth-child(n + 14) { display: none; }
+}
+
+/* Tanpa hover di layar sentuh, ubin redup hanya terlihat seperti gambar rusak. */
+@media (hover: hover) {
+  .vm-tile { opacity: 0.58; }
+  .vm-tile:hover { opacity: 1; }
+}
+.vm-tile { transition: opacity 0.4s ease; cursor: pointer; }
+
+/* ── Tata letak dua kolom ─────────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .vp-hero, .vp-about, .vp-contact { grid-template-columns: 1fr !important; }
+  .vp-hero-photos { grid-template-columns: 1fr 1fr !important; }
+  .vp-hero-photos > *:first-child { grid-column: span 2; aspect-ratio: 16 / 11; }
+}
+@media (max-width: 899px) {
+  .vp-tiers, .vp-testimonials { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 767px) {
+  .vp-stats, .vp-facts { grid-template-columns: 1fr 1fr !important; }
+  .vp-nav { display: none !important; }
+}
+
+/* ── Interaksi ────────────────────────────────────────────────────────── */
+.vp-link { transition: color 0.3s ease; }
+.vp-link:hover { color: #C9A97C; }
+.vp-btn { transition: all 0.3s ease; }
+.vp-btn-gold:hover { background: #E0C79E !important; }
+.vp-btn-ghost:hover { border-color: rgba(234, 224, 212, 0.7) !important; }
+.vp-btn-outline:hover {
+  background: #C9A97C !important; color: #17110D !important; border-color: #C9A97C !important;
+}
+
+@keyframes vpFade { from { opacity: 0 } to { opacity: 1 } }
+.vp-fade { animation: vpFade 0.25s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-link, .vp-btn, .vm-tile { transition-duration: 0.001ms !important; }
+  .vp-fade { animation: none; }
+}
