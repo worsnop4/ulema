@@ -42,34 +42,44 @@ function AdminRoute({ children }) {
   return children
 }
 
+// Vendor tetap pengguna biasa: perannya tidak berubah, yang membedakan hanya
+// punya baris di tabel vendors atau tidak. Dompet, komisi, dan penarikan
+// menempel di profiles, jadi tidak ada yang perlu dipikir ulang. Dua kueri ini
+// berjalan bersamaan supaya tidak menambah waktu tunggu bagi mayoritas
+// pengguna yang bukan vendor.
+async function loadUser(session) {
+  if (!session) return null
+  const [{ data: profile }, { data: vendor }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+    supabase.from('vendors').select('id, slug, name, category, visible').eq('user_id', session.user.id).maybeSingle(),
+  ])
+  const mappedPackage = (profile?.package_type === 'free' ? 'none' : profile?.package_type) || 'none'
+  return {
+    ...session.user,
+    ...(profile || { role: 'user' }),
+    package: mappedPackage,
+    vendor: vendor || null,
+  }
+}
+
 export default function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Dipanggil layar yang mengubah profil, supaya sidebar dan seluruh aplikasi
+  // ikut memakai data baru tanpa perlu memuat ulang halaman.
+  const refreshUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    setUser(await loadUser(session))
+  }
 
   useEffect(() => {
     let mounted = true
 
     const fetchProfile = async (session) => {
-      if (!session) {
-        if (mounted) { setUser(null); setLoading(false); }
-        return
-      }
-      // Vendor tetap pengguna biasa: perannya tidak berubah, yang membedakan
-      // hanya punya baris di tabel vendors atau tidak. Dompet, komisi, dan
-      // penarikan menempel di profiles, jadi tidak ada yang perlu dipikir
-      // ulang. Dua kueri ini berjalan bersamaan supaya tidak menambah waktu
-      // tunggu bagi mayoritas pengguna yang bukan vendor.
-      const [{ data: profile }, { data: vendor }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-        supabase.from('vendors').select('id, slug, name, category, visible').eq('user_id', session.user.id).maybeSingle(),
-      ])
+      const next = await loadUser(session)
       if (mounted) {
-        if (profile) {
-          const mappedPackage = (profile.package_type === 'free' ? 'none' : profile.package_type) || 'none'
-          setUser({ ...session.user, ...profile, package: mappedPackage, vendor: vendor || null })
-        } else {
-          setUser({ ...session.user, role: 'user', package: 'none', vendor: vendor || null })
-        }
+        setUser(next)
         setLoading(false)
       }
     }
@@ -97,7 +107,7 @@ export default function App() {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
       <BrowserRouter>
         <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center bg-slate-50">
