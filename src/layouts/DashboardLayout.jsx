@@ -100,7 +100,9 @@ function SidebarContent({ onClose }) {
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-800 truncate">{user?.name || 'Doni & Rizka'}</p>
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand-100 text-brand-700">
-              {user?.role === 'admin' ? 'Administrator' : (user?.package === 'none' ? 'Belum Aktif' : user?.package)}
+              {user?.role === 'admin' ? 'Administrator'
+                  : user?.vendor ? 'Vendor'
+                  : (user?.package === 'none' ? 'Belum Aktif' : user?.package)}
             </span>
           </div>
         </div>

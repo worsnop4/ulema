@@ -23,6 +23,7 @@ const VendorDashboardPage = lazy(() => import('./pages/VendorDashboardPage'))
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { AuthContext, useAuth } from './hooks/useAuth'
+import { dashboardHome } from './config/nav'
 import { refreshThemes } from './hooks/useSharedInvitation'
 
 // Re-export useAuth so legacy imports from App.jsx still work
@@ -126,13 +127,7 @@ export default function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute><DashboardLayout /></ProtectedRoute>
             }>
-              <Route index element={
-                user?.role === 'admin'
-                  ? <Navigate to="/dashboard/admin" replace />
-                  // Build-first: land everyone on the editor. Payment gates
-                  // publishing/sharing, not access to the editor itself.
-                  : <Navigate to="/dashboard/invitation/edit" replace />
-              } />
+              <Route index element={<Navigate to={dashboardHome(user)} replace />} />
               <Route path="invitation/edit" element={<InvitationEdit />} />
               <Route path="guests" element={<GuestsPage />} />
               <Route path="admin" element={
