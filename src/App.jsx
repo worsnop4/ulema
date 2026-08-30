@@ -17,6 +17,7 @@ const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const GuestsPage = lazy(() => import('./pages/GuestsPage'))
 const VendorPage = lazy(() => import('./pages/VendorPage'))
 const VendorDashboardPage = lazy(() => import('./pages/VendorDashboardPage'))
+const VendorContentPage = lazy(() => import('./pages/VendorContentPage'))
 
 
 // Simple auth context
@@ -141,6 +142,7 @@ export default function App() {
               <Route path="transactions" element={<TransactionPage />} />
               <Route path="referrals" element={<ReferralPage />} />
               <Route path="vendor" element={<VendorDashboardPage />} />
+              <Route path="vendor/content" element={<VendorContentPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

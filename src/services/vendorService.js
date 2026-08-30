@@ -54,3 +54,40 @@ export async function fetchVendorEvents(vendorId, days = 90) {
   if (error) return []
   return data || []
 }
+
+/**
+ * The signed-in vendor's own editable content.
+ *
+ * A plain select, not `get_vendor_by_slug`: that RPC only serves vendors
+ * already marked visible, so a vendor still waiting to be published could not
+ * load their own form. The "Vendor reads own row" policy is what scopes this.
+ */
+export async function fetchMyVendorContent(vendorId) {
+  if (!vendorId) return null
+  const { data, error } = await supabase
+    .from('vendors')
+    .select('id, slug, name, visible, stats, testimonials')
+    .eq('id', vendorId)
+    .maybeSingle()
+  if (error) return null
+  return data
+}
+
+/**
+ * Save statistics and testimonials.
+ *
+ * Goes through an RPC because RLS is row-level, not column-level: a policy
+ * letting a vendor update their own row would also let them set `verified`
+ * straight from the API. The function names the two columns it touches, so
+ * the rest is unreachable rather than merely unshown.
+ *
+ * Pass only the part being saved — the function leaves a null argument alone,
+ * so one form cannot blank out the other's data.
+ */
+export async function updateVendorContent({ stats, testimonials }) {
+  const { error } = await supabase.rpc('update_vendor_content', {
+    p_stats: stats ?? null,
+    p_testimonials: testimonials ?? null,
+  })
+  if (error) throw new Error(error.message)
+}

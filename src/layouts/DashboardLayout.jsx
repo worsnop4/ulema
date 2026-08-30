@@ -4,7 +4,7 @@ import { useAuth } from '../App'
 import Logo from '../components/Logo'
 import {
   LayoutDashboard, Image, User, Shield, CreditCard,
-  Share2, LogOut, Menu, X, ChevronRight, Bell, Users, BarChart3
+  Share2, LogOut, Menu, X, ChevronRight, Bell, Users, BarChart3, FileText
 } from 'lucide-react'
 
 const navGroups = [
@@ -35,6 +35,7 @@ const vendorGroups = [
     label: 'Vendor',
     items: [
       { label: 'Statistik', icon: BarChart3, path: '/dashboard/vendor' },
+      { label: 'Konten', icon: FileText, path: '/dashboard/vendor/content' },
       { label: 'Komisi', icon: Share2, path: '/dashboard/referrals' },
     ],
   },
