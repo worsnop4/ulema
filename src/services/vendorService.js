@@ -91,3 +91,53 @@ export async function updateVendorContent({ stats, testimonials }) {
   })
   if (error) throw new Error(error.message)
 }
+
+/**
+ * Upload a testimonial screenshot.
+ *
+ * Its own bucket, not `invitation-media`: the rules genuinely differ — a
+ * vendor's portfolio stays public indefinitely, while invitation media should
+ * follow the package's lifetime. Mixing them makes both awkward to manage.
+ *
+ * The path is prefixed with the uploader's user id because the storage policy
+ * checks that folder name. Without it one vendor could overwrite another's
+ * screenshots by guessing a filename.
+ */
+export async function uploadVendorMedia(blob, userId, prefix = 'testimoni') {
+  if (!userId) throw new Error('Harus masuk untuk mengunggah.')
+  const name = `${userId}/${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`
+
+  const { error } = await supabase.storage
+    .from('vendor-media')
+    .upload(name, blob, { contentType: 'image/jpeg', upsert: false })
+  if (error) throw new Error(`Gagal mengunggah: ${error.message}`)
+
+  const { data } = supabase.storage.from('vendor-media').getPublicUrl(name)
+  return data.publicUrl
+}
+
+/**
+ * Delete screenshots that no longer appear in the saved content.
+ *
+ * Without this, replacing or removing a testimonial leaves the file in the
+ * bucket forever — the row stops referencing it, but nothing deletes it. A
+ * vendor who reworks their page a few times would leave behind several times
+ * what is actually on display. Cheap to handle here; miserable to untangle
+ * two years of it later.
+ *
+ * Only paths inside this bucket and under the caller's own folder are touched,
+ * so a malformed URL can never turn into a delete somewhere else.
+ */
+export async function removeVendorMedia(urls, userId) {
+  const marker = '/storage/v1/object/public/vendor-media/'
+  const paths = (Array.isArray(urls) ? urls : [])
+    .map(u => {
+      const at = String(u || '').indexOf(marker)
+      return at === -1 ? null : decodeURIComponent(String(u).slice(at + marker.length))
+    })
+    .filter(p => p && p.startsWith(`${userId}/`))
+  if (!paths.length) return
+  // Kegagalan di sini tidak boleh membatalkan penyimpanan yang sudah berhasil:
+  // berkas yatim itu merepotkan, kehilangan suntingan jauh lebih buruk.
+  try { await supabase.storage.from('vendor-media').remove(paths) } catch { /* diabaikan */ }
+}

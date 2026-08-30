@@ -116,8 +116,10 @@
 @media (max-width: 1023px) {
   .vp-contact { grid-template-columns: 1fr !important; }
 }
+/* Testimoni kini tangkapan layar tegak. Satu kolom membuatnya raksasa di
+   ponsel; dua kolom menjaganya tetap sebagai pratinjau yang bisa diketuk. */
 @media (max-width: 899px) {
-  .vp-testimonials { grid-template-columns: 1fr !important; }
+  .vp-testimonials { grid-template-columns: 1fr 1fr !important; }
 }
 @media (max-width: 767px) {
   .vp-stats, .vp-facts { grid-template-columns: 1fr 1fr !important; }

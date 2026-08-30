@@ -7,10 +7,33 @@
 
 export const MAX_STATS = 4     // halaman publik menata statistik maksimal 4 kolom
 export const MAX_TESTI = 12
-export const LEN = { value: 16, label: 48, quote: 600, author: 80 }
+export const LEN = { value: 16, label: 48, event: 80 }
 
 export const STAT_FIELDS = ['value', 'label']
-export const TESTI_FIELDS = ['quote', 'author']
+
+// Testimoni adalah tangkapan layar percakapan klien, bukan kutipan yang
+// diketik ulang: yang ditulis vendor hanya acara dan tanggalnya. Ketiganya
+// wajib -- tanpa gambarnya testimoni ini kehilangan seluruh alasannya ada,
+// dan tanpa acara/tanggal pembaca tidak tahu itu pekerjaan yang mana.
+export const TESTI_FIELDS = ['image', 'event', 'date']
+
+const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+
+/**
+ * "2025-01-12" -> "12 Januari 2025".
+ *
+ * Dipotong sendiri, bukan lewat `new Date(...)`: string tanggal polos dibaca
+ * sebagai UTC, jadi di zona waktu Indonesia tanggalnya bisa mundur sehari.
+ * Yang bukan YYYY-MM-DD dikembalikan apa adanya ketimbang jadi "Invalid Date".
+ */
+export function formatEventDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '').trim())
+  if (!m) return String(iso || '')
+  const bulan = BULAN[Number(m[2]) - 1]
+  if (!bulan) return iso
+  return `${Number(m[3])} ${bulan} ${m[1]}`
+}
 
 let seq = 0
 export const newKey = () => `r${seq++}`

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchVendorBySlug, logVendorEvent } from '../services/vendorService'
+import { formatEventDate } from '../config/vendorContent'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 import './VendorPage.css'
 
@@ -255,7 +256,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
   const facts = arr(vendor.facts).filter(f => f?.label)
   const packageGroups = normPackages(vendor.packages)
   const packageCount = packageGroups.reduce((n, g) => n + g.items.length, 0)
-  const testimonials = arr(vendor.testimonials).filter(t => t?.quote)
+  const testimonials = arr(vendor.testimonials).filter(t => t?.image)
   const hasPrice = vendor.price_from || vendor.price_to
   const useMosaic = n >= MOSAIC_MIN_PHOTOS
 
@@ -681,17 +682,33 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
           }}>
             {testimonials.map((t, k) => (
               <figure key={k} style={{
-                margin: 0, border: `1px solid ${C.line}`, borderRadius: 26,
-                background: C.surface, padding: 'clamp(26px, 4vw, 34px) clamp(22px, 3vw, 30px)',
+                margin: 0, border: `1px solid ${C.line}`, borderRadius: 22,
+                background: C.surface, overflow: 'hidden',
               }}>
-                <blockquote style={{
-                  margin: '0 0 22px', fontSize: 17, lineHeight: 1.78,
-                  color: 'rgba(240,232,221,0.9)', textWrap: 'pretty',
-                }}>{t.quote}</blockquote>
-                <figcaption className="font-archivo" style={{
-                  fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase',
-                  color: 'rgba(201,169,124,0.8)',
-                }}>{t.author}</figcaption>
+                {/* Dipotong dari atas, bukan dari tengah: percakapan dibaca
+                    dari atas ke bawah, jadi bagian atas yang paling berguna
+                    sebagai pratinjau. Utuhnya dibuka lewat lightbox. */}
+                <button type="button" onClick={() => setLightbox(t.image)}
+                  aria-label={`Perbesar testimoni ${t.event || k + 1}`}
+                  style={{
+                    display: 'block', width: '100%', border: 0, padding: 0,
+                    background: C.well, cursor: 'zoom-in', aspectRatio: '9 / 13',
+                  }}>
+                  <img src={t.image} alt="" loading="lazy" style={{
+                    width: '100%', height: '100%', objectFit: 'cover',
+                    objectPosition: 'top', display: 'block',
+                  }} />
+                </button>
+                <figcaption style={{ padding: '16px 18px 18px' }}>
+                  <p style={{
+                    margin: 0, fontSize: 14, lineHeight: 1.5,
+                    color: 'rgba(240,232,221,0.9)', textWrap: 'pretty',
+                  }}>{t.event}</p>
+                  <p className="font-archivo" style={{
+                    margin: '8px 0 0', fontSize: 10, letterSpacing: '0.22em',
+                    textTransform: 'uppercase', color: 'rgba(201,169,124,0.8)',
+                  }}>{formatEventDate(t.date)}</p>
+                </figcaption>
               </figure>
             ))}
           </div>
