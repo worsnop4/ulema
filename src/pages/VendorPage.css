@@ -53,6 +53,14 @@
  * mengisi seluruh blok dan teksnya mengambang di atasnya. */
 .vp-band { position: relative; overflow: hidden; }
 
+/* Fotonya dipasang top:0/bottom:0, jadi ia membentang penuh ke tepi bawah
+ * section -- padding bawah section hanya mengangkat teksnya, tidak
+ * menyisakan jarak di bawah fotonya. Akibatnya apa pun yang menyusul
+ * menempel langsung ke tepi foto: statistik di bawah hero, paket di bawah
+ * "Tentang". Jaraknya diberikan di sini, satu kali, supaya berlaku untuk
+ * kedua band tanpa bergantung pada section mana yang kebetulan menyusul. */
+.vp-band { margin-bottom: clamp(32px, 4.5vw, 64px); }
+
 .vp-band-photo {
   position: absolute;
   top: 0;
