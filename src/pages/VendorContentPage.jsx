@@ -10,7 +10,7 @@ import {
   fetchMyVendorContent, updateVendorContent, uploadVendorMedia, removeVendorMedia,
 } from '../services/vendorService'
 import {
-  MAX_STATS, MAX_TESTI, LEN, STAT_FIELDS, TESTI_FIELDS,
+  MAX_STATS, MAX_TESTI, LEN, STAT_FIELDS, TESTI_FIELDS, TESTI_OPTIONAL,
   keyed, bare, newKey, formatEventDate,
 } from '../config/vendorContent'
 
@@ -19,6 +19,12 @@ import {
 // berbayang dan justru tidak terbaca -- padahal terbacanya itu seluruh isinya.
 const SHOT_WIDTH = 900
 const SHOT_QUALITY = 0.85
+
+// Ukuran kedua untuk ubin di dinding testimoni. Ubinnya paling lebar 260px,
+// jadi 480px masih tajam di layar rapat sambil tinggal seperlima berkasnya.
+// Tanpa ini dinding berisi 24 ubin kecil tetap mengunduh 24 gambar 900px.
+const THUMB_WIDTH = 480
+const THUMB_QUALITY = 0.72
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-2xl border border-surface-border shadow-card ${className}`}>{children}</div>
@@ -63,7 +69,7 @@ const AddButton = ({ onClick, disabled, children, hint }) => (
 )
 
 /** Kotak tangkapan layar: kosong -> tombol unggah, terisi -> pratinjau tegak. */
-function ShotBox({ value, busy, onPick }) {
+function ShotBox({ value, thumb, busy, onPick }) {
   const ref = useRef()
   return (
     <div className="flex-shrink-0">
@@ -74,7 +80,7 @@ function ShotBox({ value, busy, onPick }) {
         {busy ? (
           <span className="flex h-full items-center justify-center text-[10px] text-slate-400">Mengunggah…</span>
         ) : value ? (
-          <img src={value} alt="" className="w-full h-full object-cover" style={{ objectPosition: 'top' }} />
+          <img src={thumb || value} alt="" className="w-full h-full object-cover" style={{ objectPosition: 'top' }} />
         ) : (
           <span className="flex h-full flex-col items-center justify-center gap-1.5 text-slate-400">
             <Upload size={16} />
@@ -108,7 +114,7 @@ export default function VendorContentPage() {
   const applyRow = (v) => {
     setRow(v)
     setStats(keyed(v?.stats, STAT_FIELDS))
-    setTesti(keyed(v?.testimonials, TESTI_FIELDS))
+    setTesti(keyed(v?.testimonials, [...TESTI_FIELDS, ...TESTI_OPTIONAL]))
     setLoading(false)
   }
 
@@ -148,10 +154,16 @@ export default function VendorContentPage() {
     setBusyRow(k)
     try {
       const src = await (await fetch(croppedBase64)).blob()
-      const shrunk = await compressImage(src, SHOT_WIDTH, SHOT_QUALITY)
-      const blob = await (await fetch(shrunk)).blob()
-      const url = await uploadVendorMedia(blob, user.id)
-      setTesti(rows => rows.map(r => (r._k === k ? { ...r, image: url } : r)))
+      const asBlob = async (dataUrl) => (await fetch(dataUrl)).blob()
+      const [full, thumb] = await Promise.all([
+        compressImage(src, SHOT_WIDTH, SHOT_QUALITY).then(asBlob),
+        compressImage(src, THUMB_WIDTH, THUMB_QUALITY).then(asBlob),
+      ])
+      const [image, thumbUrl] = await Promise.all([
+        uploadVendorMedia(full, user.id),
+        uploadVendorMedia(thumb, user.id, 'testimoni-kecil'),
+      ])
+      setTesti(rows => rows.map(r => (r._k === k ? { ...r, image, thumb: thumbUrl } : r)))
     } catch (err) {
       setError(err.message || 'Gagal mengunggah gambar.')
     } finally {
@@ -164,10 +176,13 @@ export default function VendorContentPage() {
     setError('')
     setSaving(true)
     try {
-      const before = (row?.testimonials || []).map(t => t?.image).filter(Boolean)
+      // Kedua ukuran ikut dihitung: melewatkan thumb berarti separuh berkas
+      // yang dibuang tetap tertinggal di bucket selamanya.
+      const filesOf = (list) => (list || []).flatMap(t => [t?.image, t?.thumb]).filter(Boolean)
+      const before = filesOf(row?.testimonials)
       await updateVendorContent({
         stats: bare(stats, STAT_FIELDS),
-        testimonials: bare(testi, TESTI_FIELDS),
+        testimonials: bare(testi, TESTI_FIELDS, TESTI_OPTIONAL),
       })
       // Dibaca ulang dari server, bukan dipercaya dari layar: fungsinya
       // memangkas spasi dan membuang baris yang tidak lengkap, jadi yang
@@ -177,7 +192,7 @@ export default function VendorContentPage() {
 
       // Berkas yang sudah tidak dirujuk baris mana pun dibuang, supaya bucket
       // tidak menumpuk tangkapan layar yang tidak tampil di mana-mana.
-      const after = new Set((fresh?.testimonials || []).map(t => t?.image).filter(Boolean))
+      const after = new Set(filesOf(fresh?.testimonials))
       await removeVendorMedia(before.filter(u => !after.has(u)), user.id)
 
       setSaved(true)
@@ -199,7 +214,7 @@ export default function VendorContentPage() {
   if (loading) return <div className="p-8 text-center text-slate-500 text-sm">Memuat konten…</div>
 
   const preview = bare(stats, STAT_FIELDS)
-  const readyTesti = bare(testi, TESTI_FIELDS).length
+  const readyTesti = bare(testi, TESTI_FIELDS, TESTI_OPTIONAL).length
 
   return (
     <>
@@ -310,7 +325,7 @@ export default function VendorContentPage() {
             {testi.map(t => (
               <RowShell key={t._k} onRemove={drop(setTesti)(t._k)}>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <ShotBox value={t.image} busy={busyRow === t._k} onPick={pickShot(t._k)} />
+                  <ShotBox value={t.image} thumb={t.thumb} busy={busyRow === t._k} onPick={pickShot(t._k)} />
                   <div className="flex-1 min-w-0 space-y-3">
                     <Field label="Acara" value={t.event} max={LEN.event}
                       onChange={setTest(t._k, 'event')} placeholder="Wedding Anindya & Reza — Banjar" />
@@ -339,7 +354,7 @@ export default function VendorContentPage() {
           </div>
 
           <AddButton
-            onClick={() => setTesti(r => [...r, { _k: newKey(), image: '', event: '', date: '' }])}
+            onClick={() => setTesti(r => [...r, { _k: newKey(), image: '', thumb: '', event: '', date: '' }])}
             disabled={testi.length >= MAX_TESTI}
             hint={testi.length >= MAX_TESTI ? `Maksimal ${MAX_TESTI}.` : `${readyTesti} siap tayang dari ${testi.length} baris`}>
             Tambah testimoni

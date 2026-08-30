@@ -677,36 +677,51 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
       {testimonials.length > 0 && (
         <section id="testimoni" style={{ padding: '0 clamp(18px, 3vw, 28px) clamp(56px, 8vw, 96px)' }}>
           <H2 style={{ marginBottom: 36 }}>Testimoni</H2>
+          {/* Dinding bukti, bukan carousel. Testimoni berupa tangkapan layar
+              bekerja lewat jumlahnya: melihat dua puluh percakapan sekaligus
+              meyakinkan dengan cara yang tidak bisa ditiru satu kartu besar.
+              Carousel justru menyembunyikan berapa banyak yang ada.
+              auto-fill, bukan jumlah kolom tetap: ubinnya menyempit sampai
+              batas terkecil lalu barisnya pecah sendiri, jadi tiga di ponsel
+              dan lima sampai tujuh di layar lebar tanpa titik henti manual. */}
           <div className="vp-testimonials grid" style={{
-            gridTemplateColumns: `repeat(${Math.min(testimonials.length, 3)}, 1fr)`, gap: 16,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(96px, 16vw, 260px), 1fr))',
+            gap: 'clamp(10px, 1.2vw, 16px)',
           }}>
             {testimonials.map((t, k) => (
               <figure key={k} style={{
-                margin: 0, border: `1px solid ${C.line}`, borderRadius: 22,
+                margin: 0, border: `1px solid ${C.line}`, borderRadius: 14,
                 background: C.surface, overflow: 'hidden',
               }}>
                 {/* Dipotong dari atas, bukan dari tengah: percakapan dibaca
                     dari atas ke bawah, jadi bagian atas yang paling berguna
-                    sebagai pratinjau. Utuhnya dibuka lewat lightbox. */}
+                    sebagai pratinjau. Utuhnya dibuka lewat lightbox -- di
+                    ukuran ubin ini tulisannya memang belum terbaca, dan itu
+                    tidak apa-apa: yang dikenali sekilas adalah bentuk
+                    percakapannya, bukan kata-katanya. */}
                 <button type="button" onClick={() => setLightbox(t.image)}
                   aria-label={`Perbesar testimoni ${t.event || k + 1}`}
+                  className="vp-testimoni-shot"
                   style={{
                     display: 'block', width: '100%', border: 0, padding: 0,
-                    background: C.well, cursor: 'zoom-in', aspectRatio: '9 / 13',
+                    background: C.well, cursor: 'zoom-in', aspectRatio: '4 / 5',
                   }}>
-                  <img src={t.image} alt="" loading="lazy" style={{
+                  {/* Ubin memakai ukuran kecil; yang penuh baru diunduh saat
+                      dibuka di lightbox. Baris lama tanpa thumb jatuh kembali
+                      ke gambar penuh, jadi tidak ada yang kosong. */}
+                  <img src={t.thumb || t.image} alt="" loading="lazy" style={{
                     width: '100%', height: '100%', objectFit: 'cover',
                     objectPosition: 'top', display: 'block',
                   }} />
                 </button>
-                <figcaption style={{ padding: '16px 18px 18px' }}>
-                  <p style={{
-                    margin: 0, fontSize: 14, lineHeight: 1.5,
-                    color: 'rgba(240,232,221,0.9)', textWrap: 'pretty',
+                <figcaption style={{ padding: 'clamp(8px, 0.9vw, 13px) clamp(9px, 1vw, 14px) clamp(10px, 1.1vw, 15px)' }}>
+                  <p className="vp-testimoni-event" style={{
+                    margin: 0, fontSize: 'clamp(10px, 0.85vw, 13px)', lineHeight: 1.45,
+                    color: 'rgba(240,232,221,0.88)',
                   }}>{t.event}</p>
                   <p className="font-archivo" style={{
-                    margin: '8px 0 0', fontSize: 10, letterSpacing: '0.22em',
-                    textTransform: 'uppercase', color: 'rgba(201,169,124,0.8)',
+                    margin: '5px 0 0', fontSize: 9, letterSpacing: '0.16em',
+                    textTransform: 'uppercase', color: 'rgba(201,169,124,0.75)',
                   }}>{formatEventDate(t.date)}</p>
                 </figcaption>
               </figure>

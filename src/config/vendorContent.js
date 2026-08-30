@@ -6,7 +6,7 @@
 // berubah, keduanya harus berubah.
 
 export const MAX_STATS = 4     // halaman publik menata statistik maksimal 4 kolom
-export const MAX_TESTI = 12
+export const MAX_TESTI = 24
 export const LEN = { value: 16, label: 48, event: 80 }
 
 export const STAT_FIELDS = ['value', 'label']
@@ -16,6 +16,11 @@ export const STAT_FIELDS = ['value', 'label']
 // wajib -- tanpa gambarnya testimoni ini kehilangan seluruh alasannya ada,
 // dan tanpa acara/tanggal pembaca tidak tahu itu pekerjaan yang mana.
 export const TESTI_FIELDS = ['image', 'event', 'date']
+
+// Ukuran kecil untuk ubin di dinding testimoni. Tidak wajib -- baris lama
+// yang belum punya thumb tetap sah dan jatuh kembali ke gambar penuh.
+// Tanpa ini dinding berisi 24 ubin kecil tetap mengunduh 24 gambar 900px.
+export const TESTI_OPTIONAL = ['thumb']
 
 const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -65,8 +70,17 @@ export function keyed(rows, fields) {
  * pincang di halaman publik. Baris kosong yang tertinggal di form juga hal
  * biasa -- menolak seluruh simpanan karenanya cuma bikin frustrasi.
  */
-export function bare(rows, fields) {
+export function bare(rows, fields, optional = []) {
   return (Array.isArray(rows) ? rows : [])
-    .map(r => Object.fromEntries(fields.map(f => [f, String(r?.[f] ?? '').trim()])))
+    .map(r => {
+      const out = Object.fromEntries(fields.map(f => [f, String(r?.[f] ?? '').trim()]))
+      // Bidang tak wajib hanya ikut kalau memang terisi, supaya baris tidak
+      // membawa kunci kosong yang tak berarti apa-apa ke database.
+      optional.forEach(f => {
+        const v = String(r?.[f] ?? '').trim()
+        if (v) out[f] = v
+      })
+      return out
+    })
     .filter(r => fields.every(f => r[f] !== ''))
 }

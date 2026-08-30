@@ -116,11 +116,7 @@
 @media (max-width: 1023px) {
   .vp-contact { grid-template-columns: 1fr !important; }
 }
-/* Testimoni kini tangkapan layar tegak. Satu kolom membuatnya raksasa di
-   ponsel; dua kolom menjaganya tetap sebagai pratinjau yang bisa diketuk. */
-@media (max-width: 899px) {
-  .vp-testimonials { grid-template-columns: 1fr 1fr !important; }
-}
+
 @media (max-width: 767px) {
   .vp-stats, .vp-facts { grid-template-columns: 1fr 1fr !important; }
   .vp-nav { display: none !important; }
@@ -143,3 +139,18 @@
   .vp-link, .vp-btn, .vm-tile { transition-duration: 0.001ms !important; }
   .vp-fade { animation: none; }
 }
+
+/* ── Dinding testimoni ────────────────────────────────────────────────── */
+/* Jumlah kolomnya diurus auto-fill di JSX, jadi tidak ada titik henti di
+   sini. Yang perlu dijaga hanya nama acara: pada ubin selebar 96px teks
+   panjang bisa memakan tinggi lebih besar daripada gambarnya sendiri dan
+   membuat tinggi baris jadi tidak rata. */
+.vp-testimoni-event {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.vp-testimoni-shot { transition: opacity 0.3s ease; }
+.vp-testimoni-shot:hover { opacity: 0.82; }
