@@ -29,3 +29,28 @@ export function logVendorEvent(vendorId, kind) {
     () => {}
   )
 }
+
+/**
+ * Raw events for a vendor, newest first.
+ *
+ * Aggregated in the browser rather than in SQL: at present volumes that is a
+ * few dozen rows, and an RPC would be a second thing to keep in step with the
+ * event kinds. The window and the row cap are the guard — when a vendor's
+ * traffic outgrows them, this becomes a `group by` RPC, not a bigger limit.
+ *
+ * RLS restricts the rows to the signed-in vendor's own, so no filter here can
+ * be the thing that keeps one vendor's numbers out of another's dashboard.
+ */
+export async function fetchVendorEvents(vendorId, days = 90) {
+  if (!vendorId) return []
+  const since = new Date(Date.now() - days * 86400000).toISOString()
+  const { data, error } = await supabase
+    .from('vendor_events')
+    .select('kind, created_at')
+    .eq('vendor_id', vendorId)
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(5000)
+  if (error) return []
+  return data || []
+}

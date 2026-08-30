@@ -16,6 +16,7 @@ const ReferralPage = lazy(() => import('./pages/ReferralPage'))
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const GuestsPage = lazy(() => import('./pages/GuestsPage'))
 const VendorPage = lazy(() => import('./pages/VendorPage'))
+const VendorDashboardPage = lazy(() => import('./pages/VendorDashboardPage'))
 
 
 // Simple auth context
@@ -53,13 +54,21 @@ export default function App() {
         if (mounted) { setUser(null); setLoading(false); }
         return
       }
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      // Vendor tetap pengguna biasa: perannya tidak berubah, yang membedakan
+      // hanya punya baris di tabel vendors atau tidak. Dompet, komisi, dan
+      // penarikan menempel di profiles, jadi tidak ada yang perlu dipikir
+      // ulang. Dua kueri ini berjalan bersamaan supaya tidak menambah waktu
+      // tunggu bagi mayoritas pengguna yang bukan vendor.
+      const [{ data: profile }, { data: vendor }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+        supabase.from('vendors').select('id, slug, name, category, visible').eq('user_id', session.user.id).maybeSingle(),
+      ])
       if (mounted) {
         if (profile) {
           const mappedPackage = (profile.package_type === 'free' ? 'none' : profile.package_type) || 'none'
-          setUser({ ...session.user, ...profile, package: mappedPackage })
+          setUser({ ...session.user, ...profile, package: mappedPackage, vendor: vendor || null })
         } else {
-          setUser({ ...session.user, role: 'user', package: 'none' })
+          setUser({ ...session.user, role: 'user', package: 'none', vendor: vendor || null })
         }
         setLoading(false)
       }
@@ -126,6 +135,7 @@ export default function App() {
               <Route path="security" element={<SecurityPage />} />
               <Route path="transactions" element={<TransactionPage />} />
               <Route path="referrals" element={<ReferralPage />} />
+              <Route path="vendor" element={<VendorDashboardPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

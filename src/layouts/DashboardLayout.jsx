@@ -4,7 +4,7 @@ import { useAuth } from '../App'
 import Logo from '../components/Logo'
 import {
   LayoutDashboard, Image, User, Shield, CreditCard,
-  Share2, LogOut, Menu, X, ChevronRight, Bell, Users
+  Share2, LogOut, Menu, X, ChevronRight, Bell, Users, BarChart3
 } from 'lucide-react'
 
 const navGroups = [
@@ -23,6 +23,26 @@ const navGroups = [
       { label: 'Pengaturan', icon: Shield, path: '/dashboard/security' },
       { label: 'Transaksi', icon: CreditCard, path: '/dashboard/transactions' },
       { label: 'Referrals', icon: Share2, path: '/dashboard/referrals' },
+    ],
+  },
+]
+
+// Vendor tidak membuat undangan -- untuk mendemokan ke kliennya cukup
+// landing page Ulema. Jadi editor undangan, daftar tamu, ilustrasi, dan
+// transaksi disembunyikan; yang tersisa hanya yang benar-benar dia pakai.
+const vendorGroups = [
+  {
+    label: 'Vendor',
+    items: [
+      { label: 'Statistik', icon: BarChart3, path: '/dashboard/vendor' },
+      { label: 'Komisi', icon: Share2, path: '/dashboard/referrals' },
+    ],
+  },
+  {
+    label: 'Akun',
+    items: [
+      { label: 'Informasi', icon: User, path: '/dashboard/profile' },
+      { label: 'Pengaturan', icon: Shield, path: '/dashboard/security' },
     ],
   },
 ]
@@ -47,7 +67,14 @@ function SidebarContent({ onClose }) {
 
   // Build-first: everyone (paid or not) gets the full editor nav. Publishing
   // the live invitation is what's gated on payment, not access to the tools.
-  const activeGroups = user?.role === 'admin' ? adminGroups : navGroups
+  //
+  // Menyembunyikan menu itu kosmetik, bukan kunci: tidak ada izin di belakang
+  // daftar ini, jadi vendor yang mengetik alamatnya langsung tetap bisa masuk.
+  // Itu disengaja -- vendor yang iseng membuat undangan tidak merugikan siapa
+  // pun, dan menutupnya betulan adalah pekerjaan tersendiri.
+  const activeGroups = user?.role === 'admin' ? adminGroups
+    : user?.vendor ? vendorGroups
+    : navGroups
 
   return (
     <div className="flex flex-col h-full">
