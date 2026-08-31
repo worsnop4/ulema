@@ -6,6 +6,7 @@ import { useAuth } from '../App'
 import { storageService } from '../services/storageService'
 import { supabase } from '../lib/supabase'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
+import { readReferral } from '../config/referral'
 
 export default function TransactionPage() {
   const { user } = useAuth()
@@ -43,7 +44,10 @@ export default function TransactionPage() {
   const initialThemeName = user?.selectedThemeName || themes.find(t => t.category === (user?.selectedCategory || 'Special'))?.name || ''
   const [selectedThemeName, setSelectedThemeName] = useState(initialThemeName)
 
-  const [voucherCode, setVoucherCode] = useState('')
+  // Kode yang dibawa tautan /r/:kode, kalau ada. Dibaca sekali saat halaman
+  // dibuka supaya isian tidak tertimpa selagi orangnya sedang mengetik.
+  const [rememberedCode] = useState(() => readReferral())
+  const [voucherCode, setVoucherCode] = useState(() => rememberedCode || '')
   const [appliedVoucher, setAppliedVoucher] = useState(null)
   const [voucherError, setVoucherError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
@@ -53,6 +57,31 @@ export default function TransactionPage() {
   useEffect(() => {
     fetchPricing().then(setPricing)
   }, [])
+
+  // Kode dari tautan vendor langsung dipasang, tidak sekadar diketikkan ke
+  // kotaknya. Orang yang datang lewat tautan vendor tidak tahu ada tombol
+  // "Pakai" yang harus ditekan, dan diskon yang tidak ikut terpasang berarti
+  // komisi vendor yang hilang tanpa ada yang menyadarinya.
+  //
+  // Gagalnya sengaja diam: pesan merah menyambut orang yang baru saja datang
+  // adalah cara buruk membuka halaman, dan kodenya tetap terlihat di kotaknya
+  // supaya bisa diperiksa atau diganti sendiri.
+  useEffect(() => {
+    if (!rememberedCode) return
+    let alive = true
+    ;(async () => {
+      const v = await validateVoucher(rememberedCode)
+      if (!alive) return
+      if (v) { setAppliedVoucher(v); return }
+      const referrerId = await findReferrer(rememberedCode)
+      if (!alive || !referrerId) return
+      setAppliedVoucher({
+        type: 'referral', code: rememberedCode,
+        discount: REFERRAL_DISCOUNT_AMOUNT, referrer_id: referrerId,
+      })
+    })()
+    return () => { alive = false }
+  }, [rememberedCode])
 
   // Load Midtrans Snap.js once. Environment comes from an explicit flag
   // (VITE_MIDTRANS_IS_PRODUCTION="true" = production), defaulting to sandbox —

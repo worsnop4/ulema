@@ -81,10 +81,13 @@ export default function ReferralPage() {
     setLoading(false)
   }
 
-  const handleCopy = () => {
-    const link = `https://ulema.id/r/${referralCode}`
-    navigator.clipboard.writeText(link)
-    setCopied(true)
+  // Dua tombol, bukan satu, karena keduanya dipakai di tempat yang berbeda:
+  // kodenya diketik ke percakapan WhatsApp, tautannya ditaruh di bio Instagram
+  // atau dibagikan langsung. Sebelumnya kodenya ditampilkan besar-besar tapi
+  // tombolnya menyalin tautan -- yang tersalin bukan yang terbaca.
+  const copyText = (text, which) => {
+    navigator.clipboard.writeText(text)
+    setCopied(which)
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -243,14 +246,32 @@ export default function ReferralPage() {
       {/* Referral Code */}
       <div className="bg-white rounded-2xl border border-surface-border shadow-card p-6">
         <h2 className="font-semibold text-slate-800 text-sm mb-1">Kode Referralmu</h2>
-        <p className="text-xs text-slate-500 mb-4">Bagikan kode atau link di bawah ini kepada temanmu.</p>
-        <div className="flex items-center gap-3 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-3">
-          <span className="font-mono font-bold text-brand-700 text-lg flex-1">{referralCode}</span>
-          <button onClick={handleCopy} className="btn-primary py-1.5 text-xs">
-            {copied ? <><Check size={12} /> Disalin!</> : <><Copy size={12} /> Salin Link</>}
+        <p className="text-xs text-slate-500 mb-4">
+          Dua cara membagikannya, dan keduanya berujung di komisi yang sama.
+        </p>
+
+        <div className="flex items-center gap-3 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3">
+          <span className="font-mono font-bold text-brand-700 text-lg flex-1 truncate">{referralCode}</span>
+          <button onClick={() => copyText(referralCode, 'code')}
+            className="btn-primary py-1.5 text-xs flex-shrink-0">
+            {copied === 'code' ? <><Check size={12} /> Disalin!</> : <><Copy size={12} /> Salin Kode</>}
           </button>
         </div>
-        <p className="text-[11px] text-slate-400 font-mono break-all">{referralLink}</p>
+        <p className="text-[11px] text-slate-400 mt-1.5 mb-4">
+          Untuk diketik di percakapan. Temanmu memasukkannya sendiri saat membayar.
+        </p>
+
+        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+          <span className="font-mono text-slate-600 text-xs flex-1 truncate">{referralLink}</span>
+          <button onClick={() => copyText(referralLink, 'link')}
+            className="btn-secondary py-1.5 text-xs flex-shrink-0">
+            {copied === 'link' ? <><Check size={12} /> Disalin!</> : <><Copy size={12} /> Salin Link</>}
+          </button>
+        </div>
+        <p className="text-[11px] text-slate-400 mt-1.5">
+          Untuk bio Instagram atau dibagikan langsung. Kodenya terpasang sendiri —
+          temanmu tidak perlu mengetik apa pun.
+        </p>
         <div className="mt-4 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
           <p className="text-xs font-semibold text-amber-700">💰 Komisi: {Math.round(commissionRate * 100)}% untuk setiap pembelian</p>
           <p className="text-[11px] text-amber-600 mt-0.5">Komisi langsung masuk ke saldo akunmu setelah pesanan temanmu disetujui (lunas). Temanmu juga mendapat diskon Rp 10.000!</p>

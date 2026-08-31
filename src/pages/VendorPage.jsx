@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchVendorBySlug, logVendorEvent } from '../services/vendorService'
 import { formatEventDate, mosaicStep } from '../config/vendorContent'
+import { rememberReferral } from '../config/referral'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 import './VendorPage.css'
 
@@ -828,7 +829,14 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
                 {copied ? '✓ Tersalin' : vendor.referral_code}
               </button>
             )}
-            <Link to="/#katalog" onClick={() => onTrack('catalog_click')}
+            {/* Kodenya ikut dibawa, tidak cuma ditampilkan untuk disalin.
+                Menyalin lalu mengetik ulang berbulan-bulan kemudian adalah
+                langkah paling mudah gagal di seluruh rantai komisi -- dan
+                kalau gagal, tidak ada yang tahu: pembeli tetap membayar,
+                cuma vendornya yang tidak dapat apa-apa. Kotak kodenya tetap
+                ada untuk yang membeli dari perangkat lain. */}
+            <Link to="/#katalog"
+              onClick={() => { rememberReferral(vendor.referral_code); onTrack('catalog_click') }}
               className="font-archivo vp-btn vp-btn-gold" style={{
                 fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase',
                 background: C.gold, color: C.onGold, padding: '17px 30px',

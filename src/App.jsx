@@ -18,6 +18,7 @@ const GuestsPage = lazy(() => import('./pages/GuestsPage'))
 const VendorPage = lazy(() => import('./pages/VendorPage'))
 const VendorDashboardPage = lazy(() => import('./pages/VendorDashboardPage'))
 const VendorContentPage = lazy(() => import('./pages/VendorContentPage'))
+const ReferralLanding = lazy(() => import('./pages/ReferralLanding'))
 
 
 // Simple auth context
@@ -125,6 +126,9 @@ export default function App() {
             {/* Public invitation page — no auth needed, guests open this */}
             <Route path="/invite/:slug" element={<InvitationTemplate />} />
             <Route path="/vendor/:slug" element={<VendorPage />} />
+            {/* Tautan yang dibagikan vendor. Tanpa rute ini ia jatuh ke
+                catch-all di bawah dan berakhir di halaman login. */}
+            <Route path="/r/:code" element={<ReferralLanding />} />
             <Route path="/dashboard" element={
               <ProtectedRoute><DashboardLayout /></ProtectedRoute>
             }>
