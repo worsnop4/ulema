@@ -114,6 +114,27 @@ const PhotoBand = ({ src, eager = false }) => {
   )
 }
 
+const VpField = ({ label, value, onChange, type = 'text', placeholder, maxLength, autoFocus }) => (
+  <label style={{ display: 'block' }}>
+    <span className="font-archivo" style={{
+      display: 'block', marginBottom: 7, fontSize: 9, letterSpacing: '0.22em',
+      textTransform: 'uppercase', color: 'rgba(234,224,212,0.55)',
+    }}>{label}</span>
+    <input
+      type={type} value={value} placeholder={placeholder} maxLength={maxLength}
+      autoFocus={autoFocus} onChange={e => onChange(e.target.value)}
+      style={{
+        width: '100%', background: C.well, color: C.hi,
+        border: `1px solid ${C.line}`, borderRadius: 12,
+        padding: '13px 15px', fontSize: 14, fontFamily: 'inherit',
+        /* Pemilih tanggal bawaan menggambar ikonnya gelap, jadi ia hilang di
+           latar sekelam ini. */
+        colorScheme: 'dark',
+      }}
+    />
+  </label>
+)
+
 const Arrow = ({ dir, onClick, label }) => (
   <button onClick={onClick} aria-label={label}
     className="flex items-center justify-center vp-btn vp-btn-outline"
@@ -211,6 +232,9 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
   const photos = normPhotos(vendor.gallery)
   const [i, setI] = useState(0)
   const [lightbox, setLightbox] = useState(null)
+  // Paket yang sedang ditanyakan. null = formulir tertutup.
+  const [inquiry, setInquiry] = useState(null)
+  const [lead, setLead] = useState({ name: '', address: '', date: '' })
   // Kategori paket yang dipilih, dan paket ke berapa di dalamnya.
   const [pkgGroup, setPkgGroup] = useState(0)
   const [pkgIndex, setPkgIndex] = useState(0)
@@ -232,7 +256,7 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
   }, [n, lightbox])
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setLightbox(null) }
+    const onKey = (e) => { if (e.key === 'Escape') { setLightbox(null); setInquiry(null) } }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
@@ -280,10 +304,35 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
         { p: items[(curIndex + 1) % items.length], center: false, slot: 'n' },
       ]
 
-  const pkgWaHref = (p) => wa
-    ? `https://wa.me/${wa}?text=${encodeURIComponent(
-        `Halo ${vendor.name}, saya tertarik dengan paket ${p.name} (${p.price}). Boleh minta info ketersediaan tanggalnya?`)}`
-    : null
+  // Pesan yang sudah membawa data acara, bukan sekadar nama paket. Yang
+  // pertama ditanyakan fotografer selalu sama -- tanggal dan lokasinya --
+  // jadi menaruhnya di pesan pembuka memotong satu putaran bolak-balik.
+  const pkgWaHref = (p, l) => {
+    if (!wa) return null
+    const lines = [
+      `Halo ${vendor.name}, saya tertarik dengan paket ${p.name}${p.price ? ` (${p.price})` : ''}.`,
+      '',
+      `Nama: ${l.name.trim()}`,
+      `Alamat: ${l.address.trim()}`,
+      `Tanggal acara: ${formatEventDate(l.date)}`,
+      '',
+      'Boleh minta info ketersediaan tanggalnya?',
+    ]
+    return `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`
+  }
+
+  const leadReady = lead.name.trim() && lead.address.trim() && lead.date
+
+  const sendInquiry = (e) => {
+    e.preventDefault()
+    if (!inquiry || !leadReady) return
+    // window.open dipanggil langsung di dalam penanganan klik, tanpa await
+    // apa pun sebelumnya: begitu ada jeda asinkron, peramban memperlakukannya
+    // sebagai jendela yang dibuka sendiri oleh halaman dan memblokirnya.
+    onTrack('wa_click')
+    window.open(pkgWaHref(inquiry, lead), '_blank', 'noopener')
+    setInquiry(null)
+  }
 
   // 36 ubin dari n foto, diambil melompat supaya ubin bersebelahan tidak
   // menampilkan foto berurutan. Langkahnya harus koprima dengan n, kalau
@@ -655,12 +704,12 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
                     </ul>
 
                     {center && waHref && (
-                      <a href={pkgWaHref(p)} target="_blank" rel="noopener noreferrer"
-                        onClick={() => onTrack('wa_click')}
+                      <button type="button" onClick={() => setInquiry(p)}
                         className="font-archivo vp-btn vp-btn-gold text-center" style={{
                           marginTop: 28, fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase',
                           background: C.gold, color: C.onGold, padding: '16px 24px', borderRadius: 999,
-                        }}>Ambil paket</a>
+                          border: 0, cursor: 'pointer', width: '100%',
+                        }}>Ambil paket</button>
                     )}
                   </div>
                 ))}
@@ -871,6 +920,63 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
       </footer>
 
       {/* ── Lightbox ─────────────────────────────────────────────── */}
+      {/* ── Formulir sebelum ke WhatsApp ─────────────────────────── */}
+      {inquiry && (
+        <div onClick={() => setInquiry(null)} className="fixed inset-0 flex items-center justify-center vp-fade"
+          style={{ zIndex: 70, background: 'rgba(8,6,5,0.9)', padding: 'clamp(16px, 4vw, 40px)' }}>
+          <form onClick={e => e.stopPropagation()} onSubmit={sendInquiry}
+            style={{
+              width: 'min(440px, 100%)', maxHeight: '100%', overflowY: 'auto',
+              background: C.surface, border: `1px solid ${C.line}`, borderRadius: 22,
+              padding: 'clamp(22px, 3.5vw, 32px)',
+            }}>
+            <p className="font-archivo" style={{
+              margin: 0, fontSize: 10, letterSpacing: '0.24em',
+              textTransform: 'uppercase', color: C.gold,
+            }}>{inquiry.name}{inquiry.price ? ` · ${inquiry.price}` : ''}</p>
+            <h3 style={{ margin: '10px 0 6px', fontSize: 21, lineHeight: 1.3, color: C.hi }}>
+              Data acara kamu
+            </h3>
+            <p style={{ margin: '0 0 22px', fontSize: 13, lineHeight: 1.7, color: C.muted }}>
+              Diisi sekali di sini supaya {vendor.name} bisa langsung mengecek ketersediaan
+              tanggalnya, tanpa perlu tanya-jawab dulu.
+            </p>
+
+            <div style={{ display: 'grid', gap: 14 }}>
+              <VpField label="Nama" value={lead.name} placeholder="Nama kamu atau pasangan"
+                onChange={v => setLead(f => ({ ...f, name: v }))} maxLength={80} autoFocus />
+              <VpField label="Alamat acara" value={lead.address} placeholder="Kota atau nama gedung"
+                onChange={v => setLead(f => ({ ...f, address: v }))} maxLength={120} />
+              <VpField label="Tanggal acara" value={lead.date} type="date"
+                onChange={v => setLead(f => ({ ...f, date: v }))} />
+            </div>
+
+            <div className="flex flex-wrap items-center" style={{ gap: 10, marginTop: 24 }}>
+              <button type="submit" disabled={!leadReady}
+                className="font-archivo vp-btn vp-btn-gold" style={{
+                  flex: 1, fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase',
+                  background: leadReady ? C.gold : 'rgba(201,169,124,0.25)',
+                  color: leadReady ? C.onGold : 'rgba(23,17,13,0.55)',
+                  padding: '16px 24px', borderRadius: 999, border: 0,
+                  cursor: leadReady ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap',
+                }}>Kirim ke WhatsApp</button>
+              <button type="button" onClick={() => setInquiry(null)}
+                className="font-archivo" style={{
+                  fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase',
+                  background: 'transparent', color: C.faint, border: `1px solid ${C.line}`,
+                  padding: '16px 20px', borderRadius: 999, cursor: 'pointer',
+                }}>Batal</button>
+            </div>
+
+            {!leadReady && (
+              <p style={{ margin: '12px 0 0', fontSize: 11, color: C.faint }}>
+                Ketiganya diisi dulu supaya pesannya lengkap.
+              </p>
+            )}
+          </form>
+        </div>
+      )}
+
       {lightbox && (
         <div onClick={() => setLightbox(null)} className="fixed inset-0 flex items-center justify-center vp-fade"
           style={{ zIndex: 60, background: 'rgba(8,6,5,0.96)', padding: 'clamp(16px, 4vw, 40px)', cursor: 'zoom-out' }}>
