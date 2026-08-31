@@ -142,6 +142,7 @@ export default function ReferralPage() {
   // berkali-kali. Pagar sesungguhnya ada di request_withdrawal; yang di sini
   // supaya vendor melihat angka yang sama dengan yang akan diterima server.
   const availableBalance = Math.max(0, walletBalance - pendingWithdrawTotal)
+  const canWithdraw = availableBalance >= REFERRAL_MIN_WITHDRAWAL
 
   const referralLink = `https://ulema.id/r/${referralCode}`
   const totalCommission = orders.filter(o => o.status !== 'pending').reduce((sum, o) => sum + o.commission, 0)
@@ -174,10 +175,31 @@ export default function ReferralPage() {
         ))}
       </div>
 
-      {walletBalance >= 50000 && !showWithdraw && (
-        <button onClick={() => setShowWithdraw(true)} className="w-full btn-primary py-3 flex justify-center shadow-md shadow-brand-500/20 animate-fade-in">
-          Tarik Saldo Komisi (Rp {walletBalance.toLocaleString('id-ID')})
-        </button>
+      {/* Tombolnya selalu ada, tinggal mati kalau belum bisa dipakai.
+          Sebelumnya ia disembunyikan total di bawah ambang minimum, dan yang
+          terlihat bukan "tombol nonaktif" melainkan tidak ada apa-apa --
+          tidak bisa dibedakan dari fitur yang belum dibuat. Sekarang
+          alasannya tertulis di bawahnya.
+
+          Ambangnya diukur dari availableBalance, bukan saldo mentah: yang
+          sedang diproses belum terpotong tapi juga tidak boleh diajukan lagi.
+          Angkanya dari REFERRAL_MIN_WITHDRAWAL, bukan 50000 yang diketik
+          ulang -- kembarannya ada di request_withdrawal, dan dua salinan
+          sudah cukup banyak. */}
+      {!showWithdraw && (
+        <div className="animate-fade-in">
+          <button onClick={() => setShowWithdraw(true)} disabled={!canWithdraw}
+            className="w-full btn-primary py-3 flex justify-center shadow-md shadow-brand-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">
+            Tarik Saldo Komisi (Rp {availableBalance.toLocaleString('id-ID')})
+          </button>
+          {!canWithdraw && (
+            <p className="text-[11px] text-slate-400 text-center mt-2">
+              {pendingWithdrawTotal > 0 && availableBalance < REFERRAL_MIN_WITHDRAWAL
+                ? <>Rp {pendingWithdrawTotal.toLocaleString('id-ID')} sedang diproses. Sisanya belum mencapai minimum Rp {REFERRAL_MIN_WITHDRAWAL.toLocaleString('id-ID')}.</>
+                : <>Minimum penarikan Rp {REFERRAL_MIN_WITHDRAWAL.toLocaleString('id-ID')} — kurang Rp {(REFERRAL_MIN_WITHDRAWAL - availableBalance).toLocaleString('id-ID')} lagi.</>}
+            </p>
+          )}
+        </div>
       )}
 
       {showWithdraw && (
