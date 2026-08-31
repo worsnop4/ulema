@@ -57,9 +57,10 @@ export async function findReferrer(code) {
 /**
  * Request a commission withdrawal.
  *
- * The balance deduction and the withdrawal row are one atomic step inside the
- * RPC — doing them as two client calls is how a crash between them leaves the
- * balance and the record disagreeing about real money.
+ * The RPC records the request without touching the balance — money moves only
+ * when an admin settles it. What the RPC does enforce is the ceiling: the
+ * amount must fit inside the balance *minus everything already in flight*,
+ * checked under a row lock so two simultaneous requests cannot both pass.
  */
 export async function requestWithdrawal({ amount, method, accountNumber, accountName }) {
   const { data, error } = await supabase.rpc('request_withdrawal', {
@@ -75,7 +76,7 @@ export async function requestWithdrawal({ amount, method, accountNumber, account
 export async function fetchMyWithdrawals() {
   const { data, error } = await supabase
     .from('withdrawals')
-    .select('id, amount, payment_method, account_number, account_name, status, created_at, processed_at')
+    .select('id, amount, payment_method, account_number, account_name, status, created_at, processed_at, proof_path, admin_note')
     .order('created_at', { ascending: false })
   if (error) return []
   return data || []
@@ -85,16 +86,84 @@ export async function fetchMyWithdrawals() {
 export async function fetchAllWithdrawals() {
   const { data, error } = await supabase
     .from('withdrawals')
-    .select('id, user_id, amount, payment_method, account_number, account_name, status, created_at, processed_at, profiles:user_id (name, email)')
+    .select('id, user_id, amount, payment_method, account_number, account_name, status, created_at, processed_at, proof_path, admin_note, profiles:user_id (name, email)')
     .order('created_at', { ascending: false })
   if (error) return []
   return data || []
 }
 
-/** Move a withdrawal along its lifecycle. Admin only, enforced by RLS. */
-export async function setWithdrawalStatus(id, status) {
-  const patch = { status }
-  if (status === 'paid' || status === 'rejected') patch.processed_at = new Date().toISOString()
-  const { error } = await supabase.from('withdrawals').update(patch).eq('id', id)
-  return { error }
+const PROOF_BUCKET = 'withdrawal-proofs'
+
+/**
+ * Upload the transfer receipt for a withdrawal.
+ *
+ * Stored under the *recipient's* user id, not the admin's, because that is the
+ * folder the vendor's read policy checks. A private bucket, deliberately: the
+ * receipt carries an amount and an account number, and an unguessable filename
+ * is not access control for a financial document.
+ */
+export async function uploadWithdrawalProof(blob, ownerUserId, withdrawalId) {
+  const path = `${ownerUserId}/${withdrawalId}_${Date.now()}.jpg`
+  const { error } = await supabase.storage
+    .from(PROOF_BUCKET)
+    .upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+  if (error) throw new Error(`Gagal mengunggah bukti: ${error.message}`)
+  return path
+}
+
+/**
+ * A short-lived link to a proof image.
+ *
+ * The bucket is private, so there is no permanent URL to store — the link is
+ * minted per view and expires. Returns null rather than throwing: a missing
+ * receipt should leave the rest of the row readable.
+ */
+export async function signedProofUrl(path, seconds = 300) {
+  if (!path) return null
+  const { data, error } = await supabase.storage
+    .from(PROOF_BUCKET).createSignedUrl(path, seconds)
+  if (error) return null
+  return data?.signedUrl || null
+}
+
+/**
+ * Mark a withdrawal transferred. This is the step that moves the money.
+ *
+ * The deduction, the status, and the receipt land together inside the RPC,
+ * under a lock on the withdrawal row — so two admins pressing the button at
+ * once cannot debit the vendor twice for one transfer.
+ */
+export async function settleWithdrawal(id, proofPath, note) {
+  const { data, error } = await supabase.rpc('settle_withdrawal', {
+    p_id: id, p_proof_path: proofPath, p_note: note || null,
+  })
+  return { data, error }
+}
+
+/**
+ * Turn a withdrawal down.
+ *
+ * Touches no balance at all — that is the point of deducting at settlement
+ * rather than at request. There is no refund step here that could fail
+ * silently and leave a vendor short.
+ */
+export async function rejectWithdrawal(id, note) {
+  const { data, error } = await supabase.rpc('reject_withdrawal', {
+    p_id: id, p_note: note || null,
+  })
+  return { data, error }
+}
+
+/**
+ * Referral history for the signed-in user, newest first.
+ *
+ * Through an RPC because RLS on `profiles` lets someone read only their own
+ * row — a client-side join to the buyer's profile always came back empty, and
+ * the screen wrote "User Baru · N/A" for every referral, permanently. The
+ * function exposes the buyer's first name and nothing else.
+ */
+export async function fetchMyReferralHistory() {
+  const { data, error } = await supabase.rpc('get_referral_history')
+  if (error) return []
+  return data || []
 }

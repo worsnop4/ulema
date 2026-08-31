@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../App'
 import { supabase } from '../lib/supabase'
-import { User, Mail, Phone, Save, Check, AlertCircle } from 'lucide-react'
+import { User, Mail, Phone, Save, Check, AlertCircle, Landmark } from 'lucide-react'
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth()
@@ -11,6 +11,9 @@ export default function ProfilePage() {
   const [form, setForm] = useState(() => ({
     name: user?.name || '',
     phone: user?.phone || '',
+    bank_name: user?.bank_name || '',
+    bank_account_number: user?.bank_account_number || '',
+    bank_account_name: user?.bank_account_name || '',
   }))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -29,7 +32,15 @@ export default function ProfilePage() {
     setSaving(true)
     const { error: err } = await supabase
       .from('profiles')
-      .update({ name, phone: form.phone.trim() })
+      .update({
+        name,
+        phone: form.phone.trim(),
+        // Rekening tujuan komisi. Disimpan di profil supaya admin tidak perlu
+        // menanyakannya tiap penarikan, dan vendor tidak mengetiknya ulang.
+        bank_name: form.bank_name.trim() || null,
+        bank_account_number: form.bank_account_number.trim() || null,
+        bank_account_name: form.bank_account_name.trim() || null,
+      })
       .eq('id', user.id)
     setSaving(false)
 
@@ -94,6 +105,43 @@ export default function ProfilePage() {
               <input id="pf-phone" type="tel" className="form-input pl-9" value={form.phone}
                 onChange={set('phone')} placeholder="08xxxxxxxxxx" autoComplete="tel" />
             </div>
+          </div>
+        </div>
+
+        {/* ── Rekening penerimaan komisi ─────────────────────────────── */}
+        <div className="border-t border-slate-100 pt-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <Landmark size={15} className="text-brand-600" />
+            <h2 className="font-semibold text-slate-800 text-sm">Rekening Penerimaan Komisi</h2>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed -mt-1">
+            Ke sinilah admin mentransfer komisimu. Isi sekarang supaya penarikan
+            tidak tertahan hanya karena rekeningnya belum diketahui.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="sm:w-44 flex-shrink-0">
+              <label className="form-label" htmlFor="pf-bank">Bank / e-wallet</label>
+              <input id="pf-bank" className="form-input" value={form.bank_name}
+                onChange={set('bank_name')} placeholder="BCA" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <label className="form-label" htmlFor="pf-accnum">Nomor rekening</label>
+              <input id="pf-accnum" className="form-input font-mono" value={form.bank_account_number}
+                onChange={set('bank_account_number')} placeholder="1234567890" inputMode="numeric" />
+            </div>
+          </div>
+
+          <div>
+            <label className="form-label" htmlFor="pf-accname">Nama pemilik rekening</label>
+            <input id="pf-accname" className="form-input" value={form.bank_account_name}
+              onChange={set('bank_account_name')} placeholder="Muhammad Fazri" />
+            {/* Bank mencocokkan nama pemilik rekening, bukan nama profil, dan
+                keduanya sering berbeda. Dipisah supaya transfernya tidak
+                tertolak karena menebak. */}
+            <p className="text-[11px] text-slate-400 mt-1.5">
+              Tulis persis seperti yang tertera di rekening, walau berbeda dari nama profilmu.
+            </p>
           </div>
         </div>
 

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Share2, Copy, Check, Users, TrendingUp, AlertCircle } from 'lucide-react'
+import { Share2, Copy, Check, Users, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../App'
 import { ADMIN_WHATSAPP, REFERRAL_MIN_WITHDRAWAL, REFERRAL_COMMISSION_RATE } from '../config/constants'
-import { requestWithdrawal, fetchMyWithdrawals } from '../services/billingService'
+import { requestWithdrawal, fetchMyWithdrawals, fetchMyReferralHistory, signedProofUrl } from '../services/billingService'
 
 const WITHDRAW_STATUS = {
   pending:    { label: 'Menunggu diproses', cls: 'bg-amber-100 text-amber-700' },
@@ -37,7 +37,7 @@ export default function ReferralPage() {
     setLoading(true)
     
     // 1. Dapatkan kode referral dan saldo dari profile
-    const { data: profile } = await supabase.from('profiles').select('referral_code, wallet_balance, name, commission_rate').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('profiles').select('referral_code, wallet_balance, name, commission_rate, bank_name, bank_account_number, bank_account_name').eq('id', user.id).single()
     
     let currentCode = profile?.referral_code
     if (!currentCode) {
@@ -51,25 +51,28 @@ export default function ReferralPage() {
     setWalletBalance(profile?.wallet_balance || 0)
     setCommissionRate(Number(profile?.commission_rate ?? REFERRAL_COMMISSION_RATE))
 
-    // 2. Dapatkan riwayat referral
-    const { data: history } = await supabase.from('referral_history')
-      .select(`
-        commission_amount, status, created_at,
-        referred_user:referred_user_id (name, email)
-      `)
-      .eq('referrer_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (history) {
-      const mapped = history.map(h => ({
-        name: h.referred_user?.name || 'User Baru',
-        email: h.referred_user?.email || 'N/A',
-        commission: h.commission_amount,
-        date: new Date(h.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-        status: h.status
-      }))
-      setOrders(mapped)
+    // Rekening tujuan diambil dari profil supaya tidak perlu diketik ulang tiap
+    // penarikan. Yang tersimpan di baris penarikan tetap salinan saat itu --
+    // mengubah profil tidak boleh menulis ulang catatan transfer yang lampau.
+    if (profile?.bank_account_number) {
+      setWithdrawForm({
+        method: profile.bank_name || 'BCA',
+        accNumber: profile.bank_account_number || '',
+        accName: profile.bank_account_name || profile.name || '',
+      })
     }
+
+    // 2. Riwayat referral lewat RPC. Sambungan langsung ke profil pembeli
+    // selalu pulang kosong -- RLS profiles hanya mengizinkan seseorang membaca
+    // barisnya sendiri -- sehingga layar ini dulu menulis "User Baru - N/A"
+    // untuk setiap referal, selamanya. Fungsinya membuka nama depan saja.
+    const history = await fetchMyReferralHistory()
+    setOrders(history.map(h => ({
+      name: h.buyer_name || 'Pembeli',
+      commission: Number(h.commission_amount || 0),
+      date: new Date(h.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+      status: h.status,
+    })))
 
     // Riwayat penarikan. Tanpa ini saldo yang dipotong tidak punya jejak
     // apa pun di layar, dan vendor cuma melihat angkanya hilang.
@@ -85,20 +88,26 @@ export default function ReferralPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const openProof = async (path) => {
+    // Bucketnya tidak publik -- tautan dibuat sesaat lalu kedaluwarsa, jadi
+    // bukti transfer tidak bisa diteruskan ke siapa pun begitu saja.
+    const url = await signedProofUrl(path)
+    if (url) window.open(url, '_blank', 'noopener')
+    else alert('Bukti transfer tidak bisa dibuka. Hubungi admin.')
+  }
+
   const handleWithdraw = async (e) => {
     e.preventDefault()
-    if (walletBalance < REFERRAL_MIN_WITHDRAWAL) {
+    // Yang bisa ditarik adalah saldo dikurangi yang sedang diproses. Saldonya
+    // sendiri tidak berkurang sampai admin benar-benar mentransfer.
+    const amount = availableBalance
+    if (amount < REFERRAL_MIN_WITHDRAWAL) {
       alert(`Minimal penarikan adalah Rp ${REFERRAL_MIN_WITHDRAWAL.toLocaleString('id-ID')}`)
       return
     }
-    
-    setWithdrawing(true)
-    const amount = walletBalance
 
-    // Satu panggilan: potong saldo dan catat permintaannya sekaligus. Versi
-    // lama melakukannya sebagai dua panggilan terpisah dari browser, jadi
-    // kegagalan di antara keduanya meninggalkan saldo dan catatan yang
-    // bertentangan soal uang sungguhan.
+    setWithdrawing(true)
+
     const { error } = await requestWithdrawal({
       amount,
       method: withdrawForm.method,
@@ -107,14 +116,16 @@ export default function ReferralPage() {
     })
 
     if (!error) {
-      setWalletBalance(0)
+      // Saldo sengaja TIDAK dinolkan di sini: uangnya belum berpindah. Yang
+      // berubah hanyalah berapa yang masih bisa diajukan, dan itu terhitung
+      // sendiri dari daftar penarikan yang baru dimuat ulang.
       setWithdrawals(await fetchMyWithdrawals())
 
       const message = `Halo Admin Ulema! Saya ingin menarik komisi referral saya sebesar Rp ${amount.toLocaleString('id-ID')} ke rekening ${withdrawForm.method} - ${withdrawForm.accNumber} a.n. ${withdrawForm.accName}. Mohon diproses ya.`
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank')
 
       setShowWithdraw(false)
-      alert('Permintaan penarikan tercatat! Statusnya bisa kamu pantau di daftar Penarikan Komisi.')
+      alert('Permintaan penarikan tercatat! Saldomu belum berkurang — potongannya terjadi setelah admin mentransfer dan mengunggah bukti.')
     } else {
       alert('Gagal memproses penarikan: ' + error.message)
     }
@@ -124,6 +135,13 @@ export default function ReferralPage() {
   const pendingWithdrawTotal = withdrawals
     .filter(w => w.status === 'pending' || w.status === 'processing')
     .reduce((sum, w) => sum + Number(w.amount || 0), 0)
+
+  // Saldo tidak berkurang saat penarikan diminta -- ia baru terpotong ketika
+  // admin mentransfer. Jadi yang boleh diajukan adalah sisanya setelah semua
+  // permintaan yang masih berjalan, kalau tidak saldo yang sama bisa diajukan
+  // berkali-kali. Pagar sesungguhnya ada di request_withdrawal; yang di sini
+  // supaya vendor melihat angka yang sama dengan yang akan diterima server.
+  const availableBalance = Math.max(0, walletBalance - pendingWithdrawTotal)
 
   const referralLink = `https://ulema.id/r/${referralCode}`
   const totalCommission = orders.filter(o => o.status !== 'pending').reduce((sum, o) => sum + o.commission, 0)
@@ -245,17 +263,23 @@ export default function ReferralPage() {
         </div>
       </div>
 
-      {/* Penarikan Komisi — inilah jejak yang dulu tidak ada. Saldo dipotong
-          begitu permintaan dibuat, jadi tanpa daftar ini uangnya seolah
-          menghilang sampai admin selesai mentransfer. */}
+      {/* Penarikan Komisi. Saldo baru terpotong saat admin mentransfer, jadi
+          daftar inilah satu-satunya tempat vendor bisa melihat permintaannya
+          sedang di mana -- tanpa itu, "saldo utuh tapi tidak bisa ditarik"
+          terlihat seperti kerusakan. */}
       <div className="bg-white rounded-2xl border border-surface-border shadow-card overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
           <h2 className="font-semibold text-slate-800 text-sm">Penarikan Komisi</h2>
-          {pendingWithdrawTotal > 0 && (
-            <span className="badge text-[10px] bg-amber-100 text-amber-700">
-              Rp {pendingWithdrawTotal.toLocaleString('id-ID')} sedang diproses
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {pendingWithdrawTotal > 0 && (
+              <span className="badge text-[10px] bg-amber-100 text-amber-700">
+                Rp {pendingWithdrawTotal.toLocaleString('id-ID')} sedang diproses
+              </span>
+            )}
+            <span className="badge text-[10px] bg-slate-100 text-slate-600">
+              Bisa ditarik Rp {availableBalance.toLocaleString('id-ID')}
             </span>
-          )}
+          </div>
         </div>
         <div className="divide-y divide-slate-100">
           {withdrawals.length === 0 ? (
@@ -276,7 +300,15 @@ export default function ReferralPage() {
                     {w.processed_at && ` · Diproses ${new Date(w.processed_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`}
                   </p>
                 </div>
-                <span className={`badge text-[10px] flex-shrink-0 ${s.cls}`}>{s.label}</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {w.status === 'paid' && w.proof_path && (
+                    <button type="button" onClick={() => openProof(w.proof_path)}
+                      className="text-[11px] text-brand-600 hover:underline inline-flex items-center gap-1">
+                      <Receipt size={12} /> Bukti
+                    </button>
+                  )}
+                  <span className={`badge text-[10px] ${s.cls}`}>{s.label}</span>
+                </div>
               </div>
             )
           })}

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { fetchPricing, savePricingDB, fetchVouchers, createVoucherDB, deleteVoucherDB, fetchAllWithdrawals, setWithdrawalStatus } from '../../services/billingService'
-import { Settings, Percent, Plus, Trash2, Wallet } from 'lucide-react'
+import {
+  fetchPricing, savePricingDB, fetchVouchers, createVoucherDB, deleteVoucherDB,
+  fetchAllWithdrawals, settleWithdrawal, rejectWithdrawal,
+  uploadWithdrawalProof, signedProofUrl,
+} from '../../services/billingService'
+import { compressImage } from '../common/FormHelpers'
+import { Settings, Percent, Plus, Trash2, Wallet, Upload, Receipt, X } from 'lucide-react'
 
 const ADMIN_WD_STATUS = {
   pending:    { label: 'Menunggu',   cls: 'bg-amber-100 text-amber-700' },
@@ -13,6 +18,14 @@ export default function AdminFinance() {
   const [vouchers, setVouchers] = useState([])
   const [withdrawals, setWithdrawals] = useState([])
   const [message, setMessage] = useState('')
+
+  // Dialog bukti transfer
+  const [proofFor, setProofFor] = useState(null)
+  const [proofFile, setProofFile] = useState(null)
+  const [proofNote, setProofNote] = useState('')
+  const [settling, setSettling] = useState(false)
+
+  const flash = (text, ms = 4000) => { setMessage(text); setTimeout(() => setMessage(''), ms) }
 
   // Pricing Form State (single object → direct setter, DB-backed)
   const [pricing, setPricing] = useState({ Special: 99000, Adat: 110000, Motion: 140000, Luxury: 175000 })
@@ -73,14 +86,44 @@ export default function AdminFinance() {
     await reloadVouchers()
   }
 
-  // Saldo sudah dipotong saat vendor mengajukan, jadi tombol-tombol ini hanya
-  // menggerakkan status — bukan memindahkan uang. Transfernya tetap manual.
-  const handleWithdrawStatus = async (id, status) => {
-    const { error } = await setWithdrawalStatus(id, status)
-    if (error) { setMessage('❌ Gagal memperbarui status: ' + error.message); setTimeout(() => setMessage(''), 4000); return }
+  // Menandai lunas adalah langkah yang memindahkan uang: saldo vendor baru
+  // terpotong di sini, bukan saat ia mengajukan. Karena itu buktinya wajib --
+  // tanpa berkas yang bisa ditunjuk, satu-satunya catatan bahwa transfer
+  // benar-benar terjadi hanyalah ingatan admin.
+  const askProof = (w) => { setProofFor(w); setProofNote(''); setProofFile(null) }
+
+  const handleSettle = async () => {
+    if (!proofFor || !proofFile) return
+    setSettling(true)
+    try {
+      const small = await compressImage(proofFile, 1000, 0.82)
+      const blob = await (await fetch(small)).blob()
+      const path = await uploadWithdrawalProof(blob, proofFor.user_id, proofFor.id)
+      const { error } = await settleWithdrawal(proofFor.id, path, proofNote)
+      if (error) throw new Error(error.message)
+      setProofFor(null)
+      await reloadWithdrawals()
+      flash('✅ Penarikan ditandai lunas dan saldo vendor terpotong.')
+    } catch (err) {
+      flash('❌ ' + (err.message || 'Gagal menyelesaikan penarikan.'))
+    } finally {
+      setSettling(false)
+    }
+  }
+
+  // Menolak tidak menyentuh saldo sama sekali -- itulah untungnya memotong
+  // belakangan: tidak ada langkah pengembalian yang bisa gagal diam-diam.
+  const handleReject = async (id) => {
+    const { error } = await rejectWithdrawal(id, null)
+    if (error) { flash('❌ Gagal menolak: ' + error.message); return }
     await reloadWithdrawals()
-    setMessage('✅ Status penarikan diperbarui.')
-    setTimeout(() => setMessage(''), 3000)
+    flash('✅ Penarikan ditolak. Saldo vendor tidak berubah.')
+  }
+
+  const openProof = async (path) => {
+    const url = await signedProofUrl(path)
+    if (url) window.open(url, '_blank', 'noopener')
+    else flash('❌ Bukti transfer tidak bisa dibuka.')
   }
 
   const pendingCount = withdrawals.filter(w => w.status === 'pending' || w.status === 'processing').length
@@ -212,12 +255,18 @@ export default function AdminFinance() {
               <span className={`badge text-[10px] ${ADMIN_WD_STATUS[w.status]?.cls || 'bg-slate-100 text-slate-600'}`}>
                 {ADMIN_WD_STATUS[w.status]?.label || w.status}
               </span>
+              {w.status === 'paid' && w.proof_path && (
+                <button onClick={() => openProof(w.proof_path)}
+                  className="btn-secondary py-1.5 text-xs inline-flex items-center gap-1.5">
+                  <Receipt size={12} /> Bukti
+                </button>
+              )}
               {w.status !== 'paid' && w.status !== 'rejected' && (
                 <div className="flex gap-2">
-                  <button onClick={() => handleWithdrawStatus(w.id, 'paid')} className="btn-primary py-1.5 text-xs">
+                  <button onClick={() => askProof(w)} className="btn-primary py-1.5 text-xs">
                     Tandai Ditransfer
                   </button>
-                  <button onClick={() => handleWithdrawStatus(w.id, 'rejected')} className="btn-secondary py-1.5 text-xs">
+                  <button onClick={() => handleReject(w.id)} className="btn-secondary py-1.5 text-xs">
                     Tolak
                   </button>
                 </div>
@@ -226,6 +275,63 @@ export default function AdminFinance() {
           ))}
         </div>
       </div>
+
+      {proofFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+          onClick={() => !settling && setProofFor(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-md p-5 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-semibold text-slate-800 text-sm">Konfirmasi Transfer</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Saldo vendor terpotong setelah ini, dan tidak bisa dibatalkan dari sini.
+                </p>
+              </div>
+              <button onClick={() => !settling && setProofFor(null)}
+                className="text-slate-300 hover:text-slate-600 p-1"><X size={16} /></button>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 border border-slate-100 p-3.5 space-y-1">
+              <p className="font-semibold text-slate-800">
+                Rp {Number(proofFor.amount).toLocaleString('id-ID')}
+              </p>
+              <p className="text-[11px] text-slate-500 font-mono">
+                {proofFor.payment_method} {proofFor.account_number} a.n. {proofFor.account_name}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                {proofFor.profiles?.name || proofFor.profiles?.email || proofFor.user_id}
+              </p>
+            </div>
+
+            <div>
+              <label className="form-label">Bukti transfer <span className="text-red-500">*</span></label>
+              <label className="flex items-center gap-2.5 rounded-xl border border-dashed border-slate-300 px-4 py-3 cursor-pointer hover:border-brand-400 transition-colors">
+                <Upload size={15} className="text-slate-400 flex-shrink-0" />
+                <span className="text-xs text-slate-500 truncate">
+                  {proofFile ? proofFile.name : 'Pilih tangkapan layar bukti transfer'}
+                </span>
+                <input type="file" accept="image/*" className="hidden"
+                  onChange={e => setProofFile(e.target.files?.[0] || null)} />
+              </label>
+            </div>
+
+            <div>
+              <label className="form-label">Catatan (opsional)</label>
+              <input className="form-input" value={proofNote} onChange={e => setProofNote(e.target.value)}
+                placeholder="mis. transfer via BCA mobile 14:20" />
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={handleSettle} disabled={!proofFile || settling}
+                className="btn-primary flex-1 justify-center text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                {settling ? 'Menyimpan…' : 'Tandai Lunas & Potong Saldo'}
+              </button>
+              <button onClick={() => setProofFor(null)} disabled={settling}
+                className="btn-secondary text-xs">Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
