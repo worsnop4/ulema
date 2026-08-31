@@ -66,7 +66,7 @@ export async function fetchMyVendorContent(vendorId) {
   if (!vendorId) return null
   const { data, error } = await supabase
     .from('vendors')
-    .select('id, slug, name, visible, stats, testimonials, gallery, hero_photos, about_photos, cover_url')
+    .select('id, slug, name, visible, stats, testimonials, gallery, hero_photos, about_photos, cover_url, packages, package_note, package_footnote')
     .eq('id', vendorId)
     .maybeSingle()
   if (error) return null
@@ -86,6 +86,7 @@ export async function fetchMyVendorContent(vendorId) {
  */
 export async function updateVendorContent({
   stats, testimonials, gallery, heroPhoto, aboutPhoto, coverPhoto,
+  packages, packageNote, packageFootnote,
 }) {
   const { error } = await supabase.rpc('update_vendor_content', {
     p_stats: stats ?? null,
@@ -94,6 +95,10 @@ export async function updateVendorContent({
     p_hero_photo: heroPhoto ?? null,
     p_about_photo: aboutPhoto ?? null,
     p_cover_photo: coverPhoto ?? null,
+    p_packages: packages ?? null,
+    // Beda dari yang lain: string kosong bermakna "hapus", jadi ?? bukan ||.
+    p_pkg_note: packageNote ?? null,
+    p_pkg_footnote: packageFootnote ?? null,
   })
   if (error) throw new Error(error.message)
 }

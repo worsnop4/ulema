@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Plus, Trash2, Save, Check, AlertCircle, ExternalLink, BarChart3,
   MessageSquare, Upload, ShieldAlert, Images, ChevronLeft, ChevronRight, Star, User, Link2,
+  Tag, ChevronDown, ChevronUp, Sparkles,
 } from 'lucide-react'
 import { useAuth } from '../App'
 import ImageCropperModal from '../components/common/ImageCropperModal'
@@ -11,8 +12,10 @@ import {
 } from '../services/vendorService'
 import {
   MAX_STATS, MAX_TESTI, MAX_PHOTOS, MOSAIC_FROM, LEN,
+  MAX_GROUPS, MAX_ITEMS, MAX_FEATURES,
   STAT_FIELDS, TESTI_FIELDS, TESTI_OPTIONAL,
   keyed, bare, keyedPhotos, barePhotos, newKey, formatEventDate,
+  keyedPackages, barePackages, countPackages,
 } from '../config/vendorContent'
 
 // Tangkapan layar itu teks, bukan foto. Mutunya dijaga lebih tinggi daripada
@@ -66,6 +69,18 @@ const RowShell = ({ children, onRemove }) => (
     </button>
   </div>
 )
+
+const Nudge = ({ onUp, onDown, first, last, vertical = false }) => {
+  const Up = vertical ? ChevronUp : ChevronLeft
+  const Down = vertical ? ChevronDown : ChevronRight
+  const cls = 'p-1 text-slate-300 hover:text-slate-700 disabled:opacity-25 disabled:cursor-not-allowed'
+  return (
+    <span className="flex flex-shrink-0">
+      <button type="button" onClick={onUp} disabled={first} title="Naikkan" className={cls}><Up size={13} /></button>
+      <button type="button" onClick={onDown} disabled={last} title="Turunkan" className={cls}><Down size={13} /></button>
+    </span>
+  )
+}
 
 const AddButton = ({ onClick, disabled, children, hint }) => (
   <div className="flex items-center gap-3 flex-wrap">
@@ -126,6 +141,11 @@ export default function VendorContentPage() {
   const [coverKey, setCoverKey] = useState(null)
   const [uploading, setUploading] = useState(null)   // { done, total }
 
+  const [groups, setGroups] = useState([])
+  const [pkgNote, setPkgNote] = useState('')
+  const [pkgFootnote, setPkgFootnote] = useState('')
+  const [openGroup, setOpenGroup] = useState(null)
+
   const applyRow = (v) => {
     setRow(v)
     setStats(keyed(v?.stats, STAT_FIELDS))
@@ -141,6 +161,10 @@ export default function VendorContentPage() {
     setHeroKey(keyFor(firstOf(v?.hero_photos)))
     setAboutKey(keyFor(firstOf(v?.about_photos)))
     setCoverKey(keyFor(v?.cover_url))
+
+    setGroups(keyedPackages(v?.packages))
+    setPkgNote(v?.package_note || '')
+    setPkgFootnote(v?.package_footnote || '')
     setLoading(false)
   }
 
@@ -251,6 +275,53 @@ export default function VendorContentPage() {
     if (coverKey === k) setCoverKey(null)
   }
 
+  // Satu penolong untuk ketiga tingkat: geser satu langkah di dalam daftarnya
+  // sendiri. Tanpa ini ada tiga salinan logika yang sama persis, dan yang
+  // ketiga selalu jadi yang lupa diperbaiki.
+  const shift = (list, k, dir) => {
+    const a = list.findIndex(x => x._k === k)
+    const b = a + dir
+    if (a < 0 || b < 0 || b >= list.length) return list
+    const next = [...list]
+    ;[next[a], next[b]] = [next[b], next[a]]
+    return next
+  }
+
+  const editGroup = (gk, patchObj) =>
+    setGroups(gs => gs.map(g => (g._k === gk ? { ...g, ...patchObj } : g)))
+  const editItem = (gk, ik, patchObj) =>
+    setGroups(gs => gs.map(g => (g._k !== gk ? g
+      : { ...g, items: g.items.map(i => (i._k === ik ? { ...i, ...patchObj } : i)) })))
+  const editFeature = (gk, ik, fk, text) =>
+    setGroups(gs => gs.map(g => (g._k !== gk ? g
+      : { ...g, items: g.items.map(i => (i._k !== ik ? i
+        : { ...i, features: i.features.map(f => (f._k === fk ? { ...f, text } : f)) })) })))
+
+  const addGroup = () => {
+    const k = newKey()
+    setGroups(gs => [...gs, { _k: k, group: '', note: '', items: [] }])
+    setOpenGroup(k)
+  }
+  const addItem = (gk) => setGroups(gs => gs.map(g => (g._k !== gk ? g
+    : { ...g, items: [...g.items, { _k: newKey(), name: '', price: '', note: '', highlight: false, features: [] }] })))
+  const addFeature = (gk, ik) => setGroups(gs => gs.map(g => (g._k !== gk ? g
+    : { ...g, items: g.items.map(i => (i._k !== ik ? i
+      : { ...i, features: [...i.features, { _k: newKey(), text: '' }] })) })))
+
+  const dropGroup = (gk) => setGroups(gs => gs.filter(g => g._k !== gk))
+  const dropItem = (gk, ik) => setGroups(gs => gs.map(g => (g._k !== gk ? g
+    : { ...g, items: g.items.filter(i => i._k !== ik) })))
+  const dropFeature = (gk, ik, fk) => setGroups(gs => gs.map(g => (g._k !== gk ? g
+    : { ...g, items: g.items.map(i => (i._k !== ik ? i
+      : { ...i, features: i.features.filter(f => f._k !== fk) })) })))
+
+  const moveGroup = (gk, dir) => setGroups(gs => shift(gs, gk, dir))
+  const moveItem = (gk, ik, dir) => setGroups(gs => gs.map(g => (g._k !== gk ? g
+    : { ...g, items: shift(g.items, ik, dir) })))
+  const moveFeature = (gk, ik, fk, dir) => setGroups(gs => gs.map(g => (g._k !== gk ? g
+    : { ...g, items: g.items.map(i => (i._k !== ik ? i
+      : { ...i, features: shift(i.features, fk, dir) })) })))
+
   const handleSave = async (e) => {
     e.preventDefault()
     setError('')
@@ -277,6 +348,9 @@ export default function VendorContentPage() {
         heroPhoto: urlOf(heroKey),
         aboutPhoto: urlOf(aboutKey),
         coverPhoto: urlOf(coverKey),
+        packages: barePackages(groups),
+        packageNote: pkgNote,
+        packageFootnote: pkgFootnote,
       })
       // Dibaca ulang dari server, bukan dipercaya dari layar: fungsinya
       // memangkas spasi dan membuang baris yang tidak lengkap, jadi yang
@@ -392,7 +466,148 @@ export default function VendorContentPage() {
           )}
         </Card>
 
-        {/* ── Galeri ──────────────────────────────────────────────────── */}
+        {/* ── Daftar harga ────────────────────────────────────────────── */}
+      <Card className="p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Tag size={16} className="text-brand-600" />
+          <h2 className="font-semibold text-slate-800 text-sm">Daftar Harga</h2>
+        </div>
+        <p className="text-xs text-slate-500 leading-relaxed -mt-1">
+          Paketmu, dikelompokkan seperti di halaman. Kelompoknya jadi tab yang bisa
+          digeser calon klien. Ini satu-satunya isi halamanmu yang mengikat secara
+          komersial — pastikan harganya benar sebelum menyimpan.
+        </p>
+
+        <div className="space-y-2.5">
+          {groups.map((g, gi) => {
+            const open = openGroup === g._k
+            return (
+              <div key={g._k} className="rounded-xl border border-slate-200 overflow-hidden">
+                <div className="flex items-center gap-2 bg-slate-50 px-3 py-2.5">
+                  <button type="button" onClick={() => setOpenGroup(open ? null : g._k)}
+                    className="flex-1 min-w-0 flex items-center gap-2 text-left">
+                    {open ? <ChevronUp size={14} className="text-slate-400 flex-shrink-0" />
+                      : <ChevronDown size={14} className="text-slate-400 flex-shrink-0" />}
+                    <span className="font-semibold text-slate-800 text-sm truncate">
+                      {g.group.trim() || <em className="text-slate-400 font-normal">Tanpa nama kelompok</em>}
+                    </span>
+                    <span className="badge text-[10px] bg-white text-slate-500 flex-shrink-0">
+                      {g.items.length} paket
+                    </span>
+                  </button>
+                  <Nudge onUp={() => moveGroup(g._k, -1)} onDown={() => moveGroup(g._k, 1)}
+                    first={gi === 0} last={gi === groups.length - 1} vertical />
+                  <button type="button" onClick={() => dropGroup(g._k)} title="Hapus kelompok"
+                    className="p-1 text-slate-300 hover:text-red-500 flex-shrink-0"><Trash2 size={13} /></button>
+                </div>
+
+                {open && (
+                  <div className="p-3 space-y-3 bg-white">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="sm:w-52 flex-shrink-0">
+                        <Field label="Nama kelompok" value={g.group} max={LEN.group}
+                          onChange={v => editGroup(g._k, { group: v })} placeholder="Prewedding" />
+                      </div>
+                      <Field label="Catatan kelompok (opsional)" value={g.note} max={LEN.groupNote}
+                        onChange={v => editGroup(g._k, { note: v })}
+                        placeholder="Luar kota dikenakan transport" />
+                    </div>
+
+                    {g.items.map((it, ii) => (
+                      <div key={it._k} className="rounded-lg border border-slate-100 bg-slate-50/60 p-3 space-y-3">
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1 min-w-0 space-y-3">
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <Field label="Nama paket" value={it.name} max={LEN.pkgName}
+                                onChange={v => editItem(g._k, it._k, { name: v })} placeholder="Paket 1" />
+                              <div className="sm:w-44 flex-shrink-0">
+                                <Field label="Harga" value={it.price} max={LEN.pkgPrice}
+                                  onChange={v => editItem(g._k, it._k, { price: v })} placeholder="Rp 1.100.000" />
+                              </div>
+                            </div>
+                            <Field label="Label kecil (opsional)" value={it.note} max={LEN.pkgNote}
+                              onChange={v => editItem(g._k, it._k, { note: v })} placeholder="paling dipilih" />
+                          </div>
+                          <div className="flex flex-col items-center gap-1 pt-6">
+                            <Nudge onUp={() => moveItem(g._k, it._k, -1)} onDown={() => moveItem(g._k, it._k, 1)}
+                              first={ii === 0} last={ii === g.items.length - 1} vertical />
+                            <button type="button" onClick={() => dropItem(g._k, it._k)} title="Hapus paket"
+                              className="p-1 text-slate-300 hover:text-red-500"><Trash2 size={13} /></button>
+                          </div>
+                        </div>
+
+                        <button type="button"
+                          onClick={() => editItem(g._k, it._k, { highlight: !it.highlight })}
+                          className={`inline-flex items-center gap-1.5 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border transition-colors ${
+                            it.highlight
+                              ? 'bg-brand-50 border-brand-200 text-brand-700'
+                              : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'}`}>
+                          <Sparkles size={12} /> {it.highlight ? 'Disorot di halaman' : 'Sorot paket ini'}
+                        </button>
+
+                        <div className="space-y-1.5">
+                          <label className="form-label">Rincian paket</label>
+                          {it.features.map((f, fi) => (
+                            <div key={f._k} className="flex items-center gap-1.5">
+                              <input className="form-input flex-1 min-w-0 py-1.5 text-xs" value={f.text}
+                                onChange={e => editFeature(g._k, it._k, f._k, e.target.value)}
+                                placeholder="1 hari (4 jam)" maxLength={LEN.feature} />
+                              <Nudge onUp={() => moveFeature(g._k, it._k, f._k, -1)}
+                                onDown={() => moveFeature(g._k, it._k, f._k, 1)}
+                                first={fi === 0} last={fi === it.features.length - 1} vertical />
+                              <button type="button" onClick={() => dropFeature(g._k, it._k, f._k)}
+                                title="Hapus rincian"
+                                className="p-1 text-slate-300 hover:text-red-500 flex-shrink-0"><Trash2 size={12} /></button>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => addFeature(g._k, it._k)}
+                            disabled={it.features.length >= MAX_FEATURES}
+                            className="text-[11px] text-brand-600 hover:underline inline-flex items-center gap-1 disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed">
+                            <Plus size={11} /> Tambah rincian
+                            {it.features.length >= MAX_FEATURES && ` (maksimal ${MAX_FEATURES})`}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <AddButton onClick={() => addItem(g._k)} disabled={g.items.length >= MAX_ITEMS}
+                      hint={g.items.length >= MAX_ITEMS ? `Maksimal ${MAX_ITEMS} paket per kelompok.` : null}>
+                      Tambah paket
+                    </AddButton>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {groups.length === 0 && (
+            <p className="text-xs text-slate-400 italic py-2">
+              Belum ada paket — bagian daftar harga tidak muncul di halamanmu.
+            </p>
+          )}
+        </div>
+
+        <AddButton onClick={addGroup} disabled={groups.length >= MAX_GROUPS}
+          hint={groups.length >= MAX_GROUPS
+            ? `Maksimal ${MAX_GROUPS} kelompok.`
+            : `${groups.length} kelompok · ${countPackages(groups)} paket`}>
+          Tambah kelompok
+        </AddButton>
+
+        <div className="border-t border-slate-100 pt-4 space-y-3">
+          <Field label="Catatan di atas daftar harga" value={pkgNote} max={LEN.pkgIntro}
+            onChange={setPkgNote} placeholder="Harga berlaku untuk Kota Banjar dan sekitarnya." />
+          <Field label="Catatan kaki" value={pkgFootnote} max={LEN.pkgFootnote}
+            onChange={setPkgFootnote} placeholder="Daftar harga 2025. Ketersediaan tanggal bisa ditanyakan lewat WhatsApp." />
+          {/* Dikosongkan berarti dihapus, bukan diabaikan -- catatan harga yang
+              sudah tidak berlaku harus bisa dibuang, bukan cuma diganti. */}
+          <p className="text-[11px] text-slate-400">
+            Dikosongkan berarti catatannya dihapus dari halaman.
+          </p>
+        </div>
+      </Card>
+
+      {/* ── Galeri ──────────────────────────────────────────────────── */}
       <Card className="p-5 space-y-4">
           <div className="flex items-center gap-2">
             <Images size={16} className="text-brand-600" />

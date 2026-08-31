@@ -12,6 +12,12 @@ export const MAX_TESTI = 24
 // di jaringan seluler, dan portofolio yang bagus memang dikurasi. Mosaiknya
 // sendiri menyala pada 12 foto ke atas.
 export const MAX_PHOTOS = 24
+
+// Daftar harga bertingkat tiga: grup -> paket -> fitur. Batasnya mengikuti
+// apa yang masih terbaca di halaman, bukan apa yang muat di database.
+export const MAX_GROUPS = 8
+export const MAX_ITEMS = 12      // per grup
+export const MAX_FEATURES = 15   // per paket
 export const MOSAIC_FROM = 12
 
 /**
@@ -32,7 +38,11 @@ export function mosaicStep(n, preferred = 7) {
   while (step > 1 && gcd(step, n) !== 1) step--
   return step
 }
-export const LEN = { value: 16, label: 48, event: 80, caption: 120 }
+export const LEN = {
+  value: 16, label: 48, event: 80, caption: 120,
+  group: 40, groupNote: 160, pkgName: 60, pkgPrice: 40, pkgNote: 120,
+  feature: 120, pkgIntro: 300, pkgFootnote: 300,
+}
 
 export const STAT_FIELDS = ['value', 'label']
 
@@ -141,4 +151,83 @@ export function barePhotos(rows) {
       thumb: r.thumb || r.full,
       caption: String(r.caption || '').trim().slice(0, LEN.caption),
     }))
+}
+
+/**
+ * Daftar harga dari server -> baris untuk form.
+ *
+ * Kolomnya menerima dua bentuk: datar [{name, price, features}] untuk vendor
+ * dengan satu daftar harga, atau berkelompok [{group, note, items:[...]}]
+ * untuk yang daftarnya memang terbagi. Bentuk datar dibungkus jadi satu grup
+ * tanpa nama supaya form hanya mengenal satu bentuk; saat disimpan ia kembali
+ * datar kalau grupnya memang cuma satu dan tanpa nama.
+ */
+export function keyedPackages(packages) {
+  const raw = Array.isArray(packages) ? packages : []
+  const asItem = (i) => ({
+    _k: newKey(),
+    name: typeof i?.name === 'string' ? i.name : '',
+    price: typeof i?.price === 'string' ? i.price : '',
+    note: typeof i?.note === 'string' ? i.note : '',
+    highlight: i?.highlight === true,
+    features: (Array.isArray(i?.features) ? i.features : [])
+      .filter(f => typeof f === 'string')
+      .map(f => ({ _k: newKey(), text: f })),
+  })
+
+  const grouped = raw.filter(g => Array.isArray(g?.items))
+  if (grouped.length) {
+    return grouped.map(g => ({
+      _k: newKey(),
+      group: typeof g?.group === 'string' ? g.group : '',
+      note: typeof g?.note === 'string' ? g.note : '',
+      items: g.items.filter(Boolean).map(asItem),
+    }))
+  }
+
+  const flat = raw.filter(p => p && typeof p === 'object' && p.name)
+  if (!flat.length) return []
+  return [{ _k: newKey(), group: '', note: '', items: flat.map(asItem) }]
+}
+
+/**
+ * Baris form -> yang dikirim ke server.
+ *
+ * Paket tanpa nama dibuang, dan grup yang jadi kosong ikut hilang: kartu
+ * tanpa nama tidak bisa dipilih pembaca, dan tab grup kosong hanya jadi
+ * jalan buntu di karosel paket.
+ */
+export function barePackages(rows) {
+  const out = []
+  for (const g of Array.isArray(rows) ? rows : []) {
+    const items = []
+    for (const i of Array.isArray(g?.items) ? g.items : []) {
+      const name = String(i?.name || '').trim()
+      if (!name) continue
+      const item = { name: name.slice(0, LEN.pkgName) }
+      const price = String(i?.price || '').trim()
+      const note = String(i?.note || '').trim()
+      if (price) item.price = price.slice(0, LEN.pkgPrice)
+      if (note) item.note = note.slice(0, LEN.pkgNote)
+      if (i?.highlight === true) item.highlight = true
+      item.features = (Array.isArray(i?.features) ? i.features : [])
+        .map(f => String(f?.text ?? f ?? '').trim().slice(0, LEN.feature))
+        .filter(Boolean)
+      items.push(item)
+    }
+    if (!items.length) continue
+    const group = { items }
+    const name = String(g?.group || '').trim()
+    const note = String(g?.note || '').trim()
+    if (name) group.group = name.slice(0, LEN.group)
+    if (note) group.note = note.slice(0, LEN.groupNote)
+    out.push(group)
+  }
+  return out
+}
+
+/** Total paket di semua grup — yang dilihat pembaca, bukan jumlah grupnya. */
+export function countPackages(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .reduce((n, g) => n + (Array.isArray(g?.items) ? g.items.length : 0), 0)
 }
