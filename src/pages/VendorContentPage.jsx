@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   Plus, Trash2, Save, Check, AlertCircle, ExternalLink, BarChart3,
-  MessageSquare, Upload, ShieldAlert,
+  MessageSquare, Upload, ShieldAlert, Images, ChevronLeft, ChevronRight, Star, User,
 } from 'lucide-react'
 import { useAuth } from '../App'
 import ImageCropperModal from '../components/common/ImageCropperModal'
@@ -10,8 +10,9 @@ import {
   fetchMyVendorContent, updateVendorContent, uploadVendorMedia, removeVendorMedia,
 } from '../services/vendorService'
 import {
-  MAX_STATS, MAX_TESTI, LEN, STAT_FIELDS, TESTI_FIELDS, TESTI_OPTIONAL,
-  keyed, bare, newKey, formatEventDate,
+  MAX_STATS, MAX_TESTI, MAX_PHOTOS, MOSAIC_FROM, LEN,
+  STAT_FIELDS, TESTI_FIELDS, TESTI_OPTIONAL,
+  keyed, bare, keyedPhotos, barePhotos, newKey, formatEventDate,
 } from '../config/vendorContent'
 
 // Tangkapan layar itu teks, bukan foto. Mutunya dijaga lebih tinggi daripada
@@ -25,6 +26,14 @@ const SHOT_QUALITY = 0.85
 // Tanpa ini dinding berisi 24 ubin kecil tetap mengunduh 24 gambar 900px.
 const THUMB_WIDTH = 480
 const THUMB_QUALITY = 0.72
+
+// Foto galeri, bukan tangkapan layar: mutunya boleh lebih rendah karena
+// isinya gambar, bukan huruf kecil yang harus terbaca. Yang kecil dipakai
+// ubin mosaik, yang penuh baru diunduh saat foto dibuka di lightbox.
+const PHOTO_FULL_WIDTH = 1400
+const PHOTO_FULL_QUALITY = 0.72
+const PHOTO_THUMB_WIDTH = 600
+const PHOTO_THUMB_QUALITY = 0.68
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-2xl border border-surface-border shadow-card ${className}`}>{children}</div>
@@ -111,10 +120,25 @@ export default function VendorContentPage() {
   const [crop, setCrop] = useState(null)     // { k, url } saat memotong gambar
   const [busyRow, setBusyRow] = useState(null)
 
+  const [photos, setPhotos] = useState([])
+  const [heroKey, setHeroKey] = useState(null)
+  const [aboutKey, setAboutKey] = useState(null)
+  const [uploading, setUploading] = useState(null)   // { done, total }
+
   const applyRow = (v) => {
     setRow(v)
     setStats(keyed(v?.stats, STAT_FIELDS))
     setTesti(keyed(v?.testimonials, [...TESTI_FIELDS, ...TESTI_OPTIONAL]))
+
+    const rows = keyedPhotos(v?.gallery)
+    setPhotos(rows)
+    // Kolomnya menyimpan URL, sedangkan form bekerja dengan kunci baris.
+    // Dicocokkan sekali di sini supaya penanda "hero" ikut berpindah kalau
+    // fotonya digeser, dan hilang sendiri kalau fotonya dihapus.
+    const firstOf = (v2) => (Array.isArray(v2) ? v2 : []).find(x => typeof x === 'string' && x)
+    const keyFor = (url) => rows.find(r => r.full === url || r.thumb === url)?._k || null
+    setHeroKey(keyFor(firstOf(v?.hero_photos)))
+    setAboutKey(keyFor(firstOf(v?.about_photos)))
     setLoading(false)
   }
 
@@ -171,6 +195,59 @@ export default function VendorContentPage() {
     }
   }
 
+  const pickPhotos = async (e) => {
+    const files = Array.from(e.target.files || [])
+    e.target.value = ''
+    if (!files.length) return
+    setError('')
+
+    const room = MAX_PHOTOS - photos.length
+    if (room <= 0) { setError(`Galeri sudah penuh (maksimal ${MAX_PHOTOS} foto).`); return }
+    const batch = files.slice(0, room)
+    if (files.length > room) {
+      setError(`Hanya ${room} foto pertama yang diambil — galeri maksimal ${MAX_PHOTOS} foto.`)
+    }
+
+    setUploading({ done: 0, total: batch.length })
+    // Berurutan, bukan serentak: mengunggah dua puluh foto sekaligus dari
+    // koneksi seluler membuat semuanya melambat bersamaan dan sebagian gagal.
+    for (let i = 0; i < batch.length; i++) {
+      try {
+        const asBlob = async (dataUrl) => (await fetch(dataUrl)).blob()
+        const [full, thumb] = await Promise.all([
+          compressImage(batch[i], PHOTO_FULL_WIDTH, PHOTO_FULL_QUALITY).then(asBlob),
+          compressImage(batch[i], PHOTO_THUMB_WIDTH, PHOTO_THUMB_QUALITY).then(asBlob),
+        ])
+        const [fullUrl, thumbUrl] = await Promise.all([
+          uploadVendorMedia(full, user.id, 'galeri'),
+          uploadVendorMedia(thumb, user.id, 'galeri-kecil'),
+        ])
+        setPhotos(rows => [...rows, { _k: newKey(), full: fullUrl, thumb: thumbUrl, caption: '' }])
+      } catch (err) {
+        setError(`Gagal mengunggah ${batch[i].name}: ${err.message}`)
+      }
+      setUploading({ done: i + 1, total: batch.length })
+    }
+    setUploading(null)
+  }
+
+  const movePhoto = (k, dir) => setPhotos(rows => {
+    const i = rows.findIndex(r => r._k === k)
+    const j = i + dir
+    if (i < 0 || j < 0 || j >= rows.length) return rows
+    const next = [...rows]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    return next
+  })
+
+  const dropPhoto = (k) => {
+    setPhotos(rows => rows.filter(r => r._k !== k))
+    // Penanda ikut dilepas, kalau tidak halaman kehilangan foto hero-nya
+    // tanpa ada yang memberi tahu.
+    if (heroKey === k) setHeroKey(null)
+    if (aboutKey === k) setAboutKey(null)
+  }
+
   const handleSave = async (e) => {
     e.preventDefault()
     setError('')
@@ -179,10 +256,23 @@ export default function VendorContentPage() {
       // Kedua ukuran ikut dihitung: melewatkan thumb berarti separuh berkas
       // yang dibuang tetap tertinggal di bucket selamanya.
       const filesOf = (list) => (list || []).flatMap(t => [t?.image, t?.thumb]).filter(Boolean)
-      const before = filesOf(row?.testimonials)
+      const photoFilesOf = (list) => (Array.isArray(list) ? list : [])
+        .flatMap(g => (typeof g === 'string' ? [g] : [g?.full, g?.thumb]))
+        .filter(Boolean)
+      const before = [...filesOf(row?.testimonials), ...photoFilesOf(row?.gallery)]
+
+      const nextPhotos = barePhotos(photos)
+      if (nextPhotos.length === 0) {
+        throw new Error('Galeri tidak boleh kosong — halaman portofolio tanpa foto tidak ada gunanya.')
+      }
+      const urlOf = (k) => photos.find(r => r._k === k)?.full || null
+
       await updateVendorContent({
         stats: bare(stats, STAT_FIELDS),
         testimonials: bare(testi, TESTI_FIELDS, TESTI_OPTIONAL),
+        gallery: nextPhotos,
+        heroPhoto: urlOf(heroKey),
+        aboutPhoto: urlOf(aboutKey),
       })
       // Dibaca ulang dari server, bukan dipercaya dari layar: fungsinya
       // memangkas spasi dan membuang baris yang tidak lengkap, jadi yang
@@ -192,7 +282,7 @@ export default function VendorContentPage() {
 
       // Berkas yang sudah tidak dirujuk baris mana pun dibuang, supaya bucket
       // tidak menumpuk tangkapan layar yang tidak tampil di mana-mana.
-      const after = new Set(filesOf(fresh?.testimonials))
+      const after = new Set([...filesOf(fresh?.testimonials), ...photoFilesOf(fresh?.gallery)])
       await removeVendorMedia(before.filter(u => !after.has(u)), user.id)
 
       setSaved(true)
@@ -298,7 +388,107 @@ export default function VendorContentPage() {
           )}
         </Card>
 
-        {/* ── Testimoni ───────────────────────────────────────────────── */}
+        {/* ── Galeri ──────────────────────────────────────────────────── */}
+      <Card className="p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <Images size={16} className="text-brand-600" />
+            <h2 className="font-semibold text-slate-800 text-sm">Galeri</h2>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed -mt-1">
+            Foto karyamu. Urutannya menentukan tampilan di halaman, dan dari sini juga
+            kamu memilih foto mana yang jadi sampul atas dan mana yang menemani
+            bagian &ldquo;Tentang&rdquo;. Tidak perlu memotong — ukurannya diatur otomatis.
+          </p>
+
+          {photos.length > 0 && photos.length < MOSAIC_FROM && (
+            <p className="text-[11px] text-amber-600 flex items-start gap-1.5">
+              <AlertCircle size={12} className="mt-px flex-shrink-0" />
+              Di bawah {MOSAIC_FROM} foto, galeri tampil sebagai kisi biasa. Mulai {MOSAIC_FROM} foto
+              ia berubah jadi mosaik besar yang jauh lebih berkesan.
+            </p>
+          )}
+
+          <div className="grid gap-2.5"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(112px, 1fr))' }}>
+            {photos.map((p, i) => (
+              <div key={p._k} className="rounded-xl overflow-hidden border border-slate-200 bg-white">
+                <div className="relative bg-slate-100" style={{ aspectRatio: '3 / 4' }}>
+                  <img src={p.thumb || p.full} alt="" className="w-full h-full object-cover" />
+                  {(heroKey === p._k || aboutKey === p._k) && (
+                    <div className="absolute top-1 left-1 flex gap-1">
+                      {heroKey === p._k && (
+                        <span className="badge text-[9px] bg-brand-600 text-white">Sampul</span>
+                      )}
+                      {aboutKey === p._k && (
+                        <span className="badge text-[9px] bg-slate-800 text-white">Tentang</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between px-1 py-1 border-t border-slate-100">
+                  <button type="button" onClick={() => movePhoto(p._k, -1)} disabled={i === 0}
+                    title="Geser kiri"
+                    className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-25 disabled:cursor-not-allowed">
+                    <ChevronLeft size={13} />
+                  </button>
+                  <span className="text-[10px] text-slate-400 tabular-nums">{i + 1}</span>
+                  <button type="button" onClick={() => movePhoto(p._k, 1)} disabled={i === photos.length - 1}
+                    title="Geser kanan"
+                    className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-25 disabled:cursor-not-allowed">
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between px-1 pb-1">
+                  <button type="button" onClick={() => setHeroKey(p._k)} title="Jadikan foto sampul"
+                    className={`p-1 ${heroKey === p._k ? 'text-brand-600' : 'text-slate-300 hover:text-brand-500'}`}>
+                    <Star size={13} />
+                  </button>
+                  <button type="button" onClick={() => setAboutKey(p._k)} title="Jadikan foto Tentang"
+                    className={`p-1 ${aboutKey === p._k ? 'text-slate-800' : 'text-slate-300 hover:text-slate-600'}`}>
+                    <User size={13} />
+                  </button>
+                  <button type="button" onClick={() => dropPhoto(p._k)} title="Hapus foto"
+                    className="p-1 text-slate-300 hover:text-red-500">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {photos.length < MAX_PHOTOS && (
+              <label className="rounded-xl border border-dashed border-slate-300 hover:border-brand-400 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5 text-slate-400"
+                style={{ aspectRatio: '3 / 4' }}>
+                <Upload size={17} />
+                <span className="text-[10px] text-center leading-tight px-2">Tambah<br />foto</span>
+                <input type="file" accept="image/*" multiple className="hidden"
+                  onChange={pickPhotos} disabled={uploading !== null} />
+              </label>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {uploading ? (
+              <span className="text-[11px] text-brand-600 font-semibold">
+                Mengunggah {uploading.done} dari {uploading.total}…
+              </span>
+            ) : (
+              <span className="text-[11px] text-slate-400">
+                {photos.length} dari {MAX_PHOTOS} foto
+                {photos.length > 0 && !heroKey && ' · belum ada foto sampul yang dipilih'}
+              </span>
+            )}
+          </div>
+
+          <p className="text-[11px] text-slate-400 flex items-start gap-1.5">
+            <Star size={11} className="mt-0.5 flex-shrink-0" />
+            Bintang menandai foto sampul di bagian paling atas halaman.
+            Ikon orang menandai foto yang menemani bagian &ldquo;Tentang&rdquo;.
+          </p>
+      </Card>
+
+      {/* ── Testimoni ───────────────────────────────────────────────── */}
         <Card className="p-5 space-y-4">
           <div className="flex items-center gap-2">
             <MessageSquare size={16} className="text-brand-600" />
@@ -368,7 +558,7 @@ export default function VendorContentPage() {
         )}
 
         <div className="flex items-center gap-3 flex-wrap">
-          <button type="submit" disabled={saving || busyRow !== null}
+          <button type="submit" disabled={saving || busyRow !== null || uploading !== null}
             className={`btn-primary inline-flex items-center gap-1.5 ${saved ? 'bg-green-600 hover:bg-green-600' : ''}`}>
             {saved ? <><Check size={14} /> Tersimpan!</>
               : saving ? 'Menyimpan…'

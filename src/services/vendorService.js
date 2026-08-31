@@ -66,7 +66,7 @@ export async function fetchMyVendorContent(vendorId) {
   if (!vendorId) return null
   const { data, error } = await supabase
     .from('vendors')
-    .select('id, slug, name, visible, stats, testimonials')
+    .select('id, slug, name, visible, stats, testimonials, gallery, hero_photos, about_photos')
     .eq('id', vendorId)
     .maybeSingle()
   if (error) return null
@@ -84,10 +84,13 @@ export async function fetchMyVendorContent(vendorId) {
  * Pass only the part being saved — the function leaves a null argument alone,
  * so one form cannot blank out the other's data.
  */
-export async function updateVendorContent({ stats, testimonials }) {
+export async function updateVendorContent({ stats, testimonials, gallery, heroPhoto, aboutPhoto }) {
   const { error } = await supabase.rpc('update_vendor_content', {
     p_stats: stats ?? null,
     p_testimonials: testimonials ?? null,
+    p_gallery: gallery ?? null,
+    p_hero_photo: heroPhoto ?? null,
+    p_about_photo: aboutPhoto ?? null,
   })
   if (error) throw new Error(error.message)
 }

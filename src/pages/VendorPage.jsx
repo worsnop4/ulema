@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchVendorBySlug, logVendorEvent } from '../services/vendorService'
-import { formatEventDate } from '../config/vendorContent'
+import { formatEventDate, mosaicStep } from '../config/vendorContent'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 import './VendorPage.css'
 
@@ -284,10 +284,14 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
         `Halo ${vendor.name}, saya tertarik dengan paket ${p.name} (${p.price}). Boleh minta info ketersediaan tanggalnya?`)}`
     : null
 
-  // 36 ubin dari n foto. Langkah 7 relatif prima terhadap 20, jadi seluruh
-  // arsip lewat sekali sebelum ada yang terulang.
+  // 36 ubin dari n foto, diambil melompat supaya ubin bersebelahan tidak
+  // menampilkan foto berurutan. Langkahnya harus koprima dengan n, kalau
+  // tidak ia hanya berputar di sebagian kecil arsip: dengan 14 foto, langkah
+  // 7 cuma menampilkan 2 foto yang diulang 18 kali. Dulu ini tidak terlihat
+  // karena jumlah fotonya tetap 20; begitu vendor bisa menambah dan mengurangi
+  // sendiri, angka seperti 14, 21, dan 28 jadi mungkin.
   const tiles = useMosaic
-    ? Array.from({ length: MOSAIC_TILES }, (_, k) => photos[(k * 7) % n])
+    ? Array.from({ length: MOSAIC_TILES }, (_, k) => photos[(k * mosaicStep(n)) % n])
     : []
 
   const NAV = [

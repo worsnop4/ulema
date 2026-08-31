@@ -7,7 +7,32 @@
 
 export const MAX_STATS = 4     // halaman publik menata statistik maksimal 4 kolom
 export const MAX_TESTI = 24
-export const LEN = { value: 16, label: 48, event: 80 }
+
+// Bukan soal penyimpanan: satu halaman galeri dengan puluhan ubin sudah berat
+// di jaringan seluler, dan portofolio yang bagus memang dikurasi. Mosaiknya
+// sendiri menyala pada 12 foto ke atas.
+export const MAX_PHOTOS = 24
+export const MOSAIC_FROM = 12
+
+/**
+ * Langkah lompatan untuk mengisi ubin mosaik: terbesar <= 7 yang koprima
+ * dengan jumlah foto.
+ *
+ * Ubin diisi photos[(k * step) % n] supaya ubin bersebelahan tidak
+ * menampilkan foto berurutan. Kalau langkahnya berbagi faktor dengan n, ia
+ * hanya berputar di sebagian kecil arsip -- dengan 14 foto, langkah 7 cuma
+ * menampilkan 2 foto yang diulang 18 kali. Dulu tidak terlihat karena jumlah
+ * fotonya tetap 20; begitu vendor bisa menambah dan mengurangi sendiri,
+ * angka seperti 14, 21, dan 28 jadi mungkin.
+ */
+const gcd = (a, b) => (b ? gcd(b, a % b) : a)
+export function mosaicStep(n, preferred = 7) {
+  if (n < 3) return 1
+  let step = Math.min(preferred, n - 1)
+  while (step > 1 && gcd(step, n) !== 1) step--
+  return step
+}
+export const LEN = { value: 16, label: 48, event: 80, caption: 120 }
 
 export const STAT_FIELDS = ['value', 'label']
 
@@ -83,4 +108,37 @@ export function bare(rows, fields, optional = []) {
       return out
     })
     .filter(r => fields.every(f => r[f] !== ''))
+}
+
+/**
+ * Baris galeri dari server -> baris untuk form.
+ *
+ * Kolomnya menerima string URL polos (bentuk lama, dan itulah isi FM Project
+ * sekarang) maupun objek dua ukuran. Keduanya dinormalkan ke satu bentuk di
+ * sini supaya form hanya mengenal satu.
+ */
+export function keyedPhotos(gallery) {
+  return (Array.isArray(gallery) ? gallery : []).map(g => {
+    if (typeof g === 'string' && g) return { _k: newKey(), full: g, thumb: g, caption: '' }
+    if (!g || typeof g !== 'object') return null
+    const full = g.full || g.url || g.thumb
+    if (!full) return null
+    return {
+      _k: newKey(),
+      full,
+      thumb: g.thumb || g.url || full,
+      caption: typeof g.caption === 'string' ? g.caption : '',
+    }
+  }).filter(Boolean)
+}
+
+/** Baris form -> yang dikirim ke server. */
+export function barePhotos(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter(r => r?.full)
+    .map(r => ({
+      full: r.full,
+      thumb: r.thumb || r.full,
+      caption: String(r.caption || '').trim().slice(0, LEN.caption),
+    }))
 }
