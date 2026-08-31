@@ -78,7 +78,7 @@ async function fetchVendorData(slug) {
     // Only visible vendors get a preview — an unfinished portfolio must not
     // become shareable just because someone guessed the slug.
     const endpoint = `${supabaseUrl}/rest/v1/vendors`
-      + `?select=name,category,city,tagline,cover_url,logo_url`
+      + `?select=name,category,city,tagline,cover_url`
       + `&slug=eq.${encodeURIComponent(slug)}&visible=is.true&limit=1`
     const res = await fetch(endpoint, {
       headers: {
@@ -110,7 +110,12 @@ export default async function middleware(request) {
     return ogResponse({
       title: v ? `${v.name} — ${v.category}${v.city ? ` ${v.city}` : ''}` : 'Vendor Pernikahan — Ulema',
       description: v?.tagline || 'Lihat portofolio dan hubungi kami untuk hari bahagiamu.',
-      image: v?.cover_url || v?.logo_url || `${url.origin}/hero/hero1.jpg`,
+      // Sengaja TIDAK jatuh ke logo_url. Logo portofolio adalah versi yang
+      // dibuat untuk halaman vendor yang berlatar gelap -- tinta terang di
+      // latar transparan. WhatsApp menyusun pratinjau di atas putih, jadi
+      // logo itu akan tampil nyaris kosong. Gambar umum yang benar lebih
+      // baik daripada gambar yang tepat tapi tidak terlihat.
+      image: v?.cover_url || `${url.origin}/hero/hero1.jpg`,
       pageUrl: pageUrlBase,
     })
   }

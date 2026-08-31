@@ -311,10 +311,24 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
         background: 'rgba(13,11,10,0.82)', backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(234,224,212,0.09)',
       }}>
-        <a href="#top" className="font-archivo" style={{
-          fontSize: 13, fontWeight: 500, letterSpacing: '0.3em',
-          textTransform: 'uppercase', color: C.hi2, whiteSpace: 'nowrap',
-        }}>{vendor.name}</a>
+        {/* Logo kalau ada, nama kalau tidak. Halaman ini gelap, jadi logo yang
+            disimpan di logo_url memang harus versi yang terbaca di latar
+            gelap -- bukan versi gelap yang dibalik lewat CSS filter, karena
+            filter itu akan menghancurkan logo vendor berikutnya yang
+            kebetulan berwarna. */}
+        <a href="#top" className="flex items-center" style={{ minWidth: 0 }}>
+          {vendor.logo_url ? (
+            <img src={vendor.logo_url} alt={vendor.name} style={{
+              height: 'clamp(22px, 2.4vw, 30px)', width: 'auto',
+              maxWidth: 'min(52vw, 240px)', objectFit: 'contain', display: 'block',
+            }} />
+          ) : (
+            <span className="font-archivo" style={{
+              fontSize: 13, fontWeight: 500, letterSpacing: '0.3em',
+              textTransform: 'uppercase', color: C.hi2, whiteSpace: 'nowrap',
+            }}>{vendor.name}</span>
+          )}
+        </a>
 
         <nav className="vp-nav flex font-archivo" style={{
           gap: 30, fontSize: 10, letterSpacing: '0.26em',
