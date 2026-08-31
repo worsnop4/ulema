@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   Plus, Trash2, Save, Check, AlertCircle, ExternalLink, BarChart3,
-  MessageSquare, Upload, ShieldAlert, Images, ChevronLeft, ChevronRight, Star, User,
+  MessageSquare, Upload, ShieldAlert, Images, ChevronLeft, ChevronRight, Star, User, Link2,
 } from 'lucide-react'
 import { useAuth } from '../App'
 import ImageCropperModal from '../components/common/ImageCropperModal'
@@ -123,6 +123,7 @@ export default function VendorContentPage() {
   const [photos, setPhotos] = useState([])
   const [heroKey, setHeroKey] = useState(null)
   const [aboutKey, setAboutKey] = useState(null)
+  const [coverKey, setCoverKey] = useState(null)
   const [uploading, setUploading] = useState(null)   // { done, total }
 
   const applyRow = (v) => {
@@ -139,6 +140,7 @@ export default function VendorContentPage() {
     const keyFor = (url) => rows.find(r => r.full === url || r.thumb === url)?._k || null
     setHeroKey(keyFor(firstOf(v?.hero_photos)))
     setAboutKey(keyFor(firstOf(v?.about_photos)))
+    setCoverKey(keyFor(v?.cover_url))
     setLoading(false)
   }
 
@@ -246,6 +248,7 @@ export default function VendorContentPage() {
     // tanpa ada yang memberi tahu.
     if (heroKey === k) setHeroKey(null)
     if (aboutKey === k) setAboutKey(null)
+    if (coverKey === k) setCoverKey(null)
   }
 
   const handleSave = async (e) => {
@@ -273,6 +276,7 @@ export default function VendorContentPage() {
         gallery: nextPhotos,
         heroPhoto: urlOf(heroKey),
         aboutPhoto: urlOf(aboutKey),
+        coverPhoto: urlOf(coverKey),
       })
       // Dibaca ulang dari server, bukan dipercaya dari layar: fungsinya
       // memangkas spasi dan membuang baris yang tidak lengkap, jadi yang
@@ -396,8 +400,8 @@ export default function VendorContentPage() {
           </div>
           <p className="text-xs text-slate-500 leading-relaxed -mt-1">
             Foto karyamu. Urutannya menentukan tampilan di halaman, dan dari sini juga
-            kamu memilih foto mana yang jadi sampul atas dan mana yang menemani
-            bagian &ldquo;Tentang&rdquo;. Tidak perlu memotong — ukurannya diatur otomatis.
+            kamu menandai foto mana yang dipakai untuk header, bagian &ldquo;Tentang&rdquo;,
+            dan pratinjau tautan. Tidak perlu memotong — ukurannya diatur otomatis.
           </p>
 
           {photos.length > 0 && photos.length < MOSAIC_FROM && (
@@ -414,13 +418,16 @@ export default function VendorContentPage() {
               <div key={p._k} className="rounded-xl overflow-hidden border border-slate-200 bg-white">
                 <div className="relative bg-slate-100" style={{ aspectRatio: '3 / 4' }}>
                   <img src={p.thumb || p.full} alt="" className="w-full h-full object-cover" />
-                  {(heroKey === p._k || aboutKey === p._k) && (
-                    <div className="absolute top-1 left-1 flex gap-1">
+                  {(heroKey === p._k || aboutKey === p._k || coverKey === p._k) && (
+                    <div className="absolute top-1 left-1 flex flex-wrap gap-1">
                       {heroKey === p._k && (
-                        <span className="badge text-[9px] bg-brand-600 text-white">Sampul</span>
+                        <span className="badge text-[9px] bg-brand-600 text-white">Header</span>
                       )}
                       {aboutKey === p._k && (
                         <span className="badge text-[9px] bg-slate-800 text-white">Tentang</span>
+                      )}
+                      {coverKey === p._k && (
+                        <span className="badge text-[9px] bg-teal-600 text-white">Tautan</span>
                       )}
                     </div>
                   )}
@@ -441,13 +448,17 @@ export default function VendorContentPage() {
                 </div>
 
                 <div className="flex items-center justify-between px-1 pb-1">
-                  <button type="button" onClick={() => setHeroKey(p._k)} title="Jadikan foto sampul"
+                  <button type="button" onClick={() => setHeroKey(p._k)} title="Jadikan foto header"
                     className={`p-1 ${heroKey === p._k ? 'text-brand-600' : 'text-slate-300 hover:text-brand-500'}`}>
                     <Star size={13} />
                   </button>
                   <button type="button" onClick={() => setAboutKey(p._k)} title="Jadikan foto Tentang"
                     className={`p-1 ${aboutKey === p._k ? 'text-slate-800' : 'text-slate-300 hover:text-slate-600'}`}>
                     <User size={13} />
+                  </button>
+                  <button type="button" onClick={() => setCoverKey(p._k)} title="Jadikan pratinjau tautan"
+                    className={`p-1 ${coverKey === p._k ? 'text-teal-600' : 'text-slate-300 hover:text-teal-500'}`}>
+                    <Link2 size={13} />
                   </button>
                   <button type="button" onClick={() => dropPhoto(p._k)} title="Hapus foto"
                     className="p-1 text-slate-300 hover:text-red-500">
@@ -476,16 +487,29 @@ export default function VendorContentPage() {
             ) : (
               <span className="text-[11px] text-slate-400">
                 {photos.length} dari {MAX_PHOTOS} foto
-                {photos.length > 0 && !heroKey && ' · belum ada foto sampul yang dipilih'}
+                {photos.length > 0 && !heroKey && ' · belum ada foto header yang dipilih'}
               </span>
             )}
           </div>
 
-          <p className="text-[11px] text-slate-400 flex items-start gap-1.5">
-            <Star size={11} className="mt-0.5 flex-shrink-0" />
-            Bintang menandai foto sampul di bagian paling atas halaman.
-            Ikon orang menandai foto yang menemani bagian &ldquo;Tentang&rdquo;.
-          </p>
+          <div className="rounded-xl bg-slate-50 border border-slate-100 p-3.5 space-y-1.5">
+            <p className="text-[11px] text-slate-600 flex items-start gap-2">
+              <Star size={12} className="mt-px flex-shrink-0 text-brand-600" />
+              <span><strong>Header</strong> — foto besar di bagian paling atas halamanmu.</span>
+            </p>
+            <p className="text-[11px] text-slate-600 flex items-start gap-2">
+              <User size={12} className="mt-px flex-shrink-0 text-slate-800" />
+              <span><strong>Tentang</strong> — foto yang menemani cerita tentang kamu.</span>
+            </p>
+            <p className="text-[11px] text-slate-600 flex items-start gap-2">
+              <Link2 size={12} className="mt-px flex-shrink-0 text-teal-600" />
+              <span>
+                <strong>Tautan</strong> — tidak tampil di halaman. Ini gambar yang muncul
+                saat alamat portofoliomu dibagikan di WhatsApp, jadi justru paling
+                sering dilihat calon klien sebelum mereka membukanya.
+              </span>
+            </p>
+          </div>
       </Card>
 
       {/* ── Testimoni ───────────────────────────────────────────────── */}
