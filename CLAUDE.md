@@ -4,10 +4,11 @@ Ulema (`ulema.id`) is a wedding-invitation SaaS. Couples buy a package, pick a t
 fill in their details on a dashboard, and share a personalized invitation link. Guests
 open `/invite/<slug>` (no login) to RSVP, leave wishes, view the event, gift accounts, etc.
 
-The app has three surfaces:
+The app has four surfaces:
 1. **Landing page** (`/`) — marketing site (hero, promo, catalog, testimonials, FAQ).
-2. **Dashboard** (`/dashboard/*`) — authenticated area where couples edit their invitation and admins manage themes/pricing/finance.
+2. **Dashboard** (`/dashboard/*`) — authenticated area where couples edit their invitation, vendors edit their portfolio, and admins manage themes/pricing/finance.
 3. **Public invitation** (`/invite/:slug`) — the rendered invitation guests see.
+4. **Vendor portfolio** (`/vendor/:slug`) — a wedding vendor's own page, which also carries their referral code.
 
 ## Tech Stack
 
@@ -135,6 +136,33 @@ with real `og:*` / Twitter Card tags. Real visitors pass through untouched to th
 - OG image priority: `meta.ogImage` → `meta.coverPhoto` → `meta.photo` → bride/groom photo → default.
 - `middleware.js` reads `process.env.VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (Vercel exposes
   all project env vars server-side). It has its own ESLint override in `eslint.config.js`.
+
+## Vendor portfolios — a second business, sharing the same app
+
+Wedding vendors (photographer, MUA, venue…) get a portfolio page at `/vendor/:slug` plus an
+account. Their page carries their `referral_code`; when a client buys an invitation with it, the
+vendor earns commission (rate is **per account** on `profiles.commission_rate` — the first vendor
+is at 40%, the default for ordinary users is 20%).
+
+- A vendor is an **ordinary user** — `role` is unchanged. What makes them a vendor is a row in
+  `vendors` with `user_id` pointing at them. That is deliberate: commission, wallet, and
+  withdrawals all hang off `profiles` and needed no rethinking.
+- The dashboard branches on `user.vendor` (see `src/config/nav.js` → `dashboardHome()`), giving
+  them Statistik / Konten / Komisi instead of the invitation editor.
+- Vendors edit their own content — stats, gallery, packages, testimonials, and which photo is the
+  header / About / link-preview image — through `update_vendor_content`. That RPC is the **only**
+  write path a vendor has into `vendors`: RLS is row-level, not column-level, so a plain UPDATE
+  policy would also let them set `verified`, `visible`, and `slug` straight from the API.
+- **Testimonials are screenshots, not typed quotes** (`{image, thumb, event, date}`). Typed
+  testimonials read as written by the page's owner, because they are.
+- `/r/:code` remembers a referral code for 180 days and lands on the catalog — the wedding
+  timeline (venue ~1 year ahead, invitation 1–2 months before) outlives any session.
+- Withdrawals deduct the balance **when the admin uploads proof of transfer**, not when the vendor
+  requests. What is capped at request time is `wallet_balance` minus everything already in flight.
+
+Two docs carry the rest: `docs/VENDOR_PAGE_GUIDE.md` (self-contained handoff for a Claude Design
+session) and `docs/ARSITEKTUR_HALAMAN_VENDOR.md` (why each vendor gets a bespoke page, and the
+rule that the shared mechanics get extracted after the second one — before the third).
 
 ## Key Directories
 
