@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Plus, Trash2, Save, Check, AlertCircle, ExternalLink, BarChart3,
   MessageSquare, Upload, ShieldAlert, Images, ChevronLeft, ChevronRight, Star, User, Link2,
-  Tag, ChevronDown, ChevronUp, Sparkles,
+  Tag, ChevronDown, ChevronUp, Sparkles, Heading, SlidersHorizontal, ListChecks,
 } from 'lucide-react'
 import { useAuth } from '../App'
 import ImageCropperModal from '../components/common/ImageCropperModal'
@@ -12,10 +12,11 @@ import {
 } from '../services/vendorService'
 import {
   MAX_STATS, MAX_TESTI, MAX_PHOTOS, MOSAIC_FROM, LEN,
-  MAX_GROUPS, MAX_ITEMS, MAX_FEATURES,
+  MAX_GROUPS, MAX_ITEMS, MAX_FEATURES, MAX_BEFORE_AFTER, MAX_SERVICES,
   STAT_FIELDS, TESTI_FIELDS, TESTI_OPTIONAL,
   keyed, bare, keyedPhotos, barePhotos, newKey, formatEventDate,
   keyedPackages, barePackages, countPackages,
+  keyedPairs, barePairs, keyedServices, bareServices,
 } from '../config/vendorContent'
 
 // Tangkapan layar itu teks, bukan foto. Mutunya dijaga lebih tinggi daripada
@@ -93,11 +94,11 @@ const AddButton = ({ onClick, disabled, children, hint }) => (
 )
 
 /** Kotak tangkapan layar: kosong -> tombol unggah, terisi -> pratinjau tegak. */
-function ShotBox({ value, thumb, busy, onPick }) {
+function ShotBox({ value, thumb, busy, onPick, label = 'Tangkapan layar' }) {
   const ref = useRef()
   return (
     <div className="flex-shrink-0">
-      <label className="form-label">Tangkapan layar</label>
+      <label className="form-label">{label}</label>
       <button type="button" onClick={() => ref.current?.click()} disabled={busy}
         className="block w-[104px] rounded-lg overflow-hidden border border-slate-200 bg-white hover:border-brand-400 transition-colors disabled:opacity-50"
         style={{ aspectRatio: '9 / 14' }}>
@@ -146,6 +147,10 @@ export default function VendorContentPage() {
   const [pkgFootnote, setPkgFootnote] = useState('')
   const [openGroup, setOpenGroup] = useState(null)
 
+  const [pairs, setPairs] = useState([])
+  const [services, setServices] = useState([])
+  const [busyPair, setBusyPair] = useState(null)   // `${_k}:${side}`
+
   const applyRow = (v) => {
     setRow(v)
     setStats(keyed(v?.stats, STAT_FIELDS))
@@ -165,6 +170,8 @@ export default function VendorContentPage() {
     setGroups(keyedPackages(v?.packages))
     setPkgNote(v?.package_note || '')
     setPkgFootnote(v?.package_footnote || '')
+    setPairs(keyedPairs(v?.before_after))
+    setServices(keyedServices(v?.service_types))
     setLoading(false)
   }
 
@@ -292,10 +299,10 @@ export default function VendorContentPage() {
   const editItem = (gk, ik, patchObj) =>
     setGroups(gs => gs.map(g => (g._k !== gk ? g
       : { ...g, items: g.items.map(i => (i._k === ik ? { ...i, ...patchObj } : i)) })))
-  const editFeature = (gk, ik, fk, text) =>
+  const editFeature = (gk, ik, fk, patchObj) =>
     setGroups(gs => gs.map(g => (g._k !== gk ? g
       : { ...g, items: g.items.map(i => (i._k !== ik ? i
-        : { ...i, features: i.features.map(f => (f._k === fk ? { ...f, text } : f)) })) })))
+        : { ...i, features: i.features.map(f => (f._k === fk ? { ...f, ...patchObj } : f)) })) })))
 
   const addGroup = () => {
     const k = newKey()
@@ -306,7 +313,7 @@ export default function VendorContentPage() {
     : { ...g, items: [...g.items, { _k: newKey(), name: '', price: '', note: '', highlight: false, features: [] }] })))
   const addFeature = (gk, ik) => setGroups(gs => gs.map(g => (g._k !== gk ? g
     : { ...g, items: g.items.map(i => (i._k !== ik ? i
-      : { ...i, features: [...i.features, { _k: newKey(), text: '' }] })) })))
+      : { ...i, features: [...i.features, { _k: newKey(), text: '', heading: false }] })) })))
 
   const dropGroup = (gk) => setGroups(gs => gs.filter(g => g._k !== gk))
   const dropItem = (gk, ik) => setGroups(gs => gs.map(g => (g._k !== gk ? g
@@ -322,6 +329,27 @@ export default function VendorContentPage() {
     : { ...g, items: g.items.map(i => (i._k !== ik ? i
       : { ...i, features: shift(i.features, fk, dir) })) })))
 
+  const pickPair = (k, side) => async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (file.size > 10 * 1024 * 1024) { setError('Gambar terlalu besar. Maksimal 10MB.'); return }
+    setError('')
+    setBusyPair(`${k}:${side}`)
+    try {
+      // Ukuran penuh saja: pasangan ini dilihat besar dan digeser, jadi tidak
+      // ada tempat yang memakai versi kecilnya.
+      const shrunk = await compressImage(file, PHOTO_FULL_WIDTH, PHOTO_FULL_QUALITY)
+      const blob = await (await fetch(shrunk)).blob()
+      const url = await uploadVendorMedia(blob, user.id, `sebelum-sesudah-${side}`)
+      setPairs(rows => rows.map(r => (r._k === k ? { ...r, [side]: url } : r)))
+    } catch (err) {
+      setError(err.message || 'Gagal mengunggah gambar.')
+    } finally {
+      setBusyPair(null)
+    }
+  }
+
   const handleSave = async (e) => {
     e.preventDefault()
     setError('')
@@ -333,7 +361,10 @@ export default function VendorContentPage() {
       const photoFilesOf = (list) => (Array.isArray(list) ? list : [])
         .flatMap(g => (typeof g === 'string' ? [g] : [g?.full, g?.thumb]))
         .filter(Boolean)
-      const before = [...filesOf(row?.testimonials), ...photoFilesOf(row?.gallery)]
+      const pairFilesOf = (list) => (Array.isArray(list) ? list : [])
+        .flatMap(p2 => [p2?.before, p2?.after]).filter(Boolean)
+      const before = [...filesOf(row?.testimonials), ...photoFilesOf(row?.gallery),
+        ...pairFilesOf(row?.before_after)]
 
       const nextPhotos = barePhotos(photos)
       if (nextPhotos.length === 0) {
@@ -351,6 +382,8 @@ export default function VendorContentPage() {
         packages: barePackages(groups),
         packageNote: pkgNote,
         packageFootnote: pkgFootnote,
+        beforeAfter: barePairs(pairs),
+        services: bareServices(services),
       })
       // Dibaca ulang dari server, bukan dipercaya dari layar: fungsinya
       // memangkas spasi dan membuang baris yang tidak lengkap, jadi yang
@@ -360,7 +393,8 @@ export default function VendorContentPage() {
 
       // Berkas yang sudah tidak dirujuk baris mana pun dibuang, supaya bucket
       // tidak menumpuk tangkapan layar yang tidak tampil di mana-mana.
-      const after = new Set([...filesOf(fresh?.testimonials), ...photoFilesOf(fresh?.gallery)])
+      const after = new Set([...filesOf(fresh?.testimonials), ...photoFilesOf(fresh?.gallery),
+        ...pairFilesOf(fresh?.before_after)])
       await removeVendorMedia(before.filter(u => !after.has(u)), user.id)
 
       setSaved(true)
@@ -549,9 +583,24 @@ export default function VendorContentPage() {
                           <label className="form-label">Rincian paket</label>
                           {it.features.map((f, fi) => (
                             <div key={f._k} className="flex items-center gap-1.5">
-                              <input className="form-input flex-1 min-w-0 py-1.5 text-xs" value={f.text}
-                                onChange={e => editFeature(g._k, it._k, f._k, e.target.value)}
-                                placeholder="1 hari (4 jam)" maxLength={LEN.feature} />
+                              {/* Baris judul membagi daftar yang panjang jadi
+                                  bagian ("DEKORASI", "BONUS"). Tanpa itu dua
+                                  puluh peluru beruntun tidak bisa dibedakan
+                                  mana yang termasuk apa. */}
+                              <button type="button"
+                                onClick={() => editFeature(g._k, it._k, f._k, { heading: !f.heading })}
+                                title={f.heading ? 'Jadikan rincian biasa' : 'Jadikan judul bagian'}
+                                className={`p-1.5 rounded-lg flex-shrink-0 transition-colors ${
+                                  f.heading ? 'bg-brand-50 text-brand-600' : 'text-slate-300 hover:text-slate-600'}`}>
+                                <Heading size={12} />
+                              </button>
+                              <input
+                                className={`form-input flex-1 min-w-0 py-1.5 text-xs ${
+                                  f.heading ? 'font-semibold uppercase tracking-wider bg-brand-50/40' : ''}`}
+                                value={f.text}
+                                onChange={e => editFeature(g._k, it._k, f._k, { text: e.target.value })}
+                                placeholder={f.heading ? 'DEKORASI' : '1 hari (4 jam)'}
+                                maxLength={LEN.feature} />
                               <Nudge onUp={() => moveFeature(g._k, it._k, f._k, -1)}
                                 onDown={() => moveFeature(g._k, it._k, f._k, 1)}
                                 first={fi === 0} last={fi === it.features.length - 1} vertical />
@@ -725,6 +774,93 @@ export default function VendorContentPage() {
               </span>
             </p>
           </div>
+      </Card>
+
+      {/* ── Sebelum & sesudah ───────────────────────────────────────── */}
+      <Card className="p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal size={16} className="text-brand-600" />
+          <h2 className="font-semibold text-slate-800 text-sm">Sebelum &amp; Sesudah</h2>
+        </div>
+        <p className="text-xs text-slate-500 leading-relaxed -mt-1">
+          Pasangan foto wajah yang sama, sebelum dan sesudah dirias. Pengunjung menggeser
+          garis di tengahnya. Keduanya harus terisi — satu sisi saja bukan sebelum-sesudah.
+        </p>
+
+        <div className="space-y-3">
+          {pairs.map(pr => (
+            <RowShell key={pr._k} onRemove={() => setPairs(rs => rs.filter(r => r._k !== pr._k))}>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex gap-3 flex-shrink-0">
+                  {['before', 'after'].map(side => (
+                    <ShotBox key={side} value={pr[side]} busy={busyPair === `${pr._k}:${side}`}
+                      onPick={pickPair(pr._k, side)}
+                      label={side === 'before' ? 'Sebelum' : 'Sesudah'} />
+                  ))}
+                </div>
+                <div className="flex-1 min-w-0 space-y-3">
+                  <Field label="Keterangan (opsional)" value={pr.label} max={LEN.baLabel}
+                    onChange={v => setPairs(rs => rs.map(r => (r._k === pr._k ? { ...r, label: v } : r)))}
+                    placeholder="Akad — Anindya" />
+                  {(!pr.before || !pr.after) && (
+                    <p className="text-[11px] text-amber-600 flex items-start gap-1.5">
+                      <AlertCircle size={12} className="mt-px flex-shrink-0" />
+                      Kedua foto harus ada — baris ini belum akan tersimpan.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </RowShell>
+          ))}
+          {pairs.length === 0 && (
+            <p className="text-xs text-slate-400 italic py-2">
+              Belum ada — bagian ini tidak muncul di halamanmu.
+            </p>
+          )}
+        </div>
+
+        <AddButton
+          onClick={() => setPairs(rs => [...rs, { _k: newKey(), before: '', after: '', label: '' }])}
+          disabled={pairs.length >= MAX_BEFORE_AFTER}
+          hint={pairs.length >= MAX_BEFORE_AFTER
+            ? `Maksimal ${MAX_BEFORE_AFTER} pasang.`
+            : `${pairs.length} dari ${MAX_BEFORE_AFTER}`}>
+          Tambah pasangan
+        </AddButton>
+      </Card>
+
+      {/* ── Jenis layanan ───────────────────────────────────────────── */}
+      <Card className="p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <ListChecks size={16} className="text-brand-600" />
+          <h2 className="font-semibold text-slate-800 text-sm">Jenis Layanan</h2>
+        </div>
+        <p className="text-xs text-slate-500 leading-relaxed -mt-1">
+          Label pendek yang tampil sebagai chip di bagian atas halaman, supaya pengunjung
+          langsung tahu kamu melayani apa saja.
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {services.map(sv => (
+            <div key={sv._k} className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 pl-3 pr-1 py-1">
+              <input className="bg-transparent text-xs outline-none w-28 min-w-0" value={sv.text}
+                maxLength={LEN.service} placeholder="Bridal akad"
+                onChange={e => setServices(rs => rs.map(r => (r._k === sv._k ? { ...r, text: e.target.value } : r)))} />
+              <button type="button" onClick={() => setServices(rs => rs.filter(r => r._k !== sv._k))}
+                className="p-1 text-slate-300 hover:text-red-500"><Trash2 size={11} /></button>
+            </div>
+          ))}
+          {services.length === 0 && (
+            <p className="text-xs text-slate-400 italic">Belum ada — barisnya tidak muncul.</p>
+          )}
+        </div>
+
+        <AddButton
+          onClick={() => setServices(rs => [...rs, { _k: newKey(), text: '' }])}
+          disabled={services.length >= MAX_SERVICES}
+          hint={services.length >= MAX_SERVICES ? `Maksimal ${MAX_SERVICES}.` : `${services.length} dari ${MAX_SERVICES}`}>
+          Tambah layanan
+        </AddButton>
       </Card>
 
       {/* ── Testimoni ───────────────────────────────────────────────── */}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchVendorBySlug, logVendorEvent } from '../services/vendorService'
-import { formatEventDate, mosaicStep } from '../config/vendorContent'
+import { formatEventDate, mosaicStep, normFeature } from '../config/vendorContent'
 import { rememberReferral } from '../config/referral'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 import './VendorPage.css'
@@ -700,7 +700,20 @@ export function VendorPageView({ vendor, copied = false, onCopy = () => {}, onTr
                       fontSize: center ? 14 : 13, lineHeight: 1.6,
                       color: center ? 'rgba(234,224,212,0.85)' : 'rgba(234,224,212,0.7)',
                     }}>
-                      {arr(p.features).map((f, j) => <li key={j}>{f}</li>)}
+                      {/* Rincian boleh berbentuk teks polos atau objek judul
+                          bagian. Merendernya langsung akan melempar "Objects
+                          are not valid as a React child", yang oleh batas galat
+                          tema berubah jadi halaman rusak tanpa petunjuk apa
+                          pun soal penyebabnya. */}
+                      {arr(p.features).map(normFeature).filter(f => f.text).map((f, j) => (
+                        f.heading
+                          ? <li key={j} className="font-archivo" style={{
+                              listStyle: 'none', marginTop: j === 0 ? 0 : 10,
+                              fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase',
+                              color: C.goldLabel,
+                            }}>{f.text}</li>
+                          : <li key={j}>{f.text}</li>
+                      ))}
                     </ul>
 
                     {center && waHref && (

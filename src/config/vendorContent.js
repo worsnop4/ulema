@@ -12,12 +12,17 @@ export const MAX_TESTI = 24
 // di jaringan seluler, dan portofolio yang bagus memang dikurasi. Mosaiknya
 // sendiri menyala pada 12 foto ke atas.
 export const MAX_PHOTOS = 24
+export const MAX_BEFORE_AFTER = 6
+export const MAX_SERVICES = 10
 
 // Daftar harga bertingkat tiga: grup -> paket -> fitur. Batasnya mengikuti
 // apa yang masih terbaca di halaman, bukan apa yang muat di database.
 export const MAX_GROUPS = 8
-export const MAX_ITEMS = 12      // per grup
-export const MAX_FEATURES = 15   // per paket
+// Dinaikkan dari 12 dan 15 setelah daftar harga vendor kedua tidak muat:
+// daftar "Additional"-nya berisi 13 baris, dan paket termahalnya 21 rincian
+// yang terbagi tiga bagian. Angka lama ditaksir dari satu contoh.
+export const MAX_ITEMS = 16      // per grup
+export const MAX_FEATURES = 28   // per paket, sudah termasuk baris judul
 export const MOSAIC_FROM = 12
 
 /**
@@ -41,7 +46,7 @@ export function mosaicStep(n, preferred = 7) {
 export const LEN = {
   value: 16, label: 48, event: 80, caption: 120,
   group: 40, groupNote: 160, pkgName: 60, pkgPrice: 40, pkgNote: 120,
-  feature: 120, pkgIntro: 300, pkgFootnote: 300,
+  feature: 120, pkgIntro: 300, pkgFootnote: 300, baLabel: 80, service: 40,
 }
 
 export const STAT_FIELDS = ['value', 'label']
@@ -171,8 +176,9 @@ export function keyedPackages(packages) {
     note: typeof i?.note === 'string' ? i.note : '',
     highlight: i?.highlight === true,
     features: (Array.isArray(i?.features) ? i.features : [])
-      .filter(f => typeof f === 'string')
-      .map(f => ({ _k: newKey(), text: f })),
+      .map(normFeature)
+      .filter(f => f.text || f.heading)
+      .map(f => ({ _k: newKey(), text: f.text, heading: f.heading })),
   })
 
   const grouped = raw.filter(g => Array.isArray(g?.items))
@@ -211,7 +217,12 @@ export function barePackages(rows) {
       if (note) item.note = note.slice(0, LEN.pkgNote)
       if (i?.highlight === true) item.highlight = true
       item.features = (Array.isArray(i?.features) ? i.features : [])
-        .map(f => String(f?.text ?? f ?? '').trim().slice(0, LEN.feature))
+        .map(f => {
+          const n = normFeature(typeof f === 'object' && f && 'heading' in f ? f : (f?.text ?? f))
+          const text = String(f?.text ?? n.text ?? '').trim().slice(0, LEN.feature)
+          const heading = f?.heading === true || n.heading
+          return text ? (heading ? { text, heading: true } : text) : null
+        })
         .filter(Boolean)
       items.push(item)
     }
@@ -230,4 +241,60 @@ export function barePackages(rows) {
 export function countPackages(rows) {
   return (Array.isArray(rows) ? rows : [])
     .reduce((n, g) => n + (Array.isArray(g?.items) ? g.items.length : 0), 0)
+}
+
+/**
+ * Satu baris rincian paket.
+ *
+ * Dua bentuk yang keduanya sah: teks polos untuk rincian biasa, atau
+ * `{text, heading:true}` untuk baris yang berfungsi sebagai judul bagian --
+ * daftar harga yang panjang biasanya terbagi ("Makeup busana", "DEKORASI",
+ * "BONUS"), dan meratakannya jadi dua puluh peluru membuat pembaca tidak bisa
+ * membedakan mana yang termasuk apa.
+ *
+ * Yang polos tetap ditulis sebagai teks polos, bukan objek berisi
+ * `heading:false` -- supaya daftar yang sudah tersimpan tidak berubah bentuk
+ * hanya karena fitur ini ditambahkan.
+ */
+export function normFeature(f) {
+  if (typeof f === 'string') return { text: f, heading: false }
+  if (f && typeof f === 'object') {
+    return { text: typeof f.text === 'string' ? f.text : '', heading: f.heading === true }
+  }
+  return { text: '', heading: false }
+}
+
+/** Pasangan sebelum/sesudah dari server -> baris form. Keduanya wajib. */
+export function keyedPairs(rows) {
+  return (Array.isArray(rows) ? rows : []).map(r => (r && typeof r === 'object' ? {
+    _k: newKey(),
+    before: typeof r.before === 'string' ? r.before : '',
+    after: typeof r.after === 'string' ? r.after : '',
+    label: typeof r.label === 'string' ? r.label : '',
+  } : null)).filter(Boolean)
+}
+
+/** Baris form -> server. Pasangan yang cuma punya satu sisi dibuang: ia bukan
+ *  sebelum/sesudah, dan di halaman jadi penggeser yang tidak menggeser apa-apa. */
+export function barePairs(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter(r => r?.before && r?.after)
+    .map(r => {
+      const out = { before: r.before, after: r.after }
+      const label = String(r.label || '').trim()
+      if (label) out.label = label.slice(0, LEN.baLabel)
+      return out
+    })
+}
+
+/** Daftar label layanan: teks polos, dipangkas dan dibuang yang kosong. */
+export function bareServices(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map(r => String(r?.text ?? r ?? '').trim().slice(0, LEN.service))
+    .filter(Boolean)
+}
+export function keyedServices(list) {
+  return (Array.isArray(list) ? list : [])
+    .filter(x => typeof x === 'string' && x.trim())
+    .map(x => ({ _k: newKey(), text: x }))
 }
