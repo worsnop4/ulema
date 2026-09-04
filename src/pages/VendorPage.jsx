@@ -4,6 +4,7 @@ import { fetchVendorBySlug, logVendorEvent } from '../services/vendorService'
 import { formatEventDate, mosaicStep, normFeature } from '../config/vendorContent'
 import { rememberReferral } from '../config/referral'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
+import VendorMilaPutri from './VendorMilaPutri'
 import './VendorPage.css'
 
 // Token dari handoff "FM Project Portfolio v2" (gelap/mewah).
@@ -161,6 +162,15 @@ const H2 = ({ children, style }) => (
   }}>{children}</h2>
 )
 
+/**
+ * Buku alamat halaman vendor, bukan menu.
+ *
+ * Kolom vendors.theme diisi admin sekali saat vendor bergabung; ia tidak ada
+ * di dashboard vendor dan tidak lewat update_vendor_content. Alasannya di
+ * docs/ARSITEKTUR_HALAMAN_VENDOR.md -- keautentikan adalah nilai jual halaman
+ * ini, jadi tiap vendor punya desainnya sendiri, bukan memilih milik vendor
+ * lain.
+ */
 export default function VendorPage() {
   const { slug } = useParams()
   const [vendor, setVendor] = useState(null)
@@ -219,7 +229,23 @@ export default function VendorPage() {
     )
   }
 
-  return <VendorPageView vendor={vendor} copied={copied} onCopy={handleCopy} onTrack={track} />
+  const props = { vendor, copied, onCopy: handleCopy, onTrack: track }
+
+  /* Pemilihan halamannya ditulis terbuka, bukan lewat tabel yang dibaca saat
+   * render: komponen yang datang dari sebuah variabel akan kehilangan
+   * seluruh state-nya setiap identitasnya berubah, dan React memang
+   * melarangnya. Menambah vendor berarti menambah satu case di sini.
+   *
+   * Tema yang tidak dikenal jatuh ke desain pertama dan TIDAK membuat halaman
+   * gagal -- tapi jatuhnya disebut namanya. Tema undangan pernah kena versi
+   * diam dari ini: fallback-nya themes[0], "baris pertama menurut id",
+   * sehingga sebuah undangan bisa tampil dengan palet dan tata letak yang
+   * sama sekali berbeda tanpa satu pun error di mana pun. */
+  switch (vendor.theme) {
+    case 'mila-putri': return <VendorMilaPutri {...props} />
+    case 'fm-project':
+    default: return <VendorPageView {...props} />
+  }
 }
 
 /**

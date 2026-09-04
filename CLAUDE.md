@@ -159,6 +159,11 @@ is at 40%, the default for ordinary users is 20%).
   timeline (venue ~1 year ahead, invitation 1–2 months before) outlives any session.
 - Withdrawals deduct the balance **when the admin uploads proof of transfer**, not when the vendor
   requests. What is capped at request time is `wallet_balance` minus everything already in flight.
+- **`vendors.theme` picks the page component, and only an admin sets it.** It is an address book,
+  not a menu: `VendorPage.jsx` switches on it (`fm-project` → `VendorPageView`, `mila-putri` →
+  `VendorMilaPutri`) and an unknown value falls back to the first design by name. It is
+  deliberately absent from `update_vendor_content`, or a vendor could wear another vendor's
+  design through the API.
 
 Two docs carry the rest: `docs/VENDOR_PAGE_GUIDE.md` (self-contained handoff for a Claude Design
 session) and `docs/ARSITEKTUR_HALAMAN_VENDOR.md` (why each vendor gets a bespoke page, and the

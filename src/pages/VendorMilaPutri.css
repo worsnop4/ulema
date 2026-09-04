@@ -1,0 +1,87 @@
+/* Halaman portofolio Mila Putri MakeUP.
+ *
+ * Aturan kategori MUA yang tidak boleh dilanggar dan paling mudah hilang saat
+ * porting: TIDAK ADA filter warna, scrim berwarna, atau duotone di atas foto
+ * karya. Yang dijual perias adalah ketepatan warna kulit dan pigmen -- satu
+ * lapis hangat di atasnya membuat halaman ini berbohong tentang barangnya.
+ * Gradasi hanya boleh hitam/putih transparan, dan hanya di tempat yang perlu
+ * untuk keterbacaan teks (label SEBELUM/SESUDAH).
+ *
+ * Bingkai foto juga netral (--mp-line / putih). Border berwarna di sebelah
+ * foto menggeser persepsi warna kulit di dalamnya.
+ *
+ * Warna bohlam dipakai untuk titik lampu kecil dan bullet paket saja, selalu
+ * berjarak dari bidang foto -- tidak pernah jadi glow di sekelilingnya.
+ */
+
+.mp {
+  --mp-paper: #F7F4F3;
+  --mp-paper-2: #EFEAE8;
+  --mp-ink: #241A22;
+  --mp-ink-60: #6A5C64;
+  --mp-plum: #5B2740;
+  --mp-bulb: #F6E3C4;
+  --mp-line: #DED6D3;
+  --mp-r-sm: 2px;
+  --mp-r-md: 6px;
+  /* Bingkai cermin rias: lengkung penuh di atas, sudut kecil di bawah. */
+  --mp-r-arch: 999px 999px 6px 6px;
+  --mp-dur: 420ms;
+  --mp-dur-fast: 180ms;
+  --mp-ease: cubic-bezier(.22, .61, .36, 1);
+
+  background: var(--mp-paper);
+  color: var(--mp-ink);
+  font-family: 'Jost', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.mp img { display: block; max-width: 100%; }
+.mp a { color: var(--mp-plum); text-decoration: none; }
+.mp button, .mp input { font: inherit; color: inherit; }
+
+.mp-serif { font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif; font-weight: 400; }
+
+/* ── Motion ───────────────────────────────────────────────────────────── */
+
+@keyframes mp-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes mp-flicker { 0%, 100% { opacity: 1; } 48% { opacity: .86; } 52% { opacity: 1; } }
+
+.mp-rise { animation: mp-rise var(--mp-dur) var(--mp-ease) both; }
+
+.mp-bulb {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--mp-bulb);
+  box-shadow: 0 0 12px 4px rgba(246, 227, 196, .75);
+  animation: mp-flicker 5.5s ease-in-out infinite;
+}
+
+/* ── Hover ────────────────────────────────────────────────────────────── */
+/* Hanya di perangkat yang benar-benar punya kursor. Di layar sentuh keadaan
+ * hover bisa nyangkut setelah ketukan dan terlihat seperti kerusakan. */
+@media (hover: hover) {
+  .mp-nav a:hover { color: var(--mp-plum); }
+  .mp-btn-plum:hover { background: var(--mp-ink); border-color: var(--mp-ink); }
+  .mp-btn-line:hover { border-color: var(--mp-ink); }
+  .mp-btn-white:hover { background: var(--mp-bulb); }
+  .mp-tile:hover { transform: scale(1.015); }
+  .mp-copy:hover { background: var(--mp-paper-2); }
+  .mp-ig:hover { color: #fff; }
+}
+
+.mp-tile { transition: transform var(--mp-dur-fast) var(--mp-ease); }
+
+.mp :focus-visible { outline: 2px solid var(--mp-plum); outline-offset: 2px; }
+
+/* Lightbox di atas latar gelap: garis plum tidak terbaca di sana. */
+.mp-lb :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mp *, .mp *::before, .mp *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .mp-tile:hover { transform: none; }
+}

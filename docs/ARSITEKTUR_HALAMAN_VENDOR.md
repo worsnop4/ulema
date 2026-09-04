@@ -60,6 +60,17 @@ lebih mahal didamaikan daripada dua.
 
 **Syaratnya: penarikan mesin dikerjakan setelah halaman MUA jadi, sebelum vendor ketiga masuk.**
 
+> **Status 4 September 2026: langkah 1 dan 2 selesai, langkah 3 belum.** Halaman kedua
+> (`src/pages/VendorMilaPutri.jsx`) sudah berdiri sendiri, dan `vendors.theme` sudah jadi
+> penunjuknya. **Utang yang sekarang jatuh tempo adalah menarik keluar yang sama.** Dua salinan
+> sudah ada di depan mata, jadi sambungannya bisa dilihat, bukan ditebak: lightbox, formulir data
+> acara sebelum WhatsApp, blok referal + `rememberReferral`, normalisasi galeri dan paket,
+> `waNumber`, dan keempat pelacakan event ada dua kali dengan perbedaan yang tidak berarti.
+> Yang memang beda dan harus tetap terpisah: palet, tipografi, mosaik galeri (FM memakai kisi tetap
+> 9x6, Mila memakai auto-fill dengan ubin ganda tiap tujuh), dan bentuk testimoni.
+>
+> Jangan tambah vendor ketiga sebelum ini dikerjakan.
+
 ## Catatan teknis untuk saat mengerjakannya
 
 - `theme` yang tidak dikenal **tidak boleh membuat halaman gagal**. Jatuhkan ke komponen dasar.
