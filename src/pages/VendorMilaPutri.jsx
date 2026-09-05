@@ -26,7 +26,7 @@ const PLUM = '#5B2740'
 const BULB = '#F6E3C4'
 const LINE = '#DED6D3'
 
-const FS_H2 = 'clamp(26px, 3.2vw, 44px)'
+const FS_H2 = 'clamp(30px, 3.6vw, 50px)'
 const FS_BODY = 'clamp(15px, 1.15vw, 17px)'
 const WRAP = { maxWidth: 1240, margin: '0 auto', padding: 'clamp(48px, 7vw, 96px) 24px' }
 const PAD_Y = 'clamp(48px, 7vw, 96px)'
@@ -87,7 +87,7 @@ const Label = ({ children, style }) => (
 )
 
 const H2 = ({ children, style }) => (
-  <h2 className="mp-serif" style={{
+  <h2 className="mp-serif mp-display" style={{
     fontSize: FS_H2, margin: 0, lineHeight: 1.05, ...style,
   }}>{children}</h2>
 )
@@ -173,7 +173,7 @@ function BeforeAfter({ pair }) {
         }}
         style={{
           position: 'relative', aspectRatio: '3 / 4', overflow: 'hidden',
-          border: `1px solid ${LINE}`, background: PAPER_2,
+          border: `1px solid ${LINE}`, borderRadius: 6, background: PAPER_2,
           userSelect: 'none', touchAction: 'none', cursor: 'ew-resize',
         }}
       >
@@ -300,12 +300,13 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
   }
 
   const btnBase = {
-    fontSize: 14, letterSpacing: '0.05em', borderRadius: 2,
+    fontSize: 14, letterSpacing: '0.05em', borderRadius: 10,
     padding: '14px 26px', display: 'inline-block',
   }
   const tile = {
     margin: 0, position: 'relative', background: PAPER_2,
-    border: `1px solid ${LINE}`, overflow: 'hidden', cursor: 'zoom-in',
+    border: `1px solid ${LINE}`, borderRadius: 6,
+    overflow: 'hidden', cursor: 'zoom-in',
   }
 
   const visiblePhotos = photos.slice(0, Math.max(shownPhotos, Math.min(12, photos.length)))
@@ -323,16 +324,23 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
         <div className="flex flex-wrap items-center" style={{
           maxWidth: 1240, margin: '0 auto', padding: '14px 24px', gap: 24,
         }}>
-          <a href="#top" className="flex items-baseline" style={{ gap: 10, color: INK, minWidth: 0 }}>
-            {vendor.logo_url ? (
-              <img src={vendor.logo_url} alt={vendor.name} style={{
-                height: 'clamp(24px, 2.6vw, 34px)', width: 'auto',
-                maxWidth: 'min(52vw, 220px)', objectFit: 'contain', alignSelf: 'center',
+          {/* Logonya persegi dan wordmark-nya ikut tercetak di dalamnya, jadi
+              pada tinggi header huruf "MILA PUTRI" di bawah monogramnya cuma
+              beberapa piksel -- terbaca sebagai noda, bukan sebagai nama.
+              Namanya karena itu ditulis ulang di sebelahnya, dan kotanya
+              dikeluarkan dari sini: "BANJAR" dalam huruf besar di samping logo
+              membaca seperti label, bukan seperti kop surat. Kotanya tetap ada
+              di bagian Kontak, jadi tidak ada keterangan yang hilang. */}
+          <a href="#top" className="flex items-center" style={{ gap: 12, color: INK, minWidth: 0 }}>
+            {vendor.logo_url && (
+              <img src={vendor.logo_url} alt="" style={{
+                height: 'clamp(38px, 4vw, 54px)', width: 'auto',
+                maxWidth: 'min(28vw, 90px)', objectFit: 'contain', flex: 'none',
               }} />
-            ) : (
-              <span className="mp-serif" style={{ fontSize: 20, letterSpacing: '0.01em' }}>{vendor.name}</span>
             )}
-            {vendor.city && <Label style={{ whiteSpace: 'nowrap' }}>{vendor.city}</Label>}
+            <span className="mp-serif" style={{
+              fontSize: 'clamp(19px, 2vw, 25px)', letterSpacing: '0.02em', lineHeight: 1.1,
+            }}>{vendor.name}</span>
           </a>
           <nav className="mp-nav flex flex-wrap" style={{
             marginLeft: 'auto', gap: 22, fontSize: 13, letterSpacing: '0.06em', color: INK_60,
@@ -345,7 +353,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
           </nav>
           <a href="#kontak" className="mp-btn-plum" style={{
             flex: 'none', padding: '9px 18px', background: PLUM, color: '#fff',
-            borderRadius: 2, fontSize: 13, letterSpacing: '0.04em',
+            borderRadius: 10, fontSize: 13, letterSpacing: '0.04em',
             border: `1px solid ${PLUM}`,
           }}>WhatsApp</a>
         </div>
@@ -366,8 +374,8 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
               }}>{vendor.category}</span>
             </div>
           )}
-          <h1 className="mp-serif" style={{
-            fontSize: 'clamp(38px, 6vw, 86px)', lineHeight: 1.02, letterSpacing: '-0.015em',
+          <h1 className="mp-serif mp-display" style={{
+            fontSize: 'clamp(44px, 7vw, 96px)', lineHeight: 1.04, letterSpacing: '0.005em',
             margin: '0 0 20px', textWrap: 'pretty',
           }}>
             <Headline text={vendor.headline || vendor.name} accent={vendor.headline_accent} />
@@ -405,7 +413,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
         <div style={{ flex: '1 1 340px', minWidth: 280, maxWidth: 520, margin: '0 auto' }}>
           <div style={{
             position: 'relative', padding: '26px 22px 22px', background: '#fff',
-            border: `1px solid ${LINE}`, borderRadius: '999px 999px 6px 6px',
+            border: `1px solid ${LINE}`, borderRadius: '999px 999px 14px 14px',
           }}>
             <div className="flex justify-center" aria-hidden="true" style={{
               position: 'absolute', top: 9, left: 0, right: 0, gap: 'clamp(14px, 3.4vw, 30px)',
@@ -416,7 +424,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
             </div>
             <div className="grid place-items-center" style={{
               position: 'relative', aspectRatio: '3 / 4', background: PAPER_2,
-              borderRadius: '999px 999px 6px 6px', overflow: 'hidden',
+              borderRadius: '999px 999px 14px 14px', overflow: 'hidden',
             }}>
               {heroPhoto ? (
                 <img src={heroPhoto} alt={`Karya ${vendor.name}`} style={{
@@ -457,38 +465,28 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
       {photos.length > 0 && (
         <Reveal id="galeri" style={WRAP}>
           <SectionHead title="Galeri" sub="Klik foto untuk melihat detail riasan" bulb />
-          <div className="grid" style={{
-            gridTemplateColumns: photos.length === 1
-              ? 'minmax(0, 420px)'
-              : 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: 14,
-          }}>
-            {visiblePhotos.map((p, i) => {
-              // Ubin besar tiap tujuh foto, hanya saat galerinya sudah ramai.
-              // Batas 560px bukan gaya: sumber thumb diunggah pada lebar 600px
-              // dan mulai buram di atas itu.
-              const big = photos.length >= 12 && i % 7 === 0
-              return (
-                <figure key={i} className="mp-tile" tabIndex={0} role="button"
-                  aria-label={`Perbesar foto ${i + 1}`}
-                  onClick={() => openPhotos(i)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPhotos(i) } }}
-                  style={{
-                    ...tile, aspectRatio: '3 / 4',
-                    ...(big ? { gridColumn: 'span 2', gridRow: 'span 2', maxWidth: 560 } : null),
-                  }}>
-                  <img src={p.thumb} alt={p.caption || ''} loading="lazy" style={{
-                    position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                  }} />
-                </figure>
-              )
-            })}
+          {/* Ukuran ubinnya diatur oleh irama di CSS (.mp-gal), bukan dihitung
+              di sini per foto. Yang lama memakai auto-fill satu ukuran, dan di
+              layar ponsel itu jatuh jadi satu kolom panjang -- sembilan foto
+              seukuran, berbaris ke bawah. */}
+          <div className={`mp-gal${photos.length === 1 ? ' mp-gal--one' : ''}`}>
+            {visiblePhotos.map((p, i) => (
+              <figure key={i} className="mp-tile" tabIndex={0} role="button"
+                aria-label={`Perbesar foto ${i + 1}`}
+                onClick={() => openPhotos(i)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPhotos(i) } }}
+                style={{ ...tile, aspectRatio: '3 / 4' }}>
+                <img src={p.thumb} alt={p.caption || ''} loading="lazy" style={{
+                  position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                }} />
+              </figure>
+            ))}
           </div>
           {photos.length > visiblePhotos.length && (
             <div className="flex justify-center" style={{ marginTop: 26 }}>
               <button onClick={() => setShownPhotos(MAX_PHOTOS)} className="mp-btn-line" style={{
                 padding: '12px 26px', background: 'none', border: `1px solid ${LINE}`,
-                borderRadius: 2, fontSize: 13, letterSpacing: '0.06em', cursor: 'pointer',
+                borderRadius: 10, fontSize: 13, letterSpacing: '0.06em', cursor: 'pointer',
               }}>Lihat semua foto</button>
             </div>
           )}
@@ -520,7 +518,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
             <div style={{ flex: '1 1 300px', minWidth: 260, maxWidth: 440 }}>
               <div style={{
                 position: 'relative', aspectRatio: '4 / 5', background: PAPER_2,
-                border: `1px solid ${LINE}`, overflow: 'hidden',
+                border: `1px solid ${LINE}`, borderRadius: 14, overflow: 'hidden',
               }}>
                 <img src={aboutPhoto} alt={`Tentang ${vendor.name}`} loading="lazy" style={{
                   position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
@@ -584,7 +582,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                     {g.items.map((it, ii) => (
                       <div key={ii} className="flex flex-col" style={{
                         border: `1px solid ${it?.highlight ? PLUM : LINE}`,
-                        background: PAPER, padding: 24, gap: 14,
+                        background: PAPER, padding: 24, gap: 14, borderRadius: 14,
                       }}>
                         <div className="flex items-start" style={{ gap: 10 }}>
                           <h4 style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: '0.02em' }}>
@@ -632,7 +630,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                             background: it?.highlight ? PLUM : 'transparent',
                             color: it?.highlight ? '#fff' : INK,
                             border: `1px solid ${it?.highlight ? PLUM : LINE}`,
-                            borderRadius: 2, cursor: 'pointer', fontSize: 13, letterSpacing: '0.06em',
+                            borderRadius: 10, cursor: 'pointer', fontSize: 13, letterSpacing: '0.06em',
                           }}>Ambil paket</button>
                       </div>
                     ))}
@@ -664,7 +662,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                 style={{ margin: 0, cursor: 'zoom-in', background: 'none', border: 'none' }}>
                 <div style={{
                   position: 'relative', aspectRatio: '9 / 16', background: PAPER_2,
-                  border: `1px solid ${LINE}`, overflow: 'hidden',
+                  border: `1px solid ${LINE}`, borderRadius: 6, overflow: 'hidden',
                 }}>
                   <img src={t?.thumb || t?.image} alt={`Testimoni ${t?.event || ''}`} loading="lazy" style={{
                     position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
@@ -730,7 +728,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
       <section style={{ background: PAPER }}>
         <div style={{ maxWidth: 1240, margin: '0 auto', padding: 'clamp(44px, 6vw, 80px) 24px' }}>
           <div className="flex flex-wrap items-center" style={{
-            border: `1px solid ${LINE}`, background: '#fff',
+            border: `1px solid ${LINE}`, background: '#fff', borderRadius: 14,
             padding: 'clamp(26px, 4vw, 44px)', gap: 32,
           }}>
             <div style={{ flex: '1 1 320px' }}>
@@ -749,7 +747,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                 <button onClick={onCopy} aria-label={`Salin kode ${vendor.referral_code}`}
                   className="mp-copy flex items-center justify-between" style={{
                     gap: 16, padding: '16px 20px', background: PAPER,
-                    border: `1px dashed ${PLUM}`, borderRadius: 2, cursor: 'pointer', textAlign: 'left',
+                    border: `1px dashed ${PLUM}`, borderRadius: 10, cursor: 'pointer', textAlign: 'left',
                   }}>
                   <span>
                     <Label style={{ display: 'block', marginBottom: 5 }}>Kode referal</Label>
@@ -771,7 +769,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                 onClick={() => { rememberReferral(vendor.referral_code); onTrack('catalog_click') }}
                 className="mp-btn-plum" style={{
                   padding: '14px 22px', background: PLUM, color: '#fff', textAlign: 'center',
-                  fontSize: 14, letterSpacing: '0.05em', borderRadius: 2, border: `1px solid ${PLUM}`,
+                  fontSize: 14, letterSpacing: '0.05em', borderRadius: 10, border: `1px solid ${PLUM}`,
                 }}>Lihat katalog undangan</Link>
             </div>
           </div>
@@ -833,7 +831,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
           }}>
           <form onSubmit={sendInquiry} className="grid" style={{
             background: '#fff', width: 'min(100%, 440px)', padding: 'clamp(24px, 4vw, 36px)',
-            borderRadius: 6, gap: 16, maxHeight: '92vh', overflowY: 'auto',
+            borderRadius: 18, gap: 16, maxHeight: '92vh', overflowY: 'auto',
           }}>
             <div>
               <Label style={{ letterSpacing: '0.22em', display: 'block', marginBottom: 8 }}>Ambil paket</Label>
@@ -848,11 +846,11 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
             <div className="flex" style={{ gap: 10, marginTop: 6 }}>
               <button type="button" onClick={() => setInquiry(null)} className="mp-btn-line" style={{
                 flex: 1, padding: 13, background: 'none', border: `1px solid ${LINE}`,
-                borderRadius: 2, cursor: 'pointer', fontSize: 14,
+                borderRadius: 10, cursor: 'pointer', fontSize: 14,
               }}>Batal</button>
               <button type="submit" disabled={!leadReady || !wa} className="mp-btn-plum" style={{
                 flex: 2, padding: 13, background: PLUM, color: '#fff', border: `1px solid ${PLUM}`,
-                borderRadius: 2, cursor: leadReady && wa ? 'pointer' : 'not-allowed',
+                borderRadius: 10, cursor: leadReady && wa ? 'pointer' : 'not-allowed',
                 fontSize: 14, letterSpacing: '0.04em', opacity: leadReady && wa ? 1 : 0.55,
               }}>Lanjut ke WhatsApp</button>
             </div>
@@ -899,7 +897,7 @@ function Field({ label, value, onChange, type = 'text', placeholder, maxLength, 
         maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          padding: '12px 14px', border: `1px solid ${LINE}`, borderRadius: 2,
+          padding: '12px 14px', border: `1px solid ${LINE}`, borderRadius: 10,
           fontSize: 15, letterSpacing: 'normal', textTransform: 'none', color: INK,
           background: '#fff',
         }}

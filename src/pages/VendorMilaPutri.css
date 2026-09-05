@@ -22,17 +22,20 @@
   --mp-plum: #5B2740;
   --mp-bulb: #F6E3C4;
   --mp-line: #DED6D3;
-  --mp-r-sm: 2px;
-  --mp-r-md: 6px;
-  /* Bingkai cermin rias: lengkung penuh di atas, sudut kecil di bawah. */
-  --mp-r-arch: 999px 999px 6px 6px;
+  /* Sudutnya dilembutkan setelah versi pertama: 2px membaca sebagai sudut
+   * tajam yang tidak disengaja, bukan sebagai pilihan. */
+  --mp-r-sm: 10px;
+  --mp-r-md: 18px;
+  --mp-r-card: 14px;
+  /* Bingkai cermin rias: lengkung penuh di atas, sudut lembut di bawah. */
+  --mp-r-arch: 999px 999px 14px 14px;
   --mp-dur: 420ms;
   --mp-dur-fast: 180ms;
   --mp-ease: cubic-bezier(.22, .61, .36, 1);
 
   background: var(--mp-paper);
   color: var(--mp-ink);
-  font-family: 'Jost', system-ui, sans-serif;
+  font-family: 'Karla', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
@@ -41,7 +44,58 @@
 .mp a { color: var(--mp-plum); text-decoration: none; }
 .mp button, .mp input { font: inherit; color: inherit; }
 
-.mp-serif { font-family: 'Bodoni Moda', 'Playfair Display', Georgia, serif; font-weight: 400; }
+/* Bodoni adalah pilihan handoff-nya, dan di layar ia tidak menepati janjinya:
+ * kontras tebal-tipis yang membuatnya megah di ukuran poster berubah jadi
+ * berat dan sedikit kaku di ukuran halaman. Cormorant Garamond membawa
+ * keanggunan yang sama lewat jalan lain -- kontras rendah, bentuk kaligrafis,
+ * dan berat 300 yang lapang. Karena huruf Cormorant optiknya kecil dan
+ * ringan, semua ukuran display di halaman ini ikut dinaikkan; menukar
+ * fontnya saja tanpa menaikkan ukurannya akan membuat halaman terlihat
+ * mengecil, bukan menghalus. */
+.mp-serif {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-weight: 400;
+}
+.mp-display { font-weight: 300; letter-spacing: 0.005em; }
+
+
+/* ── Galeri: irama, bukan satu kolom panjang ──────────────────────────── */
+/* Versi pertama memakai auto-fill minmax(220px). Di layar 375px itu jatuh
+ * jadi satu kolom -- sembilan foto berukuran sama, berbaris ke bawah, dan
+ * pengguna berhenti menggulir sebelum foto keempat.
+ *
+ * Yang di bawah ini meminjam ide mosaik FM Project (ukuran ubin yang tidak
+ * seragam) tapi dengan mesin yang berbeda: FM memakai kisi tetap 9x6 dengan
+ * satu foto besar di tengah dan jumlah ubin yang harus pas, jadi ia terikat
+ * pada jumlah foto tertentu. Di sini iramanya berulang tiap siklus, sehingga
+ * sembilan foto maupun dua puluh empat foto sama-sama tersusun rapi dan tidak
+ * pernah menyisakan baris yang aneh.
+ *
+ * Baris selalu terisi penuh: mobile 3+3 lalu 2+2+2 dari 6 kolom;
+ * desktop 6+6, lalu 4+4+4, lalu 3+3+3+3 dari 12 kolom. */
+.mp-gal { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.mp-gal > * { grid-column: span 2; }
+.mp-gal > *:nth-child(5n + 1),
+.mp-gal > *:nth-child(5n + 2) { grid-column: span 3; }
+
+@media (min-width: 640px) {
+  .mp-gal { grid-template-columns: repeat(12, 1fr); gap: 12px; }
+  .mp-gal > * { grid-column: span 3; }
+  .mp-gal > *:nth-child(9n + 1),
+  .mp-gal > *:nth-child(9n + 2) { grid-column: span 6; }
+  .mp-gal > *:nth-child(9n + 3),
+  .mp-gal > *:nth-child(9n + 4),
+  .mp-gal > *:nth-child(9n + 5) { grid-column: span 4; }
+}
+
+/* Ubin terbesar berhenti di bawah 600px pada lebar penuh (1192px dikurangi
+ * dua celah, dibagi dua). Itu bukan kebetulan: sumber thumb diunggah pada
+ * lebar 600px, jadi ubin yang lebih lebar dari itu akan buram. */
+
+/* Satu foto tidak diregangkan memenuhi baris -- foto tunggal yang melebar
+ * terbaca sebagai kesalahan tata letak, bukan sebagai pilihan. */
+.mp-gal--one { grid-template-columns: minmax(0, 420px); }
+.mp-gal--one > * { grid-column: auto; }
 
 /* ── Motion ───────────────────────────────────────────────────────────── */
 
