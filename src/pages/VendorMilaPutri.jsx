@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { Fragment, useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   formatEventDate, normFeature, isAddonItem, inquiryMessage,
-  MAX_ITEMS, MAX_FEATURES, MAX_PHOTOS, MAX_TESTI, MAX_BEFORE_AFTER,
+  MAX_ITEMS, MAX_FEATURES, MAX_PHOTOS, MAX_TESTI, MAX_BEFORE_AFTER, MAX_VIDEOS,
 } from '../config/vendorContent'
 import { rememberReferral } from '../config/referral'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
@@ -20,6 +20,10 @@ import './VendorMilaPutri.css'
  *
  * Aturan MUA yang mengikat ada di VendorMilaPutri.css.
  */
+
+/* Titik belah galeri. Lihat catatan di bagian galeri: 5 adalah satu-satunya
+ * angka kecil yang menutup baris pada irama ponsel maupun desktop. */
+const GALLERY_SPLIT = 5
 
 const PAPER = '#F7F4F3'
 const PAPER_2 = '#EFEAE8'
@@ -222,6 +226,53 @@ function BeforeAfter({ pair }) {
   )
 }
 
+/**
+ * Deret cuplikan video di tengah galeri.
+ *
+ * Berkasnya kecil karena kita yang mengompresnya (720x1280, tanpa audio,
+ * ~650KB) -- bukan hasil unggahan vendor, yang tidak punya jalur kompresi
+ * sama sekali. Meski begitu, `preload="none"` tetap dipasang: yang menentukan
+ * biaya bukan ukuran satu berkas melainkan berapa yang diunduh oleh orang
+ * yang tidak pernah menggulir sejauh ini.
+ *
+ * Klip hanya berputar selagi ada di layar. Tiga video yang jalan terus di
+ * belakang layar menguras baterai, dan Safari iOS membatasi berapa video yang
+ * boleh main bersamaan -- kalau batasnya kena, yang gagal bukan yang terakhir,
+ * melainkan yang mana saja.
+ */
+function VideoStrip({ videos, vendorName }) {
+  const refs = useRef([])
+
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    if (typeof IntersectionObserver !== 'function') return
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        const v = e.target
+        // play() menolak kalau peramban belum mengizinkan -- muted +
+        // playsInline seharusnya selalu boleh, tapi penolakannya tidak boleh
+        // dibiarkan jadi unhandled rejection di konsol vendor.
+        if (e.isIntersecting) v.play?.().catch(() => {})
+        else v.pause?.()
+      })
+    }, { threshold: 0.4 })
+    const nodes = refs.current.filter(Boolean)
+    nodes.forEach(v => io.observe(v))
+    return () => io.disconnect()
+  }, [videos.length])
+
+  return (
+    <div className="mp-vid-row" style={{ margin: '26px auto' }}>
+      {videos.map((v, i) => (
+        <video key={i} ref={(el) => { refs.current[i] = el }}
+          className="mp-vid" src={v.src} poster={v.poster}
+          muted loop playsInline preload="none"
+          aria-label={v.label || `Cuplikan karya ${vendorName}`} />
+      ))}
+    </div>
+  )
+}
+
 /* ── Halaman ────────────────────────────────────────────────────────────── */
 
 export default function VendorMilaPutri({ vendor, copied = false, onCopy = () => {}, onTrack = () => {} }) {
@@ -230,6 +281,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
   const testimonials = arr(vendor.testimonials).slice(0, MAX_TESTI)
   const pairs = arr(vendor.before_after).filter(p => p?.before && p?.after).slice(0, MAX_BEFORE_AFTER)
   const services = arr(vendor.service_types).filter(Boolean)
+  const videos = arr(vendor.videos).filter(v => v?.src && v?.poster).slice(0, MAX_VIDEOS)
   const stats = arr(vendor.stats).slice(0, 4)
   const facts = arr(vendor.facts)
 
@@ -334,6 +386,9 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
   }
 
   const visiblePhotos = photos.slice(0, Math.max(shownPhotos, Math.min(12, photos.length)))
+  const splitGallery = videos.length > 0 && visiblePhotos.length > GALLERY_SPLIT
+  const firstHalf = splitGallery ? visiblePhotos.slice(0, GALLERY_SPLIT) : visiblePhotos
+  const secondHalf = splitGallery ? visiblePhotos.slice(GALLERY_SPLIT) : []
 
   // Kategori dan paket aktif, dijaga di dalam rentang supaya berpindah
   // kategori tidak pernah menunjuk paket yang tidak ada.
@@ -524,20 +579,41 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
           {/* Ukuran ubinnya diatur oleh irama di CSS (.mp-gal), bukan dihitung
               di sini per foto. Yang lama memakai auto-fill satu ukuran, dan di
               layar ponsel itu jatuh jadi satu kolom panjang -- sembilan foto
-              seukuran, berbaris ke bawah. */}
-          <div className={`mp-gal${photos.length === 1 ? ' mp-gal--one' : ''}`}>
-            {visiblePhotos.map((p, i) => (
-              <figure key={i} className="mp-tile" tabIndex={0} role="button"
-                aria-label={`Perbesar foto ${i + 1}`}
-                onClick={() => openPhotos(i)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPhotos(i) } }}
-                style={{ ...tile, aspectRatio: '3 / 4' }}>
-                <img src={p.thumb} alt={p.caption || ''} loading="lazy" style={{
-                  position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                }} />
-              </figure>
-            ))}
-          </div>
+              seukuran, berbaris ke bawah.
+
+              Galerinya dibelah di foto ke-5 supaya deret video bisa duduk di
+              tengahnya. Angka itu bukan asal: irama ubin berulang tiap 5 di
+              ponsel (6 kolom) dan tiap 9 di desktop (12 kolom), dan 5 adalah
+              titik yang menutup baris di KEDUA breakpoint. Memotong di angka
+              lain menyisakan baris gompal di salah satunya. */}
+          {[firstHalf, secondHalf].map((chunk, half) => chunk.length > 0 && (
+            <Fragment key={half}>
+              {half === 1 && videos.length > 0 && (
+                <VideoStrip videos={videos} vendorName={vendor.name} />
+              )}
+              <div className={`mp-gal${photos.length === 1 ? ' mp-gal--one' : ''}`}>
+                {chunk.map((p, i) => {
+                  const at = half === 0 ? i : GALLERY_SPLIT + i
+                  return (
+                    <figure key={at} className="mp-tile" tabIndex={0} role="button"
+                      aria-label={`Perbesar foto ${at + 1}`}
+                      onClick={() => openPhotos(at)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPhotos(at) } }}
+                      style={{ ...tile, aspectRatio: '3 / 4' }}>
+                      <img src={p.thumb} alt={p.caption || ''} loading="lazy" style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                      }} />
+                    </figure>
+                  )
+                })}
+              </div>
+            </Fragment>
+          ))}
+          {/* Foto terlalu sedikit untuk dibelah: videonya menyusul di bawah,
+              bukan hilang. */}
+          {secondHalf.length === 0 && videos.length > 0 && (
+            <VideoStrip videos={videos} vendorName={vendor.name} />
+          )}
           {photos.length > visiblePhotos.length && (
             <div className="flex justify-center" style={{ marginTop: 26 }}>
               <button onClick={() => setShownPhotos(MAX_PHOTOS)} className="mp-btn-line" style={{

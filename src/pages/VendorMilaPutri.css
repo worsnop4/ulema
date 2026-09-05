@@ -108,6 +108,49 @@
   .mp-peek { display: flex; }
 }
 
+
+/* ── Deret video di tengah galeri ─────────────────────────────────────── */
+/* Lebar tiap klip mengikuti tingginya (9:16), bukan sebaliknya -- kalau
+ * lebarnya yang diikat, di desktop tiga klip 9:16 jadi setinggi 676px dan
+ * memakan seluruh layar. */
+.mp-vid-row {
+  display: flex;
+  gap: clamp(10px, 1.6vw, 18px);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  /* Melebar sesuai isinya lalu dipusatkan sendiri. `justify-content: center`
+   * pada wadah yang bisa digulir memotong item pertama saat isinya melimpah;
+   * ini tidak. */
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+.mp-vid-row::-webkit-scrollbar { display: none; }
+
+.mp-vid {
+  flex: none;
+  height: clamp(300px, 38vw, 480px);
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  background: var(--mp-paper-2);
+  scroll-snap-align: center;
+  /* Ini pengganti "kabut asap" yang diminta. Idenya sama -- video tidak
+   * berhenti dengan garis tajam terhadap foto di atas dan di bawahnya -- tapi
+   * mekanismenya nol byte dan, yang lebih penting, TIDAK berwarna. Selubung
+   * berwarna di atas foto karya adalah satu-satunya hal yang dilarang di
+   * halaman MUA: yang dijual perias adalah ketepatan warna kulit. Mask hanya
+   * mengurangi keburaman, tidak menambahkan warna apa pun. */
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 15%, #000 85%, transparent 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0%, #000 15%, #000 85%, transparent 100%);
+}
+
+/* Sengaja tanpa bingkai dan tanpa sudut membulat: garis di tepi yang sedang
+ * dilarutkan justru menegaskan tepi yang mau dihilangkan. */
+
 /* ── Motion ───────────────────────────────────────────────────────────── */
 
 @keyframes mp-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }

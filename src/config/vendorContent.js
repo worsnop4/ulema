@@ -13,6 +13,10 @@ export const MAX_TESTI = 24
 // sendiri menyala pada 12 foto ke atas.
 export const MAX_PHOTOS = 24
 export const MAX_BEFORE_AFTER = 6
+// Video dipasang admin, bukan vendor, dan tiap klip berarti satu putaran
+// pilih-potong-kompres dengan tangan. Empat sudah lebih dari cukup untuk
+// memberi tekstur; lebih dari itu deretnya jadi tontonan, bukan bumbu.
+export const MAX_VIDEOS = 4
 export const MAX_SERVICES = 10
 
 // Daftar harga bertingkat tiga: grup -> paket -> fitur. Batasnya mengikuti
