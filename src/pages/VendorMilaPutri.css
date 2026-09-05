@@ -129,27 +129,22 @@
 }
 .mp-vid-row::-webkit-scrollbar { display: none; }
 
+/* Bingkainya sama persis dengan ubin foto galeri di bawahnya -- garis
+ * --mp-line 1px dan sudut 6px, tanpa warna apa pun. Sempat dicoba tepinya
+ * dilarutkan dengan mask gradasi supaya menyatu dengan foto; di layar ia
+ * malah terbaca seperti video yang gagal dimuat, bukan seperti transisi.
+ * Bingkai yang tegas dan seragam justru membuat deret ini terbaca sebagai
+ * satu keluarga dengan galerinya. */
 .mp-vid {
   flex: none;
   height: clamp(300px, 38vw, 480px);
   aspect-ratio: 9 / 16;
   object-fit: cover;
   background: var(--mp-paper-2);
+  border: 1px solid var(--mp-line);
+  border-radius: 6px;
   scroll-snap-align: center;
-  /* Ini pengganti "kabut asap" yang diminta. Idenya sama -- video tidak
-   * berhenti dengan garis tajam terhadap foto di atas dan di bawahnya -- tapi
-   * mekanismenya nol byte dan, yang lebih penting, TIDAK berwarna. Selubung
-   * berwarna di atas foto karya adalah satu-satunya hal yang dilarang di
-   * halaman MUA: yang dijual perias adalah ketepatan warna kulit. Mask hanya
-   * mengurangi keburaman, tidak menambahkan warna apa pun. */
-  -webkit-mask-image: linear-gradient(to bottom,
-    transparent 0%, #000 15%, #000 85%, transparent 100%);
-  mask-image: linear-gradient(to bottom,
-    transparent 0%, #000 15%, #000 85%, transparent 100%);
 }
-
-/* Sengaja tanpa bingkai dan tanpa sudut membulat: garis di tepi yang sedang
- * dilarutkan justru menegaskan tepi yang mau dihilangkan. */
 
 /* ── Motion ───────────────────────────────────────────────────────────── */
 

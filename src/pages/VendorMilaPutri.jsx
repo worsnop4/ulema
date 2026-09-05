@@ -257,8 +257,8 @@ function VideoStrip({ videos, vendorName }) {
     return () => io.disconnect()
   }, [videos.length])
 
-  // Tanpa jarak atas: judul section sudah memberi 30px, dan tepi atas klip
-  // memang sudah dilarutkan -- menumpuk keduanya menyisakan lubang.
+  // Tanpa jarak atas: judul section sudah memberi 30px, sama seperti yang
+  // diterima kisi foto kalau deret ini tidak ada.
   return (
     <div className="mp-vid-row" style={{ margin: '0 auto 26px' }}>
       {videos.map((v, i) => (
@@ -575,7 +575,8 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
               membelah kisinya di foto ke-5 -- dan di layar hasilnya terbaca
               seperti kisi yang rusak di tengah, bukan seperti pergantian
               irama yang disengaja. Di atas, ia jadi pembuka bagian galeri:
-              yang bergerak lebih dulu, yang diam menyusul. */}
+              yang bergerak lebih dulu, yang diam menyusul. Bingkainya sengaja
+              menyamai ubin foto di bawahnya. */}
           {videos.length > 0 && <VideoStrip videos={videos} vendorName={vendor.name} />}
 
           {/* Ukuran ubinnya diatur oleh irama di CSS (.mp-gal), bukan dihitung
