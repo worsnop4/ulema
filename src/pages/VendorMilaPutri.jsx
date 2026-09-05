@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   formatEventDate, normFeature, isAddonItem, inquiryMessage,
@@ -20,10 +20,6 @@ import './VendorMilaPutri.css'
  *
  * Aturan MUA yang mengikat ada di VendorMilaPutri.css.
  */
-
-/* Titik belah galeri. Lihat catatan di bagian galeri: 5 adalah satu-satunya
- * angka kecil yang menutup baris pada irama ponsel maupun desktop. */
-const GALLERY_SPLIT = 5
 
 const PAPER = '#F7F4F3'
 const PAPER_2 = '#EFEAE8'
@@ -261,8 +257,10 @@ function VideoStrip({ videos, vendorName }) {
     return () => io.disconnect()
   }, [videos.length])
 
+  // Tanpa jarak atas: judul section sudah memberi 30px, dan tepi atas klip
+  // memang sudah dilarutkan -- menumpuk keduanya menyisakan lubang.
   return (
-    <div className="mp-vid-row" style={{ margin: '26px auto' }}>
+    <div className="mp-vid-row" style={{ margin: '0 auto 26px' }}>
       {videos.map((v, i) => (
         <video key={i} ref={(el) => { refs.current[i] = el }}
           className="mp-vid" src={v.src} poster={v.poster}
@@ -386,9 +384,6 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
   }
 
   const visiblePhotos = photos.slice(0, Math.max(shownPhotos, Math.min(12, photos.length)))
-  const splitGallery = videos.length > 0 && visiblePhotos.length > GALLERY_SPLIT
-  const firstHalf = splitGallery ? visiblePhotos.slice(0, GALLERY_SPLIT) : visiblePhotos
-  const secondHalf = splitGallery ? visiblePhotos.slice(GALLERY_SPLIT) : []
 
   // Kategori dan paket aktif, dijaga di dalam rentang supaya berpindah
   // kategori tidak pernah menunjuk paket yang tidak ada.
@@ -576,44 +571,30 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
       {photos.length > 0 && (
         <Reveal id="galeri" style={WRAP}>
           <SectionHead title="Galeri" sub="Klik foto untuk melihat detail riasan" bulb />
+          {/* Video dulu, baru fotonya. Sempat dicoba di tengah galeri --
+              membelah kisinya di foto ke-5 -- dan di layar hasilnya terbaca
+              seperti kisi yang rusak di tengah, bukan seperti pergantian
+              irama yang disengaja. Di atas, ia jadi pembuka bagian galeri:
+              yang bergerak lebih dulu, yang diam menyusul. */}
+          {videos.length > 0 && <VideoStrip videos={videos} vendorName={vendor.name} />}
+
           {/* Ukuran ubinnya diatur oleh irama di CSS (.mp-gal), bukan dihitung
               di sini per foto. Yang lama memakai auto-fill satu ukuran, dan di
               layar ponsel itu jatuh jadi satu kolom panjang -- sembilan foto
-              seukuran, berbaris ke bawah.
-
-              Galerinya dibelah di foto ke-5 supaya deret video bisa duduk di
-              tengahnya. Angka itu bukan asal: irama ubin berulang tiap 5 di
-              ponsel (6 kolom) dan tiap 9 di desktop (12 kolom), dan 5 adalah
-              titik yang menutup baris di KEDUA breakpoint. Memotong di angka
-              lain menyisakan baris gompal di salah satunya. */}
-          {[firstHalf, secondHalf].map((chunk, half) => chunk.length > 0 && (
-            <Fragment key={half}>
-              {half === 1 && videos.length > 0 && (
-                <VideoStrip videos={videos} vendorName={vendor.name} />
-              )}
-              <div className={`mp-gal${photos.length === 1 ? ' mp-gal--one' : ''}`}>
-                {chunk.map((p, i) => {
-                  const at = half === 0 ? i : GALLERY_SPLIT + i
-                  return (
-                    <figure key={at} className="mp-tile" tabIndex={0} role="button"
-                      aria-label={`Perbesar foto ${at + 1}`}
-                      onClick={() => openPhotos(at)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPhotos(at) } }}
-                      style={{ ...tile, aspectRatio: '3 / 4' }}>
-                      <img src={p.thumb} alt={p.caption || ''} loading="lazy" style={{
-                        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      }} />
-                    </figure>
-                  )
-                })}
-              </div>
-            </Fragment>
-          ))}
-          {/* Foto terlalu sedikit untuk dibelah: videonya menyusul di bawah,
-              bukan hilang. */}
-          {secondHalf.length === 0 && videos.length > 0 && (
-            <VideoStrip videos={videos} vendorName={vendor.name} />
-          )}
+              seukuran, berbaris ke bawah. */}
+          <div className={`mp-gal${photos.length === 1 ? ' mp-gal--one' : ''}`}>
+            {visiblePhotos.map((p, i) => (
+              <figure key={i} className="mp-tile" tabIndex={0} role="button"
+                aria-label={`Perbesar foto ${i + 1}`}
+                onClick={() => openPhotos(i)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPhotos(i) } }}
+                style={{ ...tile, aspectRatio: '3 / 4' }}>
+                <img src={p.thumb} alt={p.caption || ''} loading="lazy" style={{
+                  position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                }} />
+              </figure>
+            ))}
+          </div>
           {photos.length > visiblePhotos.length && (
             <div className="flex justify-center" style={{ marginTop: 26 }}>
               <button onClick={() => setShownPhotos(MAX_PHOTOS)} className="mp-btn-line" style={{
