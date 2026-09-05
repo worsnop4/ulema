@@ -97,6 +97,17 @@
 .mp-gal--one { grid-template-columns: minmax(0, 420px); }
 .mp-gal--one > * { grid-column: auto; }
 
+
+/* ── Karosel paket ────────────────────────────────────────────────────── */
+/* Kartu samping yang setengah terlihat memberi tahu bahwa masih ada paket
+ * lain -- di layar lebar. Di ponsel ia justru menyisakan dua potongan kartu
+ * yang tidak terbaca di kiri-kanan kartu utama, persis keluhan "terlalu
+ * banyak". Jadi di bawah 900px hanya kartu tengahnya yang ada. */
+.mp-peek { display: none; }
+@media (min-width: 900px) {
+  .mp-peek { display: flex; }
+}
+
 /* ── Motion ───────────────────────────────────────────────────────────── */
 
 @keyframes mp-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }

@@ -257,9 +257,15 @@ export function countPackages(rows) {
  * hanya karena fitur ini ditambahkan.
  */
 export function normFeature(f) {
-  if (typeof f === 'string') return { text: f, heading: false }
+  // Dipangkas di sini, bukan di tiap pemakainya. Rincian yang isinya cuma
+  // spasi lolos dari `filter(f => f.text)` -- string berisi spasi itu truthy --
+  // dan muncul di halaman vendor sebagai bulatan tanpa teks di sebelahnya.
+  // RPC penyimpannya sudah mem-btrim, jadi yang bisa berbentuk begini hanya
+  // baris lama yang masuk sebelum aturan itu ada.
+  const clean = (t) => (typeof t === 'string' ? t.trim() : '')
+  if (typeof f === 'string') return { text: clean(f), heading: false }
   if (f && typeof f === 'object') {
-    return { text: typeof f.text === 'string' ? f.text : '', heading: f.heading === true }
+    return { text: clean(f.text), heading: f.heading === true }
   }
   return { text: '', heading: false }
 }
@@ -297,4 +303,46 @@ export function keyedServices(list) {
   return (Array.isArray(list) ? list : [])
     .filter(x => typeof x === 'string' && x.trim())
     .map(x => ({ _k: newKey(), text: x }))
+}
+
+/**
+ * Apakah sebuah item daftar harga adalah "tambahan", bukan paket?
+ *
+ * Yang membedakannya adalah datanya sendiri, bukan setelan di mana pun:
+ * paket punya rincian isi, tambahan cuma satu baris berharga ("Meja akad,
+ * Rp 500.000"). Karena itu ia bisa ditawarkan sebagai centangan saat orang
+ * sudah memilih paketnya, sementara paket tidak.
+ */
+export function isAddonItem(item) {
+  if (!item || !String(item.name || '').trim()) return false
+  const feats = Array.isArray(item.features) ? item.features : []
+  return !feats.map(normFeature).some(f => f.text)
+}
+
+/**
+ * Pesan WhatsApp untuk pemesanan paket.
+ *
+ * Berdiri sendiri di sini, bukan di dalam komponen, supaya bisa diuji: isinya
+ * hanya muncul setelah orang membuka dialog dan mencentang tambahan, dan
+ * keadaan itu tidak pernah tercapai di render server -- assertion apa pun
+ * terhadapnya lewat halaman akan lulus tanpa menguji apa-apa.
+ *
+ * Tidak ada total harga. Harganya teks bebas yang ditulis vendor -- biasanya
+ * "Rp 6.500.000", tapi bisa juga "mulai 500rb" -- jadi menjumlahkannya berarti
+ * menebak, dan tebakan yang salah di sini terbaca pembeli sebagai penawaran.
+ */
+export function inquiryMessage({ vendorName, pkg, lead, addons = [] }) {
+  const price = pkg?.price ? ` (${pkg.price})` : ''
+  const lines = [
+    `Halo ${vendorName}, saya mau ambil paket ${pkg?.name || ''}${price}.`,
+    `Nama: ${String(lead?.name || '').trim()}`,
+    `Alamat acara: ${String(lead?.address || '').trim()}`,
+    `Tanggal acara: ${formatEventDate(lead?.date)}`,
+  ]
+  const extra = (Array.isArray(addons) ? addons : []).filter(it => it?.name)
+  if (extra.length) {
+    lines.push('', 'Tambahan:',
+      ...extra.map(it => `- ${it.name}${it.price ? ` (${it.price})` : ''}`))
+  }
+  return lines.join('\n')
 }

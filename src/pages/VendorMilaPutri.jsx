@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { formatEventDate, normFeature, MAX_ITEMS, MAX_FEATURES, MAX_PHOTOS, MAX_TESTI, MAX_BEFORE_AFTER } from '../config/vendorContent'
+import {
+  formatEventDate, normFeature, isAddonItem, inquiryMessage,
+  MAX_ITEMS, MAX_FEATURES, MAX_PHOTOS, MAX_TESTI, MAX_BEFORE_AFTER,
+} from '../config/vendorContent'
 import { rememberReferral } from '../config/referral'
 import { REFERRAL_DISCOUNT_AMOUNT } from '../config/constants'
 import './VendorMilaPutri.css'
@@ -90,6 +93,14 @@ const H2 = ({ children, style }) => (
   <h2 className="mp-serif mp-display" style={{
     fontSize: FS_H2, margin: 0, lineHeight: 1.05, ...style,
   }}>{children}</h2>
+)
+
+const CarouselArrow = ({ dir, onClick, label }) => (
+  <button onClick={onClick} aria-label={label} className="mp-btn-line grid place-items-center"
+    style={{
+      flex: 'none', width: 42, height: 42, borderRadius: '50%', background: 'transparent',
+      border: `1px solid ${LINE}`, color: INK, cursor: 'pointer', fontSize: 16,
+    }}>{dir === 'prev' ? '‹' : '›'}</button>
 )
 
 /** Judul section: teks, subteks, lalu garis yang mengisi sisa baris. */
@@ -224,8 +235,12 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
 
   const [shownPhotos, setShownPhotos] = useState(12)
   const [lightbox, setLightbox] = useState(null)   // { items, i }
-  const [inquiry, setInquiry] = useState(null)     // nama paket, null = tertutup
+  const [inquiry, setInquiry] = useState(null)     // paket yang dipilih, null = tertutup
   const [lead, setLead] = useState({ name: '', address: '', date: '' })
+  const [addons, setAddons] = useState([])        // nama tambahan yang dicentang
+  const [pkgGroup, setPkgGroup] = useState(0)     // kategori paket yang aktif
+  const [pkgIndex, setPkgIndex] = useState(0)     // paket ke berapa di kategori itu
+  const [baIndex, setBaIndex] = useState(0)       // pasangan sebelum/sesudah yang besar
   const [scrolled, setScrolled] = useState(false)
   const nameField = useRef(null)
 
@@ -283,15 +298,24 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
 
   const leadReady = lead.name.trim() && lead.address.trim() && lead.date
 
+  const openInquiry = (item) => {
+    setInquiry(item)
+    setLead({ name: '', address: '', date: '' })
+    setAddons([])
+  }
+
+  const toggleAddon = (name) => setAddons(v =>
+    (v.includes(name) ? v.filter(x => x !== name) : [...v, name]))
+
   const sendInquiry = (e) => {
     e.preventDefault()
     if (!inquiry || !leadReady || !wa) return
-    const msg = [
-      `Halo ${vendor.name}, saya mau ambil paket ${inquiry}.`,
-      `Nama: ${lead.name.trim()}`,
-      `Alamat acara: ${lead.address.trim()}`,
-      `Tanggal acara: ${formatEventDate(lead.date)}`,
-    ].join('\n')
+    const msg = inquiryMessage({
+      vendorName: vendor.name,
+      pkg: inquiry,
+      lead,
+      addons: addonItems.filter(it => addons.includes(it.name)),
+    })
     onTrack('wa_click')
     // window.open harus dipanggil langsung di dalam penangan submit. Ditunda
     // sedikit saja -- await, setTimeout -- dan pemblokir popup menutupnya.
@@ -310,6 +334,38 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
   }
 
   const visiblePhotos = photos.slice(0, Math.max(shownPhotos, Math.min(12, photos.length)))
+
+  // Kategori dan paket aktif, dijaga di dalam rentang supaya berpindah
+  // kategori tidak pernah menunjuk paket yang tidak ada.
+  const curGroup = groups.length ? Math.min(pkgGroup, groups.length - 1) : 0
+  const groupItems = groups[curGroup]?.items || []
+  const curIndex = groupItems.length ? pkgIndex % groupItems.length : 0
+
+  /* Sebuah kelompok yang seluruh isinya tidak punya rincian bukan daftar
+   * paket, melainkan daftar harga tambahan -- "Meja akad, Rp 500.000" adalah
+   * satu baris, bukan satu kartu. Ditata sebagai karosel kartu, tiga belas
+   * baris seperti itu berubah jadi tiga belas kartu kosong yang harus diklik
+   * satu per satu. Jadi bentuknya ditentukan datanya, bukan disetel di mana
+   * pun: kelompok tanpa rincian tampil sebagai daftar. */
+  const isPriceList = groupItems.length > 0 && groupItems.every(isAddonItem)
+
+  /* Item yang boleh ditawarkan sebagai tambahan saat memesan: apa pun yang
+   * berupa baris berharga tanpa rincian. Vendor yang semua paketnya berisi
+   * rincian tidak punya tambahan sama sekali, dan bagian ini hilang sendiri
+   * dari formulirnya. */
+  const addonItems = groups.flatMap(g => g.items).filter(isAddonItem)
+
+  const peek = (offset) => groupItems[
+    (curIndex + offset + groupItems.length) % groupItems.length]
+  const carousel = groupItems.length === 1
+    ? [{ p: groupItems[0], center: true, slot: 'c' }]
+    : groupItems.length === 2
+      ? [{ p: peek(0), center: true, slot: 'c' }, { p: peek(1), center: false, slot: 'n' }]
+      : [
+          { p: peek(-1), center: false, slot: 'p' },
+          { p: peek(0), center: true, slot: 'c' },
+          { p: peek(1), center: false, slot: 'n' },
+        ]
 
   return (
     <div className="mp">
@@ -500,11 +556,36 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
         }}>
           <div style={{ maxWidth: 1240, margin: '0 auto', padding: `${PAD_Y} 24px` }}>
             <SectionHead title="Sebelum & sesudah" sub="Geser garisnya" />
-            <div className="grid" style={{
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 22,
-            }}>
-              {pairs.map((p, i) => <BeforeAfter key={i} pair={p} />)}
+            {/* Satu penggeser saja yang besar. Berjajar semua, tiap kartu jadi
+                terlalu kecil untuk digeser dengan jempol -- dan yang dijual di
+                sini justru perbedaan yang cuma terlihat kalau fotonya besar.
+                Sisanya jadi deret kecil di bawah, memakai foto "sebelum"-nya:
+                itu yang membuat orang penasaran ingin melihat sesudahnya. */}
+            <div style={{ maxWidth: 520, margin: '0 auto' }}>
+              <BeforeAfter key={baIndex} pair={pairs[Math.min(baIndex, pairs.length - 1)]} />
             </div>
+            {pairs.length > 1 && (
+              <div className="flex flex-wrap justify-center" style={{ gap: 12, marginTop: 24 }}>
+                {pairs.map((p, i) => {
+                  const on = i === Math.min(baIndex, pairs.length - 1)
+                  return (
+                    <button key={i} onClick={() => setBaIndex(i)}
+                      aria-label={`Lihat ${p.label || `pasangan ${i + 1}`}`}
+                      aria-pressed={on}
+                      className="mp-tile" style={{
+                        width: 'clamp(64px, 15vw, 92px)', aspectRatio: '3 / 4', padding: 0,
+                        borderRadius: 6, overflow: 'hidden', cursor: 'pointer', background: PAPER_2,
+                        border: `1px solid ${on ? PLUM : LINE}`,
+                        opacity: on ? 1 : 0.65, position: 'relative',
+                      }}>
+                      <img src={p.before} alt="" loading="lazy" style={{
+                        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                      }} />
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </Reveal>
       )}
@@ -560,54 +641,113 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
               <span aria-hidden="true" style={{ flex: 1, height: 1, background: LINE, marginBottom: 12 }} />
             </div>
             {vendor.package_note && (
-              <p style={{ fontSize: 14, color: INK_60, margin: '0 0 34px', maxWidth: '60ch' }}>
+              <p style={{ fontSize: 14, color: INK_60, margin: '0 0 28px', maxWidth: '60ch' }}>
                 {vendor.package_note}
               </p>
             )}
-            <div className="grid" style={{ gap: 44 }}>
-              {groups.map((g, gi) => (
-                <div key={gi}>
-                  {g.group && (
-                    <div className="flex items-baseline" style={{ gap: 14, marginBottom: 18 }}>
-                      <h3 className="mp-serif" style={{
-                        fontSize: 'clamp(17px, 1.5vw, 21px)', letterSpacing: '0.02em', margin: 0,
-                      }}>{g.group}</h3>
-                      {g.note && <span style={{ fontSize: 12, color: INK_60 }}>{g.note}</span>}
-                      <span aria-hidden="true" style={{ flex: 1, height: 1, background: LINE }} />
-                    </div>
-                  )}
-                  <div className="grid" style={{
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16,
+
+            {/* Kategori. Semua kelompok sekaligus membanjiri layar ponsel --
+                delapan belas kartu berbaris ke bawah, dan orang berhenti
+                membaca di kartu ketiga. */}
+            {groups.length > 1 && (
+              <div className="flex flex-wrap" role="tablist" style={{ gap: 8, marginBottom: 24 }}>
+                {groups.map((g, k) => {
+                  const on = k === curGroup
+                  return (
+                    <button key={k} role="tab" aria-selected={on}
+                      onClick={() => { setPkgGroup(k); setPkgIndex(0) }}
+                      className={on ? 'mp-btn-plum' : 'mp-btn-line'} style={{
+                        fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase',
+                        cursor: 'pointer', borderRadius: 999, padding: '9px 18px',
+                        color: on ? '#fff' : INK_60,
+                        background: on ? PLUM : 'transparent',
+                        border: `1px solid ${on ? PLUM : LINE}`,
+                      }}>{g.group || `Paket ${k + 1}`}</button>
+                  )
+                })}
+              </div>
+            )}
+
+            {groups[curGroup]?.note && (
+              <p style={{ margin: '0 0 22px', fontSize: 13, lineHeight: 1.7, color: INK_60 }}>
+                {groups[curGroup].note}
+              </p>
+            )}
+
+            {isPriceList ? (
+              /* Daftar harga: dua kolom di layar lebar, satu di ponsel. Tetap
+                 bisa dipesan langsung, tapi tanpa kartu dan tanpa karosel. */
+              <ul className="grid" style={{
+                margin: 0, padding: 0, listStyle: 'none',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '0 44px',
+              }}>
+                {groupItems.map((it, i) => (
+                  <li key={i} className="flex items-baseline" style={{
+                    gap: 12, padding: '13px 0', borderBottom: `1px solid ${LINE}`,
                   }}>
-                    {g.items.map((it, ii) => (
-                      <div key={ii} className="flex flex-col" style={{
-                        border: `1px solid ${it?.highlight ? PLUM : LINE}`,
-                        background: PAPER, padding: 24, gap: 14, borderRadius: 14,
+                    <span style={{ fontSize: 15 }}>{it?.name}</span>
+                    <span aria-hidden="true" style={{
+                      flex: 1, height: 1, borderBottom: `1px dotted ${LINE}`, minWidth: 12,
+                    }} />
+                    {it?.price && (
+                      <span className="mp-serif" style={{
+                        fontSize: 18, color: PLUM, whiteSpace: 'nowrap',
+                      }}>{it.price}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <>
+                {/* Panah jadi saudara flex dari barisnya, bukan elemen absolute:
+                    di layar sempit kartu tengahnya akan menabraknya. */}
+                <div className="flex items-center" style={{ gap: 'clamp(8px, 1.6vw, 18px)' }}>
+                  {groupItems.length > 1 && (
+                    <CarouselArrow dir="prev" label="Paket sebelumnya"
+                      onClick={() => setPkgIndex(v => (v - 1 + groupItems.length) % groupItems.length)} />
+                  )}
+                  <div className="flex justify-center items-stretch" style={{
+                    flex: 1, minWidth: 0, gap: 'clamp(10px, 1.6vw, 18px)',
+                  }}>
+                    {carousel.map(({ p, center, slot }) => (
+                      <div key={slot} className={`flex flex-col${center ? '' : ' mp-peek'}`} style={{
+                        flex: '0 0 auto',
+                        width: center ? 'min(420px, 100%)' : 'clamp(170px, 21vw, 260px)',
+                        borderRadius: 14, padding: 'clamp(22px, 3vw, 30px)',
+                        border: `1px solid ${center && p?.highlight ? PLUM : LINE}`,
+                        background: center ? PAPER : 'transparent',
+                        opacity: center ? 1 : 0.45,
+                        transform: `scale(${center ? 1 : 0.97})`,
+                        transition: 'opacity .4s var(--mp-ease), transform .4s var(--mp-ease)',
+                        gap: 14,
                       }}>
                         <div className="flex items-start" style={{ gap: 10 }}>
                           <h4 style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: '0.02em' }}>
-                            {it?.name}
+                            {p?.name}
                           </h4>
-                          {it?.note && (
+                          {p?.note && center && (
                             <span style={{
                               marginLeft: 'auto', fontSize: 10, letterSpacing: '0.14em',
                               textTransform: 'uppercase', color: PLUM, border: `1px solid ${PLUM}`,
-                              padding: '3px 7px', whiteSpace: 'nowrap',
-                            }}>{it.note}</span>
+                              padding: '3px 7px', borderRadius: 999, whiteSpace: 'nowrap',
+                            }}>{p.note}</span>
                           )}
                         </div>
-                        {it?.price && (
-                          <div className="mp-serif" style={{ fontSize: 26, lineHeight: 1 }}>{it.price}</div>
+                        {p?.price && (
+                          <div className="mp-serif" style={{
+                            fontSize: center ? 30 : 22, lineHeight: 1, color: PLUM,
+                          }}>{p.price}</div>
                         )}
                         <ul className="grid" style={{
-                          margin: 0, padding: 0, listStyle: 'none', gap: 8,
+                          margin: 0, padding: 0, listStyle: 'none', gap: 8, flex: 1,
                           fontSize: 13.5, color: INK_60, lineHeight: 1.5,
                         }}>
-                          {/* Fitur boleh berupa string biasa atau {text, heading}.
-                              Merendernya mentah-mentah membuat React melempar
-                              "Objects are not valid as a React child" -- dan itu
-                              layar kosong di depan calon klien vendor. */}
-                          {arr(it?.features).slice(0, MAX_FEATURES).map(normFeature)
+                          {/* Rincian boleh berupa teks polos atau {text, heading}.
+                              Dirender mentah, React melempar "Objects are not
+                              valid as a React child" -- layar kosong di depan
+                              calon klien vendor. */}
+                          {arr(p?.features).slice(0, MAX_FEATURES).map(normFeature)
                             .filter(f => f.text)
                             .map((f, fi) => (f.heading ? (
                               <li key={fi} style={{
@@ -622,22 +762,30 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                               </li>
                             )))}
                         </ul>
-                        <button
-                          onClick={() => { setInquiry(it?.name || ''); setLead({ name: '', address: '', date: '' }) }}
-                          className={it?.highlight ? 'mp-btn-plum' : 'mp-btn-line'}
-                          style={{
-                            marginTop: 'auto', padding: 12,
-                            background: it?.highlight ? PLUM : 'transparent',
-                            color: it?.highlight ? '#fff' : INK,
-                            border: `1px solid ${it?.highlight ? PLUM : LINE}`,
-                            borderRadius: 10, cursor: 'pointer', fontSize: 13, letterSpacing: '0.06em',
+                        {center && (
+                          <button onClick={() => openInquiry(p)} className="mp-btn-plum" style={{
+                            marginTop: 'auto', padding: 13, background: PLUM, color: '#fff',
+                            border: `1px solid ${PLUM}`, borderRadius: 10, cursor: 'pointer',
+                            fontSize: 13, letterSpacing: '0.06em', width: '100%',
                           }}>Ambil paket</button>
+                        )}
                       </div>
                     ))}
                   </div>
+                  {groupItems.length > 1 && (
+                    <CarouselArrow dir="next" label="Paket berikutnya"
+                      onClick={() => setPkgIndex(v => (v + 1) % groupItems.length)} />
+                  )}
                 </div>
-              ))}
-            </div>
+
+                {groupItems.length > 1 && (
+                  <p className="text-center" style={{
+                    margin: '18px 0 0', fontSize: 12, letterSpacing: '0.14em', color: INK_60,
+                  }}>{curIndex + 1} / {groupItems.length}</p>
+                )}
+              </>
+            )}
+
             {vendor.package_footnote && (
               <p style={{ fontSize: 13, color: INK_60, margin: '34px 0 0' }}>{vendor.package_footnote}</p>
             )}
@@ -835,7 +983,14 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
           }}>
             <div>
               <Label style={{ letterSpacing: '0.22em', display: 'block', marginBottom: 8 }}>Ambil paket</Label>
-              <h3 className="mp-serif" style={{ fontSize: 26, margin: 0, lineHeight: 1.15 }}>{inquiry}</h3>
+              <h3 className="mp-serif" style={{ fontSize: 26, margin: 0, lineHeight: 1.15 }}>
+                {inquiry.name}
+              </h3>
+              {inquiry.price && (
+                <p className="mp-serif" style={{ margin: '6px 0 0', fontSize: 20, color: PLUM }}>
+                  {inquiry.price}
+                </p>
+              )}
             </div>
             <Field label="Nama" value={lead.name} inputRef={nameField} placeholder="Nama kamu"
               onChange={(v) => setLead(s => ({ ...s, name: v }))} maxLength={60} />
@@ -843,6 +998,37 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
               onChange={(v) => setLead(s => ({ ...s, address: v }))} maxLength={120} />
             <Field label="Tanggal acara" value={lead.date} type="date"
               onChange={(v) => setLead(s => ({ ...s, date: v }))} />
+
+            {/* Tambahan ditawarkan di sini, bukan sebagai kategori terpisah
+                yang harus ditemukan sendiri: saat orang sudah memilih
+                paketnya, itulah satu-satunya saat pertanyaan "mau ditambah
+                apa?" masuk akal. */}
+            {addonItems.filter(it => it.name !== inquiry.name).length > 0 && (
+              <div>
+                <Label style={{ letterSpacing: '0.12em', display: 'block', marginBottom: 10 }}>
+                  Tambahan (opsional)
+                </Label>
+                <div className="grid" style={{
+                  gap: 2, maxHeight: 190, overflowY: 'auto',
+                  border: `1px solid ${LINE}`, borderRadius: 10, padding: '6px 12px',
+                }}>
+                  {addonItems.filter(it => it.name !== inquiry.name).map((it, i) => (
+                    <label key={i} className="flex items-center" style={{
+                      gap: 10, padding: '8px 0', fontSize: 14, cursor: 'pointer',
+                      borderBottom: `1px solid ${LINE}`,
+                    }}>
+                      <input type="checkbox" checked={addons.includes(it.name)}
+                        onChange={() => toggleAddon(it.name)}
+                        style={{ width: 16, height: 16, accentColor: PLUM, flex: 'none' }} />
+                      <span style={{ flex: 1, minWidth: 0 }}>{it.name}</span>
+                      {it.price && (
+                        <span style={{ fontSize: 13, color: INK_60, whiteSpace: 'nowrap' }}>{it.price}</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex" style={{ gap: 10, marginTop: 6 }}>
               <button type="button" onClick={() => setInquiry(null)} className="mp-btn-line" style={{
                 flex: 1, padding: 13, background: 'none', border: `1px solid ${LINE}`,
