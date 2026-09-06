@@ -22,11 +22,14 @@ export const MAX_SERVICES = 10
 // Daftar harga bertingkat tiga: grup -> paket -> fitur. Batasnya mengikuti
 // apa yang masih terbaca di halaman, bukan apa yang muat di database.
 export const MAX_GROUPS = 8
-// Dinaikkan dari 12 dan 15 setelah daftar harga vendor kedua tidak muat:
+// Dinaikkan dari 12 dan 15 setelah daftar harga vendor kedua tidak muat,
+// lalu 28 -> 48 setelah daftar "All Package"-nya menyusul: paket termahalnya
+// punya 43 baris. Dua kali meleset dari tebakan yang sama -- batas rincian
+// paket memang tidak bisa ditebak dari satu vendor.:
 // daftar "Additional"-nya berisi 13 baris, dan paket termahalnya 21 rincian
 // yang terbagi tiga bagian. Angka lama ditaksir dari satu contoh.
 export const MAX_ITEMS = 16      // per grup
-export const MAX_FEATURES = 28   // per paket, sudah termasuk baris judul
+export const MAX_FEATURES = 48   // per paket, sudah termasuk baris judul
 export const MOSAIC_FROM = 12
 
 /**

@@ -21,6 +21,12 @@ import './VendorMilaPutri.css'
  * Aturan MUA yang mengikat ada di VendorMilaPutri.css.
  */
 
+/* Rincian yang ditampilkan sebelum kartunya diminta membuka diri. Paket
+ * hajatan penuh punya 43 baris; dirender sekaligus, satu kartu jadi setinggi
+ * seribu piksel dan karoselnya berubah jadi gulungan tanpa ujung -- persis
+ * keluhan yang membuat kita memakai kategori sejak awal. */
+const FEATURE_PREVIEW = 14
+
 const PAPER = '#F7F4F3'
 const PAPER_2 = '#EFEAE8'
 const INK = '#241A22'
@@ -94,6 +100,61 @@ const H2 = ({ children, style }) => (
     fontSize: FS_H2, margin: 0, lineHeight: 1.05, ...style,
   }}>{children}</h2>
 )
+
+/**
+ * Daftar rincian paket, dipotong sampai diminta.
+ *
+ * Paket hajatan penuh punya 43 baris. Dirender sekaligus, satu kartu jadi
+ * setinggi seribu piksel dan karoselnya berubah jadi gulungan tanpa ujung --
+ * persis keluhan yang membuat kita memakai kategori sejak awal.
+ *
+ * Kartu samping tidak pernah membuka diri: ia hanya penanda bahwa masih ada
+ * paket lain, dan tombol di dalamnya tidak bisa diraih.
+ */
+function PackageFeatures({ features, center, open, onOpen, onClose }) {
+  const feats = (Array.isArray(features) ? features : [])
+    .slice(0, MAX_FEATURES).map(normFeature).filter(f => f.text)
+  const full = center && open
+  // Potongan yang berakhir tepat di judul bagian menyisakan judul tanpa isi --
+  // pembaca mengira bagian itu memang kosong, bukan sedang disembunyikan.
+  let shown = full ? feats : feats.slice(0, FEATURE_PREVIEW)
+  while (!full && shown.length && shown[shown.length - 1].heading) shown = shown.slice(0, -1)
+  const hidden = feats.length - shown.length
+
+  return (
+    <>
+      <ul className="grid" style={{
+        margin: 0, padding: 0, listStyle: 'none', gap: 8, flex: 1,
+        fontSize: 13.5, color: INK_60, lineHeight: 1.5,
+      }}>
+        {shown.map((f, fi) => (f.heading ? (
+          <li key={fi} style={{
+            listStyle: 'none', marginTop: fi === 0 ? 0 : 6,
+            fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+            color: INK, fontWeight: 500,
+          }}>{f.text}</li>
+        ) : (
+          <li key={fi} className="flex" style={{ gap: 9 }}>
+            <Dot size={5} style={{ marginTop: 7 }} />
+            <span>{f.text}</span>
+          </li>
+        )))}
+      </ul>
+      {center && hidden > 0 && (
+        <button onClick={onOpen} style={{
+          background: 'none', border: 0, padding: 0, cursor: 'pointer', textAlign: 'left',
+          color: PLUM, fontSize: 13, letterSpacing: '0.04em', textDecoration: 'underline',
+        }}>Lihat {hidden} rincian lainnya</button>
+      )}
+      {full && feats.length > FEATURE_PREVIEW && (
+        <button onClick={onClose} style={{
+          background: 'none', border: 0, padding: 0, cursor: 'pointer', textAlign: 'left',
+          color: INK_60, fontSize: 13, letterSpacing: '0.04em', textDecoration: 'underline',
+        }}>Ringkas lagi</button>
+      )}
+    </>
+  )
+}
 
 const CarouselArrow = ({ dir, onClick, label }) => (
   <button onClick={onClick} aria-label={label} className="mp-btn-line grid place-items-center"
@@ -299,6 +360,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
   const [pkgGroup, setPkgGroup] = useState(0)     // kategori paket yang aktif
   const [pkgIndex, setPkgIndex] = useState(0)     // paket ke berapa di kategori itu
   const [baIndex, setBaIndex] = useState(0)       // pasangan sebelum/sesudah yang besar
+  const [pkgOpen, setPkgOpen] = useState(false)   // rincian kartu tengah dibuka penuh
   const [scrolled, setScrolled] = useState(false)
   const nameField = useRef(null)
 
@@ -721,7 +783,7 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                   const on = k === curGroup
                   return (
                     <button key={k} role="tab" aria-selected={on}
-                      onClick={() => { setPkgGroup(k); setPkgIndex(0) }}
+                      onClick={() => { setPkgGroup(k); setPkgIndex(0); setPkgOpen(false) }}
                       className={on ? 'mp-btn-plum' : 'mp-btn-line'} style={{
                         fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase',
                         cursor: 'pointer', borderRadius: 999, padding: '9px 18px',
@@ -771,7 +833,10 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                 <div className="flex items-center" style={{ gap: 'clamp(8px, 1.6vw, 18px)' }}>
                   {groupItems.length > 1 && (
                     <CarouselArrow dir="prev" label="Paket sebelumnya"
-                      onClick={() => setPkgIndex(v => (v - 1 + groupItems.length) % groupItems.length)} />
+                      onClick={() => {
+                        setPkgIndex(v => (v - 1 + groupItems.length) % groupItems.length)
+                        setPkgOpen(false)
+                      }} />
                   )}
                   <div className="flex justify-center items-stretch" style={{
                     flex: 1, minWidth: 0, gap: 'clamp(10px, 1.6vw, 18px)',
@@ -805,29 +870,17 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                             fontSize: center ? 30 : 22, lineHeight: 1, color: PLUM,
                           }}>{p.price}</div>
                         )}
-                        <ul className="grid" style={{
-                          margin: 0, padding: 0, listStyle: 'none', gap: 8, flex: 1,
-                          fontSize: 13.5, color: INK_60, lineHeight: 1.5,
-                        }}>
-                          {/* Rincian boleh berupa teks polos atau {text, heading}.
-                              Dirender mentah, React melempar "Objects are not
-                              valid as a React child" -- layar kosong di depan
-                              calon klien vendor. */}
-                          {arr(p?.features).slice(0, MAX_FEATURES).map(normFeature)
-                            .filter(f => f.text)
-                            .map((f, fi) => (f.heading ? (
-                              <li key={fi} style={{
-                                listStyle: 'none', marginTop: fi === 0 ? 0 : 6,
-                                fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
-                                color: INK, fontWeight: 500,
-                              }}>{f.text}</li>
-                            ) : (
-                              <li key={fi} className="flex" style={{ gap: 9 }}>
-                                <Dot size={5} style={{ marginTop: 7 }} />
-                                <span>{f.text}</span>
-                              </li>
-                            )))}
-                        </ul>
+                        {/* Rincian boleh berupa teks polos atau {text, heading}.
+                            Dirender mentah, React melempar "Objects are not
+                            valid as a React child" -- layar kosong di depan
+                            calon klien vendor. */}
+                        <PackageFeatures
+                          features={arr(p?.features)}
+                          center={center}
+                          open={pkgOpen}
+                          onOpen={() => setPkgOpen(true)}
+                          onClose={() => setPkgOpen(false)}
+                        />
                         {center && (
                           <button onClick={() => openInquiry(p)} className="mp-btn-plum" style={{
                             marginTop: 'auto', padding: 13, background: PLUM, color: '#fff',
@@ -840,7 +893,10 @@ export default function VendorMilaPutri({ vendor, copied = false, onCopy = () =>
                   </div>
                   {groupItems.length > 1 && (
                     <CarouselArrow dir="next" label="Paket berikutnya"
-                      onClick={() => setPkgIndex(v => (v + 1) % groupItems.length)} />
+                      onClick={() => {
+                        setPkgIndex(v => (v + 1) % groupItems.length)
+                        setPkgOpen(false)
+                      }} />
                   )}
                 </div>
 
