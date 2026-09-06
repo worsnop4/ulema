@@ -188,10 +188,18 @@ function BeforeAfter({ pair }) {
           userSelect: 'none', touchAction: 'none', cursor: 'ew-resize',
         }}
       >
-        <img src={pair.before} alt="Sebelum riasan" loading="lazy" style={{
+        {/* Yang di bawah terlihat di KANAN, yang dipotong terlihat di KIRI --
+            inset memotong dari kanan, jadi yang tersisa bagian kirinya. Karena
+            labelnya SEBELUM di kiri dan SESUDAH di kanan, foto "sesudah" yang
+            harus jadi lapisan bawah dan "sebelum" yang dipotong.
+
+            Versi pertama memasangnya terbalik: prototipe handoff-nya menaruh
+            "after" di lapisan yang terpotong, jadi wajah yang sudah dirias
+            muncul di bawah label SEBELUM. Datanya benar sejak awal. */}
+        <img src={pair.after} alt="Sesudah riasan" loading="lazy" style={{
           position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
         }} />
-        <img src={pair.after} alt="Sesudah riasan" loading="lazy" style={{
+        <img src={pair.before} alt="Sebelum riasan" loading="lazy" style={{
           position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
           clipPath: `inset(0 ${100 - pct}% 0 0)`,
         }} />
